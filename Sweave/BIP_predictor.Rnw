@@ -1582,7 +1582,7 @@ p_mat_mssa_components_without_covid
 #     one year ahead
 
 # Same but for direct forecast
-p_mat_direct_without_covid
+p_mat_direct_without_covid[,1]
 
 
 # -Out of sample rRMSEs
@@ -1765,7 +1765,6 @@ if (length(sel_vec_pred)>1)
   dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),(final_mssa_array[sel_vec_pred,,h+1]))
 }
 lm_obj<-lm(dat[,1]~dat[,2:ncol(dat)])
-summary(lm_obj)
 
 optimal_weights<-lm_obj$coef
 # Compute predictor for each forward-shift  
