@@ -1,0 +1,26 @@
+{
+    "id": "8CC74A9A",
+    "path": "C:/Users/marca/OneDrive/2025/BIP-predictor/Sweave/generate_sweave.R",
+    "project_path": "Sweave/generate_sweave.R",
+    "type": "r_source",
+    "hash": "3994877276",
+    "contents": "",
+    "dirty": false,
+    "created": 1746167987813.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "25,0",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1746537425,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1746537425421,
+    "read_only": false,
+    "read_only_alternatives": []
+}
