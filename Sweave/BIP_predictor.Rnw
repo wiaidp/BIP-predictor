@@ -463,32 +463,10 @@ So-called direct forecasts are obtained by regressing the relevant indicators on
 <<label=init,results=hide>>=
 # Section 3.1: classic direct forecasts
 
-# Plot of direct forecasts with Pandemic
-par(mfrow=c(2,2))
-# We can specify the selection of macro-indicators for the direct forecast 
-select_direct_indicator<-c("ifo_c","ESI")
+# Select indicators: we select all indicators and regression is entirely in-sample
+#   -Ideal case: performances too good (overfitting)
+#   -in applications the regression is out-of-sample (ifo and ESI work best out-of-sample) 
 select_direct_indicator<-select_vec_multi
-# Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
-# To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
-for (h in 0:3)
-{
-  # Shift BIP forward by publication lag+forecast horizon
-  forward_shifted_BIP<-c(x_mat[(1+lag_vec[1]+h):nrow(x_mat),"BIP"],rep(NA,h+lag_vec[1]))
-  # Regress selected indicators on forward-shifted BIP
-  lm_obj<-lm(forward_shifted_BIP~x_mat[,select_direct_indicator])
-  # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
-  summary(lm_obj)
-  # Technical note: 
-  # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
-  # -Therefore classic OLS tests for statistical significance are biased
-  # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
-  
-  # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_forecast<-lm_obj$coef[1]+x_mat[,select_direct_indicator]%*%lm_obj$coef[2:(length(select_direct_indicator)+1)]
-  # Note that this is a full-sample predictor (no out-of-sample span)
-  
-}
-
 
 # Plot of direct forecasts without Pandemic
 file = "./Figures/direct_wc_all.pdf"
@@ -521,6 +499,7 @@ for (h in 0:3)
   
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
   mplot<-cbind(forward_shifted_BIP,direct_forecast)
+  rownames(mplot)<-rownames(x_mat_wc)
   colnames(mplot)<-c("BIP","Direct forecast")
   colo<-c("black","red")
   main_title<-paste("BIP shifted  by ",h," quarters",sep="")
@@ -562,6 +541,7 @@ for (h in 0:3)
   
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
   mplot<-cbind(forward_shifted_BIP,direct_forecast)
+  rownames(mplot)<-rownames(x_mat_wc)
   mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
   colnames(mplot)<-c("BIP","Direct forecast")
   colo<-c("black","red")
@@ -770,6 +750,8 @@ for (h in 0:3)
   
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
   mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
+  rownames(mplot)<-rownames(x_mat_wc)
+
   colnames(mplot)<-c("BIP","Direct forecast")
   colo<-c("black","red")
   main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
@@ -817,8 +799,11 @@ for (h in 0:3)
   
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
   mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
+    rownames(mplot)<-rownames(x_mat_wc)
+
   mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
   colnames(mplot)<-c("BIP","Direct HP forecast")
+  
   colo<-c("black","red")
   main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
