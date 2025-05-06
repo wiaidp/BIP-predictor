@@ -54,15 +54,85 @@ marc.wildi@zhaw.ch}
 
 <<label=init,results=hide>>=
 
+rm(list=ls())
+
+inst_pack<-rownames(installed.packages())
+if (!"mFilter"%in%inst_pack)
+  install.packages("mFilter")
+if (!"xts"%in%inst_pack)
+  install.packages("xts")
+if (!"MTS"%in%inst_pack)
+  install.packages("MTS")
+if (!"sandwich"%in%inst_pack)
+  install.packages("sandwich")
+if (!"multDM"%in%inst_pack)
+  install.packages("multDM")
+if (!"fGarch"%in%inst_pack)
+  install.packages("fGarch")
+if (!"xtable"%in%inst_pack)
+  install.packages("xtable")
 
 
 
-# Load and transform data
+
+
+# Load the required R-libraries
+# Standard filter package
+library(mFilter)
+# Multivariate time series: VARMA model for macro indicators: used here for simulation purposes only
+library(MTS)
+# HAC estimate of standard deviations in the presence of autocorrelation and heteroscedasticity
+library(sandwich)
+# Extended time series
+library(xts)
+# Library for Diebold-Mariano test of equal forecast performance
+library(multDM)
+# GARCH model: for improving regression estimates
+library(fGarch)
+# Library for tables
+library(xtable)
+
+
+
+# Load the relevant M-SSA functionalities
+# M-SSA functions
+source(paste(getwd(),"/R/functions_MSSA.r",sep=""))
+# Load signal extraction functions used for JBCY paper (relies on mFilter)
+source(paste(getwd(),"/R/HP_JBCY_functions.r",sep=""))
+# Utility functions for M-SSA, see tutorial 
+source(paste(getwd(),"/R/M_SSA_utility_functions.r",sep=""))
+# Set of performance metrics and tests of unequal predictability
+#source(paste(getwd(),"/R/performance_statistics_functions.r",sep=""))
+
+
+
+
+
+ 
+path.main<-getwd()
+
+path.pgm<-paste(path.main,"/R/",sep="")
+path.out<-paste(path.main,"/Latex/",sep="")
+path.sweave<-paste(path.main,"/Sweave/",sep="")
+path.data<-paste(path.main,"/Data/",sep="")
+# Savd results from an empirical analysis of S&P500
+path.result<-paste(path.main,"/Results/",sep="")
+fig_size<-4
+
+#------------------------------
+
+recompute_results<-T
+
+
+
+
+
+# Load data
 data_file_name<-c("Data_HWI_2025_02.csv","gdp_2025_02.csv")
-# Quarterly data: BIP in the first data column
+# Original (un-transformed) indicators
 data_quarterly<-read.csv(paste(getwd(),"/Data/",data_file_name[2],sep=""))
 BIP_original<-data_quarterly[,"BIP"]
-
+# Transformed indicators: differences, trimmed, standardized
 load(file=paste(getwd(),"\\Data\\macro",sep=""))
 
 select_vec_multi<-c("BIP","ip","ifo_c","ESI","spr_10y_3m")
@@ -72,39 +142,25 @@ n<-dim(x_mat)[2]
 # Number of observations
 len<-dim(x_mat)[1]
 
-
+# Settings for M-SSA
+ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
+f_excess<-c(5,rep(4,length(select_vec_multi)-1))
+# In-smaple span for VAR
 date_to_fit<-"2008"
+# Model orders
 p<-1
 q<-0
+# Filter length
 L<-31
-# Publication lag
-# -In contrast to M-SSA package (tutorial 7.4) we here assume a lag of one quarter only (instead of two)
-# -To replicate the results in package we then have to impose a forecast excess of 5 to BIP (instead of 4)
-#   -M-SSA estimation routine shifts HP-BIP by lag[1]+f_excess[1]+h
+# Publication lag: one quarter for BIP
 lag_vec<-c(1,rep(0,ncol(x_mat)-1))
-# Forecast excesses: see M-SSA packages
-f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 
-
-
+#------------------------------------------------------
+# Plots section data dependence
 
 # Plot BIP and diff-log BIP
 file = "./Figures/data.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
-if (F)
-{
-  par(mfrow=c(2,1))
-  mplot<-matrix(BIP_original)
-  colnames(mplot)<-"BIP"
-  colo<-c("black","blue","green")
-  main_title<-"German quarterly GDP: BIP"
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  #mtext(colnames(mplot)[1],col=colo[1],line=-1)
-  abline(h=0)
-  axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
-  axis(2)
-  box()
-}
 par(mfrow=c(1,1))
 
 # Plot the data
@@ -124,27 +180,6 @@ axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4
 axis(2)
 box()
 dev.off()
-
-
-
-if (F)
-{
-  par(mfrow=c(1,1))
-  diff_log_BIP<-na.exclude(diff(log(BIP_original)))
-  names(diff_log_BIP)<-rownames(data)
-  # First differences of original log-BIP
-  mplot<-matrix(diff_log_BIP)
-  rownames(mplot)<-names(diff_log_BIP)
-  colnames(mplot)<-"diff-log BIP"
-  colo<-c("black","blue","green")
-  main_title<-"First differences of original log-BIP"
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  mtext(colnames(mplot)[1],col=colo[1],line=-1)
-  abline(h=0)
-  axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
-  axis(2)
-  box()
-}
 
 
 
@@ -239,7 +274,7 @@ if (F)
   MTSdiag(V_obj)
 
 
-# Ma inversion
+# MA inversion
 # Full data-set
 data_fit<-x_mat
 # Sigma
@@ -282,7 +317,7 @@ for (i in 1:n)#i<-1
 
 dev.off()
 
-# Witout Pandemc
+# Without Pandemic
 # Sigma
 Sigma<-V_obj_wc$Sigma
 # MA inversion
@@ -423,6 +458,7 @@ So-called direct forecasts are obtained by regressing the relevant indicators on
 par(mfrow=c(2,2))
 # We can specify the selection of macro-indicators for the direct forecast 
 select_direct_indicator<-c("ifo_c","ESI")
+select_direct_indicator<-select_vec_multi
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
 for (h in 0:3)
@@ -442,23 +478,6 @@ for (h in 0:3)
   direct_forecast<-lm_obj$coef[1]+x_mat[,select_direct_indicator]%*%lm_obj$coef[2:(length(select_direct_indicator)+1)]
   # Note that this is a full-sample predictor (no out-of-sample span)
   
-  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero 
-  
-  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
-  mplot<-cbind(forward_shifted_BIP,direct_forecast)
-  colnames(mplot)<-c("BIP","Direct forecast")
-  colo<-c("black","red")
-  main_title<-paste("BIP shifted by ",h," quarters",sep="")
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  for (i in 1:ncol(mplot))
-  {
-    lines(mplot[,i],col=colo[i])
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
-  }
-  abline(h=0)
-  axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
-  axis(2)
-  box()
 }
 
 
@@ -672,34 +691,10 @@ cat("\\end{figure}")
 Extending the `classic' direct forecast design, we here consider filtered indicators, based on the one-sided HP(160), denoted as HP-C: the filtered indicators are explanatory variables for the regressions on forward-shifted BIP\footnote{Katja and Simon: for each forecast horizon $h=0,1,2,3$ I'm using corresponding forecasts of the real-time filter output, assuming the data to be white noise (assuming an ARMA model does not lead to significantly different results). I think we might ignore these technical details in the paper.}. As in the previous section, we rely on all indicators as well as the full sample estimate for illustration, see Figs.\eqref{direct_hp_forecasts} (all observations with exclusion of the pandemic) and \eqref{direct_hp_forecasts_financial_crisis} (financial crisis). A comparison with the classic direct forecasts in Fig.\eqref{direct_wc_financial_crisis} indicates that the new predictors are slightly less retarded (`faster'). 
 <<label=init,results=hide>>=
 
-# Filter the indicators: apply HP-C
-hp_c_mat<-NULL
-for (i in 1:ncol(x_mat))
-{
-  hp_c_mat<-cbind(hp_c_mat,filter(x_mat[,i],hp_c,side=1))
-}
-colnames(hp_c_mat)<-colnames(x_mat)
-rownames(hp_c_mat)<-rownames(x_mat)
-
-# Plot
-mplot<-hp_c_mat
-par(mfrow=c(1,1))
-colo<-c(rainbow(ncol(mplot)))
-main_title<-paste("Concurrent HP(",lambda_HP,") applied to indicators",sep="")
-plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
-for (j in 1:ncol(mplot))
-{
-  lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
-}
-abline(h=0)
-axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
-axis(2)
-box()
 
 # Compute filter outputs for forecast horizons 0:6, assuming WN data
 # Forecast horizons
+# Without Pandemic
 h_vec<-0:6
 hp_c_array_wc<-array(dim=c(ncol(x_mat),nrow(x_mat_wc),length(h_vec)))
 for (j in 1:length(h_vec))
@@ -718,7 +713,7 @@ dimnames(hp_c_array_wc)[[1]]<-colnames(x_mat_wc)
 dimnames(hp_c_array_wc)[[2]]<-rownames(x_mat_wc)
 dimnames(hp_c_array_wc)[[3]]<-paste("h=",h_vec,sep="")
 
-# Same but with pandemic
+# Same but data with Pandemic
 h_vec<-0:6
 hp_c_array<-array(dim=c(ncol(x_mat),nrow(x_mat),length(h_vec)))
 for (j in 1:length(h_vec))
@@ -787,7 +782,7 @@ dev.off()
 
 
 
-# Compute and plot direct HP forecasts: financial crisis
+# Financial crisis
 file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -854,7 +849,6 @@ cat("\\end{figure}")
 @
 Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
-require(xtable)
 
 mat_re<-rbind(f_vec_unfiltered,f_vec_hp)
 rownames(mat_re)<-c("Direct forecast","Direct HP forecast")
@@ -908,24 +902,12 @@ Second, the concept can be extended to a multivariate framework, denoted as M-SS
 
 For illustration, we consider the target $z_t$ generated by the output of the two-sided HP(160) filter applied to BIP, which we denote by HP-BIP. We compare four nowcast methods: the univariate HP-C, the multivariate MSE predictor (denoted by M-MSE), and two M-SSA predictors based on different HT constraints. The first design enforces $ht_1=1.5ht_{MSE}$, aiming to produce approximately $33\%$ fewer zero-crossings than the M-MSE predictor over the long term. The second design sets $ht_1=ht_{HP-C}$, ensuring that its zero-crossing rate matches that of the univariate HP-C. These constraints are intended to systematically compare the effects of different levels of smoothness on prediction performance. The estimation of the underlying VAR(1) model employed for the M-MSE and M-SSA nowcasts is based on data observations up to January 2008. This approach ensures a lengthy out-of-sample period that encompasses significant events such as the financial crisis, the sovereign debt crisis, and the COVID-19 pandemic. Further details and background information are available in Wildi (2025b). All computations are performed utilizing the M-SSA package, as documented in Wildi (2025b).
 <<label=init,results=hide>>=
-# Target filter: lambda_HP is the single most important hyperparameter, see tutorial 7.1 for a discussion
-lambda_HP<-160
-# Filter length: nearly 8 years is fine for the selected lambda_HP (filter weights decay sufficiently fast)
-#   The length should be an odd number (see tutorial 7.1)
-L<-31
-# In-sample span for VAR, i.e., M-SSA (the proposed design is quite insensitive to this specification because the VAR is parsimoniously parameterized
-date_to_fit<-date_to_fit
-# VARMA model orders: keep the model simple in particular for short/tight in-sample spans
-p<-1
-q<-0
-# Holding-times (HT): controls smoothness of M-SSA (the following numbers are pasted from the original predictor)
-#   -Increasing these numbers leads to predictors with less zero-crossings (smoother), see tutorial 7.1
-ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
-names(ht_mssa_vec)<-colnames(x_mat)
-# Forecast horizons: M-SSA is optimized for each forecast horizon in h_vec 
+
+# Compute and compare M-SSA and M-MSE nowcasts
 h_vec<-0
 
-
+# We rely on data with Pandemic
+#   -M-SSA is not affected since the in-sample span ends in 2008
 if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
@@ -939,9 +921,9 @@ if (recompute_results)
   ht_hp_c<-8
 
 
-  ht_mssa_vec<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
+  ht_mssa_vec_HP_C<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
 
-  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi)
 
   save(mssa_indicator_obj,file=paste(path.result,"/nowcast_obj",sep=""))
   save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
@@ -951,6 +933,7 @@ if (recompute_results)
   load(file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
 }
 
+# Select M-SSA output for BIP: tracks HP-BIP
 select<-"BIP"
 
 dim(mssa_indicator_obj$bk_x_array)
@@ -965,10 +948,9 @@ colnames(bk)<-colnames(gammak)<-select_vec_multi
 
 
 # Target series: output of two-sided HP applied to BIP: 
-#   -This is the target for which the original M-SSA predictor (tutorial 7.3) has been designed
 #   -The target is forward-shifted by the forecast horizon (plus publication lag)
 target_shifted_mat<-mssa_indicator_obj$target_shifted_mat
-# Original M-SSA predictor, see tutorial 7.3
+# Original M-SSA predictor, see tutorial 7.3 (equal-weighting of M-SSA outputs)
 #   -One predictor available for each forecast horizon in h_vec
 predictor_mssa_mat<-mssa_indicator_obj$predictor_mssa_mat
 # M-SSA components, see tutorial 7.2
@@ -1021,28 +1003,6 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 
 hp_c_out<-filter(x_mat[,select],hp_c,side=1)
 par(mfrow=c(1,1))
-if (F)
-{
-  mplot<-cbind(target_shifted_mat,hp_c_out,mssa[,select],mmse[,select])
-  colnames(mplot)<-c("Target: HP-BIP","HP-C","M-SSA","M-MSE")
-  colo<-c("black","violet","blue","green")
-  main_title<-"Nowcasting HP-BIP"
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  mtext(colnames(mplot)[1],col=colo[1],line=-1)
-  for (i in 1:ncol(mplot))
-  {
-    lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
-  }
-  abline(h=0)
-  axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
-  axis(2)
-  box()
-}
-
-
-
-
 mplot<-scale(cbind(target_shifted_mat,hp_c_out,mssa[,select],mssa_HT_HP_C[,select],mmse[,select]))
 dim(mplot)
 colnames(mplot)<-c("Target: HP-BIP","HP-C","M-SSA smaller HT","M-SSA larger HT","M-MSE")
@@ -1061,6 +1021,7 @@ abline(v=which(rownames(mplot)>date_to_fit)[1],lty=2,lwd=2)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
 box()
+
 dev.off()
 
 
@@ -1120,20 +1081,6 @@ The influence of the forecast horizon on the M-SSA design is depicted in Fig. \e
 
 M-SSA predictors are compared to the traditional univariate HP-C in Fig. \eqref{multivar_vs_univar} across the periods of the financial crisis (top panels) and the COVID-19 pandemic (bottom panels), for forecast horizons $h=0,...,6$. The nowcast from the previous section is included for reference. All series are standardized to facilitate visual comparison. The primary distinction of the M-SSA approach is the progressive left-shift of the predictor as a function of $h$; this shift becomes more pronounced with increasing $h$ and appears to be consistent across all levels, including the peaks and troughs of the series. Conversely, the positions of peaks and troughs in the HP-C series appear to remain largely unaffected by variations in $h$. The more pronounced and systematic left-shift observed in the M-SSA forecasts can be partly attributed to the increasing weight assigned to the additional indicators leading BIP, which dominate the BIP component at larger forecast horizons. %In comparison, the effect of phase shifts—arising from the cyclical nature of the HP-filter and manifesting in the HP-C forecasts (shown in the left panels)—seems less systematic. 
 <<label=init,results=hide>>=
-# Target filter: lambda_HP is the single most important hyperparameter, see tutorial 7.1 for a discussion
-lambda_HP<-160
-# Filter length: nearly 8 years is fine for the selected lambda_HP (filter weights decay sufficiently fast)
-#   The length should be an odd number (see tutorial 7.1)
-L<-31
-# In-sample span for VAR, i.e., M-SSA (the proposed design is quite insensitive to this specification because the VAR is parsimoniously parameterized
-date_to_fit<-date_to_fit
-# VARMA model orders: keep the model simple in particular for short/tight in-sample spans
-p<-1
-q<-0
-# Holding-times (HT): controls smoothness of M-SSA (the following numbers are pasted from the original predictor)
-#   -Increasing these numbers leads to predictors with less zero-crossings (smoother), see tutorial 7.1
-ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
-names(ht_mssa_vec)<-colnames(x_mat)
 # Forecast horizons: M-SSA is optimized for each forecast horizon in h_vec 
 h_vec<-0:6
 
@@ -1159,11 +1106,9 @@ predictor_mssa_mat<-mssa_indicator_obj$predictor_mssa_mat
 #   -For each forecast horizon and for each indicator we obtain the M-SSA predictor when targeting 
 #     the two-sided HP applied to this indicator, see exercise 1.1 below
 mssa_array<-mssa_indicator_obj$mssa_array
-# M-MSE components
-# -Same as mssa_array but without HT imposed, i.e., classic multivariate mean-square error signal extraction
-# -Forecast performances, see exercise 5 below 
-mmse_array<-mssa_indicator_obj$mmse_array
-mssa_array["BIP",,7]
+
+# M-SSA outputs targeting HP-BIP at forecasts horizons h=0,...,6
+mssa_array["BIP",,]
 
 dim(mssa_indicator_obj$bk_x_array)
 # Dimensions of bk_x_array:
@@ -1204,7 +1149,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 
 # Select BIP
 i<-1
-# Financial crisis
+# HP-C Financial crisis
 mplot<-scale(hp_c_array[i,,])
 colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
 par(mfrow=c(2,2))
@@ -1223,7 +1168,28 @@ abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
 axis(2)
 box()
-# b. M-SSA applied to BIP 
+
+
+# HP-C Pandemic
+mplot<-scale(hp_c_array[i,,])
+colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
+colo<-c(rainbow(ncol(mplot)))
+mplot<-mplot[which(rownames(mplot)>2017&rownames(mplot)<2022),]
+main_title<-paste("HP-C targeting HP-",colnames(x_mat)[i],sep="")
+main_title<-"HP-C: pandemic"
+plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+mtext(colnames(mplot)[1],col=colo[1],line=-1)
+for (j in 1:ncol(mplot))
+{
+  lines(mplot[,j],col=colo[j],lwd=1,lty=1)
+  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+}
+abline(h=0)
+axis(1,at=1:nrow(mplot),labels=rownames(mplot))
+axis(2)
+box()
+
+# M-SSA financial crisis 
 mplot<-scale(mssa_array[i,,])
 colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
 mplot<-mplot[which(rownames(mplot)>2007&rownames(mplot)<2011),]
@@ -1243,26 +1209,7 @@ axis(1,at=1:nrow(mplot),labels=rownames(mplot))
 axis(2)
 box()
 
-
-# Pandemic
-mplot<-scale(hp_c_array[i,,])
-colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
-colo<-c(rainbow(ncol(mplot)))
-mplot<-mplot[which(rownames(mplot)>2017&rownames(mplot)<2022),]
-main_title<-paste("HP-C targeting HP-",colnames(x_mat)[i],sep="")
-main_title<-"HP-C: pandemic"
-plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
-for (j in 1:ncol(mplot))
-{
-  lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
-}
-abline(h=0)
-axis(1,at=1:nrow(mplot),labels=rownames(mplot))
-axis(2)
-box()
-# b. M-SSA applied to BIP 
+# M-SSA: pandemic 
 mplot<-scale(mssa_array[i,,])
 colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
 mplot<-mplot[which(rownames(mplot)>2017&rownames(mplot)<2022),]
@@ -1285,7 +1232,7 @@ box()
 dev.off()
 
 
-
+# M-SSA predictor: for each forecast horizon h=0,...,6 this is the equally-weighted average of all M-SSA outputs
 file = "./Figures/mssa_predictor.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -1294,6 +1241,7 @@ mplot<-cbind(x_mat[,"BIP"],predictor_mssa_mat)
 rownames(mplot)<-rownames(x_mat)
 colo<-c("black",rainbow(ncol(mplot)-1))
 colnames(mplot)[1]<-"BIP"
+main_title<-"Equally-weighted average of M-SSA outputs"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
@@ -1340,8 +1288,7 @@ dev.off()
 
 
 
-# Compute performances of original M-SSA predictor: these will be used as a benchmark when evaluating 
-#   the new design
+# Compute performances of original M-SSA predictor
 # Select start of out-of-sample span (entire financial crisis is out-of-sample)
 in_out_separator<-"2007"
 # We can specify the selection of macro-indicators for the direct forecast, see tutorial 7.3
@@ -1349,32 +1296,15 @@ in_out_separator<-"2007"
 select_direct_indicator<-c("ifo_c","ESI")
 perf_obj<-compute_perf_func(x_mat,target_shifted_mat,predictor_mssa_mat,predictor_mmse_mat,in_out_separator,select_direct_indicator,h_vec) 
 
-# The above function generates a rich output, see tutorial 7.3
-#   -But we need only one (important/representative) performance number for our comparisons further down
-# HAC adjusted p-values of regression of original M-SSA predictor on forward-shifted BIP, see tutorial 7.3 (exercise 1.2.2)
-p_value_HAC_BIP_oos=perf_obj$p_value_HAC_BIP_oos
-p_value_HAC_BIP_oos
-# regression on HP-BIP, without pandemic
-p_value_HAC_BIP_oos_wc<-perf_obj$p_value_HAC_HP_BIP_oos_wc
+# Regression on HP-BIP, without pandemic
+p_value_HAC_HP_BIP_oos_wc<-perf_obj$p_value_HAC_HP_BIP_oos_wc
+
+p_value_HAC_HP_BIP_oos_wc
 # The p-values are empirical significance levels of the regressions of the (out-of-sample) M-SSA predictors
 #   (optimized for forecast horizon h in h_vec: the columns of the matrix) on BIP shifted forward by shift 
 #   plus publication lag (the rows of the matrix)
 
-# Example: check if the M-SSA predictor optimized for horizon h_vec[j] can significantly predict BIP shifted forward
-#   by shift=i+1
-# One-year shift
-i<-5
-# Forecast horizon 6
-j<-7
-p_value_HAC_BIP_oos[i,j]
-# The original M-SSA predictor optimized for horizon h=6 does not significantly predict BIP 4 quarters ahead (plus publication lag)
-#   -Below we shall illustrate that the new M-SSA component predictor will perform better (smaller p-value) in 
-#     particular at larger forward-shifts (>=3 quarters)
 
-# Technical note: 
-# -The M-SSA predictor can track forward-shifted HP-BIP (the series in target_shifted_mat above) more tightly 
-#   than forward-shifted BIP
-perf_obj$p_value_HAC_HP_BIP_oos[i,j]
 
 @
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
@@ -1448,7 +1378,7 @@ There are various combinations of M-SSA components for tracking BIP. For illustr
 
 shift_vec<-0:5
 
-mat1<-round(p_value_HAC_BIP_oos_wc,3)
+mat1<-round(p_value_HAC_HP_BIP_oos_wc,3)
 rownames(mat1)<-paste("Shift=",shift_vec,sep="")
 colnames(mat1)<-paste("h=",h_vec,sep="")
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
@@ -1479,7 +1409,6 @@ Tables \eqref{p_val_wc} and \eqref{rRMSE_mSSA_comp_mean_wc} present HAC-adjusted
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
 
 <<label=init,results=hide>>=
-recompute_results<-F
 sel_vec_pred<-c("BIP")
 
 shift_vec<-0:5
@@ -1502,11 +1431,11 @@ if (recompute_results)
   pb <- txtProgressBar(min=min(h_vec),max=max(h_vec)-1,style=3)
   
 # The following double loop computes all combinations of forward-shifts (of BIP) and forecast horizons (of M-SSA)
-  for (shift in shift_vec)#shift<-5
+  for (shift in shift_vec)#shift<-1
   {
 # Progress bar: see R-console
     setTxtProgressBar(pb, shift)
-    for (j in h_vec)#j<-6
+    for (j in h_vec)#j<-0
     {
 # Horizon j corresponds to k=j+1-th entry of array    
       k<-j+1
@@ -1629,47 +1558,31 @@ if (recompute_results)
 
 # HAC-adjusted p-values of out-of-sample (M-SSA) components predictor when targeting forward-shifted BIP
 #   -Evaluation based on out-of-sample span starting at in_out_separator and ending on Jan-2025
-p_mat_mssa_components
-p_mat_direct
-# Same but without singular Pandemic
+#   -Without singular Pandemic
 p_mat_mssa_components_without_covid
-p_mat_direct_without_covid
 # The link between the new predictor and future BIP is statistically significant up to multiple quarters ahead 
 #   -Designs optimized for larger forecast horizons (columns with h>=4) seem to perform significantly up to 
 #     one year ahead
 
-# We can compare new component and original M-SSA predictors (tutorial 7.3)
-# a. New M-SSA components predictor
-p_mat_mssa_components
-# b. Original M-SSA predictor (based on naive equal-weighting of the components)
-p_value_HAC_BIP_oos
-# Findings: the new M-SSA component predictors optimized for h>=4 (last three columns) tend to track BIP 
-#   better than the original M-SSA predictors at forward-shifts>=3 quarters ahead (last three rows) 
+# Same but for direct forecast
+p_mat_direct_without_covid[,1]
 
-# -The above p-values are based on regressions (of out-of-sample predictors on BIP) thereby ignoring 
-#   `static' level and scale parameters (which are automatically adjusted by the regressions)
-# -The following rRMSEs account (also) for scale and level of the new predictor
-#   -All results out-of-sample (starting just before the financial crisis)
-# a. rRMSE of M-SSA components when benchmarked against mean, out-of-sample
-rRMSE_mSSA_comp_mean
-# b. rRMSE of M-SSA components when benchmarked against direct forecast, out-of-sample
-rRMSE_mSSA_comp_direct
-# c. rRMSE of direct forecasts when benchmarked against mean benchmark, out-of-sample
-#   Note: the columns are all the same because for a given shift, the explanatory variables of the 
-#     direct forecast do not depend on j in the above loop  
-rRMSE_mSSA_direct_mean
 
-# Same but without Pandemic
+# -Out of sample rRMSEs
+# -Without pandemic
+# a. M-SSA against mean: numbers smaller one signify outperformance of M-SSA
 rRMSE_mSSA_comp_mean_without_covid
+# b. M-SSA against direct forecast
 rRMSE_mSSA_comp_direct_without_covid
-rRMSE_mSSA_direct_mean_without_covid
+# c. Direct forecast against mean
+rRMSE_mSSA_direct_mean_without_covid[,1]
 
 
 @
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 
 
-
+# P-values
 mat1<-round(p_mat_mssa_components_without_covid,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
@@ -1678,7 +1591,7 @@ paste("HAC adjusted p-values of regressions of M-SSA component predictors optimi
 label=paste("p_val_wc",sep=""),
 center = "centering", file = "", floating = FALSE)
 
-
+# rRMSEs: M-SSA vs. mean
 mat1<-round(rRMSE_mSSA_comp_mean_without_covid,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
@@ -1695,12 +1608,13 @@ center = "centering", file = "", floating = FALSE)
 
 
 <<label=init,results=hide>>=
+# Revisions
 
 # Select h and shift
 h<-4
 shift<-4
 
-
+# Plot final predictor (based on full-sample regression of M-SSA on future BIP)
 file = "./Figures/revisions1.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -1724,25 +1638,8 @@ axis(2)
 box()
 
 dev.off()
-# Notes: 
-# 1. The above plot compares real-time and final predictors for maximal shift and maximal forecast horizon
-#     -Last run in the double-loop of exercise 1.3.5 above 
-#     -Similar plots could be obtained for all combinations of forward-shift and forecast horizon (with no systematic change/difference)
-# 2. The last data point in the above plot does not correspond to Jan-2025 (because the target is forward-shifted and NAs are removed)
-tail(mplot)
-#     -The purpose of the above plot is to illustrate revisions 
-#     -It does not show the current forecast at the series end (Jan-2025)
 
-# Comments (revisions): 
-# -To the left of the plot, the real-time predictor is volatile because the sample is short (revisions are large)
-# -With increasing sample size (from left to right), the real-time predictor approaches the final estimate 
-# -The vertical black line in the plot indicates the start of the evaluation period, relevant for 
-#     out-of-sample MSEs and p-value statistics, see exercise 1.3.5 above
-# -As time progresses, we expect better out-of-sample forecast performances because the part imputable to the 
-#   above revision error will decrease
-
-# 2.2 We now examine the effect of the revisions on the regression weights 
-
+# Plot the regression weights 
 file = "./Figures/revisions2.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -1822,8 +1719,6 @@ if (recompute_results)
 }
 # Final M-SSA components
 final_mssa_array<-final_mssa_indicator_obj$mssa_array
-# Final M-MSE components
-final_mmse_array<-final_mssa_indicator_obj$mmse_array
 
 
 #----------------------
@@ -1837,7 +1732,6 @@ if (length(sel_vec_pred)>1)
   dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),(final_mssa_array[sel_vec_pred,,h+1]))
 }
 lm_obj<-lm(dat[,1]~dat[,2:ncol(dat)])
-summary(lm_obj)
 
 optimal_weights<-lm_obj$coef
 # Compute predictor for each forward-shift  
