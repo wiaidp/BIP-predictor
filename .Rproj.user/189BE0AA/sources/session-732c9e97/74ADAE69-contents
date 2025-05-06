@@ -1,11 +1,10 @@
-% -*- mode: noweb; noweb-default-code-mode: R-mode; -*-
 \documentclass[a4paper]{article}
 
 \title{BIP-Predictor}
 \author{Marc Wildi\\
-Zurich University of Applied Sciences (ZHAW)\\
-8000 Zurich, Switzerland\\
-marc.wildi@zhaw.ch}
+  Zurich University of Applied Sciences (ZHAW)\\
+  8000 Zurich, Switzerland\\
+  marc.wildi@zhaw.ch}
 
 
 \SweaveOpts{echo=FALSE}
@@ -24,9 +23,9 @@ marc.wildi@zhaw.ch}
 %- Makes the section title start with Appendix in the appendix environment
 \newcommand{\Appendix}
 {%\appendix
-\def\thesection{Appendix~\Alph{section}}
-%\def\thesubsection{\Alph{section}.\arabic{subsection}}
-\def\thesubsection{A.\arabic{subsection}}
+  \def\thesection{Appendix~\Alph{section}}
+  %\def\thesubsection{\Alph{section}.\arabic{subsection}}
+  \def\thesubsection{A.\arabic{subsection}}
 }
 
 \begin{document}
@@ -44,17 +43,13 @@ marc.wildi@zhaw.ch}
 
 
 
-%\tableofcontents
-
-\section{Introduction}
-
 
 
 \section{Data and Dependence}
 
 <<label=init,results=hide>>=
-
-rm(list=ls())
+  
+  rm(list=ls())
 
 inst_pack<-rownames(installed.packages())
 if (!"mFilter"%in%inst_pack)
@@ -108,7 +103,7 @@ source(paste(getwd(),"/R/M_SSA_utility_functions.r",sep=""))
 
 
 
- 
+
 path.main<-getwd()
 
 path.pgm<-paste(path.main,"/R/",sep="")
@@ -143,8 +138,6 @@ n<-dim(x_mat)[2]
 len<-dim(x_mat)[1]
 
 # Settings for M-SSA
-ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
-f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 # In-smaple span for VAR
 date_to_fit<-"2008"
 # Model orders
@@ -154,10 +147,11 @@ q<-0
 L<-31
 # Publication lag: one quarter for BIP
 lag_vec<-c(1,rep(0,ncol(x_mat)-1))
+# Forecast excesses: see M-SSA packages
+f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 
 #------------------------------------------------------
-# Section 1: data
-# Plots section data
+# Plots section data dependence
 
 # Plot BIP and diff-log BIP
 file = "./Figures/data.pdf"
@@ -223,10 +217,6 @@ box()
 dev.off()
 
 
-#--------------------------------------------------------
-# Section 2: dependence
-
-
 
 acf_mat<-x_mat
 
@@ -236,8 +226,6 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 acf(x_mat)
 dev.off()
 
-
-# Data without pandemic
 x_mat_wc<-x_mat[which(rownames(x_mat)<2020|rownames(x_mat)>2021),]
 
 
@@ -255,25 +243,25 @@ dev.off()
 if (recompute_results)
 {
   data_fit<-x_mat
-
+  
   set.seed(12)
   V_obj<-VARMA(data_fit,p=p,q=q)
   threshold<-1.5
   V_obj<-refVARMA(V_obj, thres = threshold)
   save(V_obj,file=paste(path.result,"/VAR",sep=""))
-# Without Pandemic  
+  # Without Pandemic  
   data_fit<-x_mat[which(rownames(x_mat)<date_to_fit),]
   set.seed(12)
   V_obj_wc<-VARMA(data_fit,p=p,q=q)
   threshold<-1.5
   V_obj_wc<-refVARMA(V_obj_wc, thres = threshold)
   save(V_obj_wc,file=paste(path.result,"/VAR_wc",sep=""))
-
+  
 } else
 {
-    load(file=paste(path.result,"/VAR",sep=""))
-    load(file=paste(path.result,"/VAR_wc",sep=""))
-
+  load(file=paste(path.result,"/VAR",sep=""))
+  load(file=paste(path.result,"/VAR_wc",sep=""))
+  
 }
 
 # Diagnostics are OK
@@ -311,11 +299,11 @@ for (i in 1:n)#i<-1
   select_vec_i<-select_vec_multi
   colo_i<-colo
   mplot<-xi[i,1:min(10,L)]
-    
+  
   for (j in 2:n)
   {
     mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
-      
+    
   }
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
@@ -348,11 +336,11 @@ for (i in 1:n)#i<-1
   select_vec_i<-select_vec_multi
   colo_i<-colo
   mplot<-xi[i,1:min(10,L)]
-    
+  
   for (j in 2:n)
   {
     mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
-      
+    
   }
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
@@ -366,10 +354,10 @@ dev.off()
 
 
 @
-
-
-
-\subsection{Data}
+  
+  
+  
+  \subsection{Data}
 
 \begin{itemize}
 \item Choice of indicators: BIP, ip, ESI, ifo, spread
@@ -383,7 +371,7 @@ The transformed quarterly series are displayed in Fig. \ref{data}, while Fig. \r
 
 
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/Data.pdf"
+  file = "./Figures/Data.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -392,9 +380,9 @@ cat("\\label{data}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/data_lags.pdf"
+  
+  <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+  file = "./Figures/data_lags.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -403,16 +391,16 @@ cat("\\label{data_lags}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-
-
-
-
-
-\subsection{Dependence}
+  
+  
+  
+  
+  
+  \subsection{Dependence}
 
 We analyze the dependence structure of the data and derive a simple VAR model to establish the multivariate filter. The sample cross-correlation function (CCF) is shown in Figs. \ref{CCF} (entire dataset) and \ref{CCF_wc} (data prior to the pandemic).  
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/CCF.pdf"
+  file = "./Figures/CCF.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -421,8 +409,8 @@ cat("\\label{CCF}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/CCF_wc.pdf"
+  <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+  file = "./Figures/CCF_wc.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -431,9 +419,9 @@ cat("\\label{CCF_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-The CCF confirms the leads and lags illustrated in Fig. \ref{data_lags}, although the strength of the dependence is influenced by the singular readings during the pandemic\footnote{We discard the corresponding data when finalizing the predictor.}. We can now fit a VARMA model, and according to standard diagnostic tests (not shown here), a simple VAR(1) specification aligns with the data. The resulting impulse responses of the model are presented in Figs. \ref{impulse} (full data set) and \eqref{impulse_wc} (prior the pandemic).
+  The CCF confirms the leads and lags illustrated in Fig. \ref{data_lags}, although the strength of the dependence is influenced by the singular readings during the pandemic\footnote{We discard the corresponding data when finalizing the predictor.}. We can now fit a VARMA model, and according to standard diagnostic tests (not shown here), a simple VAR(1) specification aligns with the data. The resulting impulse responses of the model are presented in Figs. \ref{impulse} (full data set) and \eqref{impulse_wc} (prior the pandemic).
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/ma_inv_multi_ip.pdf"
+  file = "./Figures/ma_inv_multi_ip.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -442,8 +430,8 @@ cat("\\label{impulse}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/ma_inv_multi_ip_wc.pdf"
+  <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+  file = "./Figures/ma_inv_multi_ip_wc.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
@@ -452,7 +440,7 @@ cat("\\label{impulse_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-The model summarizes key features of the data, where lagging series (GDP and industrial production, when accounting for publication lags) depend on  indicators leading in relative terms. In particular, the impulse response of the spread (rightmost panel in the figure) suggests the relevance of a univariate model for this specific leading indicator.
+  The model summarizes key features of the data, where lagging series (GDP and industrial production, when accounting for publication lags) depend on  indicators leading in relative terms. In particular, the impulse response of the spread (rightmost panel in the figure) suggests the relevance of a univariate model for this specific leading indicator.
 
 
 \section{Direct Forecasts}\label{direct_forecast}
@@ -461,8 +449,6 @@ The model summarizes key features of the data, where lagging series (GDP and ind
 
 So-called direct forecasts are obtained by regressing the relevant indicators on forward-shifted BIP, accounting for the additional publication lag. For illustration of the concept, we here rely on all indicators and full sample information, excluding the pandemic. In-sample forecasts and the shifted BIP, which serves as the target, are presented in Figs. \ref{direct_wc} (full dataset without the pandemic) and \ref{direct_wc_financial_crisis} (financial crisis) for horizons up to three quarters ahead. 
 <<label=init,results=hide>>=
-# Section 3.1: classic direct forecasts
-
 # Plot of direct forecasts with Pandemic
 par(mfrow=c(2,2))
 # We can specify the selection of macro-indicators for the direct forecast 
@@ -487,6 +473,23 @@ for (h in 0:3)
   direct_forecast<-lm_obj$coef[1]+x_mat[,select_direct_indicator]%*%lm_obj$coef[2:(length(select_direct_indicator)+1)]
   # Note that this is a full-sample predictor (no out-of-sample span)
   
+  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero 
+  
+  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
+  mplot<-cbind(forward_shifted_BIP,direct_forecast)
+  colnames(mplot)<-c("BIP","Direct forecast")
+  colo<-c("black","red")
+  main_title<-paste("BIP shifted by ",h," quarters",sep="")
+  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+  for (i in 1:ncol(mplot))
+  {
+    lines(mplot[,i],col=colo[i])
+    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+  }
+  abline(h=0)
+  axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
+  axis(2)
+  box()
 }
 
 
@@ -495,6 +498,9 @@ file = "./Figures/direct_wc_all.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
 par(mfrow=c(2,2))
+# We can specify the selection of macro-indicators for the direct forecast 
+select_direct_indicator<-c("ifo_c","ESI")
+select_direct_indicator<-select_vec_multi
 
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
@@ -608,8 +614,6 @@ As shown, the performance of direct forecasts sharply declines for larger foreca
 The so-called Hodrick-Prescott filter is a classic tool used in business cycle analysis: the filter is specified by a single smoothing parameter $\lambda$ and the value $\lambda=1600$ is specifically recommended for quarterly data. However, Phillips and Jin (2021) suggest that the HP(1600) filter removes relevant information due to excessive smoothing.  In our context, this oversmoothing issue would be further exacerbated when considering forecast horizons shorter than a year -—an interval inconsistent with the mean duration of up to several years of business cycles, as highlighted by the HP(1600). Consequently, we here select a more adaptive HP(160) 'target' filter. 
 While this choice may appear somewhat arbitrary, an analysis of the filter in the frequency domain confirms a more suitable profile for the corresponding amplitude function, assigning greater weight to yearly components -—relevant in our prediction framework-— than the classic quarterly HP filter. This approach also addresses and controls for undesirable high-frequency noise. See Fig. \ref{hp_160}, which presents both two-sided and (classic) one-sided filters (top panels) along with the associated amplitude functions (bottom panels). We now posit the HP(160) filter as a means to achieve better forecasting performance at larger horizons, noting that a comprehensive technical analysis of the effect of $\lambda$ on the resulting BIP predictor can be conducted using the M-SSA package. 
 <<label=init,results=hide>>=
-# Section 3.2: HP filter
-
 # Target filter: lambda_HP is the single most important hyperparameter, see tutorial 7.1 for a discussion
 lambda_HP<-160
 # Filter length: nearly 8 years is fine for the selected lambda_HP (filter weights decay sufficiently fast)
@@ -698,206 +702,209 @@ cat("\\end{figure}")
 
 Extending the `classic' direct forecast design, we here consider filtered indicators, based on the one-sided HP(160), denoted as HP-C: the filtered indicators are explanatory variables for the regressions on forward-shifted BIP\footnote{Katja and Simon: for each forecast horizon $h=0,1,2,3$ I'm using corresponding forecasts of the real-time filter output, assuming the data to be white noise (assuming an ARMA model does not lead to significantly different results). I think we might ignore these technical details in the paper.}. As in the previous section, we rely on all indicators as well as the full sample estimate for illustration, see Figs.\eqref{direct_hp_forecasts} (all observations with exclusion of the pandemic) and \eqref{direct_hp_forecasts_financial_crisis} (financial crisis). A comparison with the classic direct forecasts in Fig.\eqref{direct_wc_financial_crisis} indicates that the new predictors are slightly less retarded (`faster'). 
 <<label=init,results=hide>>=
-# Section 3.3: HP-filtered data used in regression on future BIP
-
-# Compute filter outputs for forecast horizons 0:6, assuming WN data
-# Forecast horizons
-# Without Pandemic
-h_vec<-0:6
-hp_c_array_wc<-array(dim=c(ncol(x_mat),nrow(x_mat_wc),length(h_vec)))
-for (j in 1:length(h_vec))
-{
-  for (i in 1:ncol(x_mat))
-  {
-# For forecast horizon h_vec[j], the first h_vec[j] filter coefficients are skipped (zeroes are appended at 
-#     the end). 
-#   -This simple rule is optimal if the data is (close to) WN (white noise).
-#   -Log-returns of the indicators are fairly close to WN (one can inspect the ACFs) 
-    hp_c_forecast<-c(hp_c[(h_vec[j]+1):L],rep(0,h_vec[j]))
-    hp_c_array_wc[i,,j]<-filter(x_mat_wc[,i],hp_c_forecast,side=1)
-  }
-}
-dimnames(hp_c_array_wc)[[1]]<-colnames(x_mat_wc)
-dimnames(hp_c_array_wc)[[2]]<-rownames(x_mat_wc)
-dimnames(hp_c_array_wc)[[3]]<-paste("h=",h_vec,sep="")
-
-# Same but data with Pandemic
-h_vec<-0:6
-hp_c_array<-array(dim=c(ncol(x_mat),nrow(x_mat),length(h_vec)))
-for (j in 1:length(h_vec))
-{
-  for (i in 1:ncol(x_mat))
-  {
-# For forecast horizon h_vec[j], the first h_vec[j] filter coefficients are skipped (zeroes are appended at 
-#     the end). 
-#   -This simple rule is optimal if the data is (close to) WN (white noise).
-#   -Log-returns of the indicators are fairly close to WN (one can inspect the ACFs) 
-    hp_c_forecast<-c(hp_c[(h_vec[j]+1):L],rep(0,h_vec[j]))
-    hp_c_array[i,,j]<-filter(x_mat[,i],hp_c_forecast,side=1)
-  }
-}
-dimnames(hp_c_array)[[1]]<-colnames(x_mat)
-dimnames(hp_c_array)[[2]]<-rownames(x_mat)
-dimnames(hp_c_array)[[3]]<-paste("h=",h_vec,sep="")
-
-
-# Compute and plot direct HP forecasts: full sample without pandemic
-file = "./Figures/direct_hp_forecasts.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
-
-par(mfrow=c(2,2))
-f_vec_hp<-t_mat_hp<-NULL
-for (h in 0:3)
-{
-  # Shift BIP forward by publication lag+forecast horizon
-  forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
-  # Regress selected indicators on forward-shifted BIP
-  length(forward_shifted_BIP)
-  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
-  # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
-  sum_obj<-summary(lm_obj)
-  sum_obj<-summary(lm_obj)
-  f_vec_hp<-c(f_vec_hp,sum_obj$fstatistic["value"])
-  t_mat_hp<-rbind(t_mat_hp,sum_obj$coef[-1,4])
-  # Technical note: 
-  # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
-  # -Therefore classic OLS tests for statistical significance are biased
-  # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
   
-  # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
-  # Note that this is a full-sample predictor (no out-of-sample span)
   
-  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
-  mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
-  colnames(mplot)<-c("BIP","Direct forecast")
-  colo<-c("black","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  for (i in 1:ncol(mplot))
+  
+  # Compute filter outputs for forecast horizons 0:6, assuming WN data
+  # Forecast horizons
+  h_vec<-0:6
+  hp_c_array_wc<-array(dim=c(ncol(x_mat),nrow(x_mat_wc),length(h_vec)))
+  for (j in 1:length(h_vec))
   {
-    lines(mplot[,i],col=colo[i])
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+    for (i in 1:ncol(x_mat))
+    {
+      # For forecast horizon h_vec[j], the first h_vec[j] filter coefficients are skipped (zeroes are appended at 
+      #     the end). 
+      #   -This simple rule is optimal if the data is (close to) WN (white noise).
+      #   -Log-returns of the indicators are fairly close to WN (one can inspect the ACFs) 
+      hp_c_forecast<-c(hp_c[(h_vec[j]+1):L],rep(0,h_vec[j]))
+      hp_c_array_wc[i,,j]<-filter(x_mat_wc[,i],hp_c_forecast,side=1)
+    }
   }
-  abline(h=0)
-  axis(1,at=1:nrow(mplot),labels=rownames(mplot))
-  axis(2)
-  box()
-}
-colnames(t_mat_hp)<-select_vec_multi
-rownames(t_mat_hp)<-paste("h=",0:3)
-dev.off()
-
-
-
-# Financial crisis
-file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
-
-par(mfrow=c(2,2))
-
-for (h in 0:3)
-{
-  # Shift BIP forward by publication lag+forecast horizon
-  forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
-  # Regress selected indicators on forward-shifted BIP
-  length(forward_shifted_BIP)
-  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
-  # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
-  sum_obj<-summary(lm_obj)
-  sum_obj$fstatistic  
-  # Technical note: 
-  # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
-  # -Therefore classic OLS tests for statistical significance are biased
-  # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
+  dimnames(hp_c_array_wc)[[1]]<-colnames(x_mat_wc)
+  dimnames(hp_c_array_wc)[[2]]<-rownames(x_mat_wc)
+  dimnames(hp_c_array_wc)[[3]]<-paste("h=",h_vec,sep="")
   
-  # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
-  # Note that this is a full-sample predictor (no out-of-sample span)
-  
-  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
-  mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
-  mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
-  colnames(mplot)<-c("BIP","Direct HP forecast")
-  colo<-c("black","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
-  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-  for (i in 1:ncol(mplot))
+  # Apply HP-C to selected indicators
+  h_vec<-0:6
+  hp_c_array<-array(dim=c(ncol(x_mat),nrow(x_mat),length(h_vec)))
+  for (j in 1:length(h_vec))
   {
-    lines(mplot[,i],col=colo[i])
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+    for (i in 1:ncol(x_mat))
+    {
+      # For forecast horizon h_vec[j], the first h_vec[j] filter coefficients are skipped (zeroes are appended at 
+      #     the end). 
+      #   -This simple rule is optimal if the data is (close to) WN (white noise).
+      #   -Log-returns of the indicators are fairly close to WN (one can inspect the ACFs) 
+      hp_c_forecast<-c(hp_c[(h_vec[j]+1):L],rep(0,h_vec[j]))
+      hp_c_array[i,,j]<-filter(x_mat[,i],hp_c_forecast,side=1)
+    }
   }
-  abline(h=0)
-  axis(1,at=1:nrow(mplot),labels=rownames(mplot))
-  axis(2)
-  box()
-}
-
-dev.off()
+  dimnames(hp_c_array)[[1]]<-colnames(x_mat)
+  dimnames(hp_c_array)[[2]]<-rownames(x_mat)
+  dimnames(hp_c_array)[[3]]<-paste("h=",h_vec,sep="")
+  
+  
+  # Compute and plot direct HP forecasts: full sample without pandemic
+  file = "./Figures/direct_hp_forecasts.pdf"
+  pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+  
+  par(mfrow=c(2,2))
+  f_vec_hp<-t_mat_hp<-NULL
+  for (h in 0:3)
+  {
+    # Shift BIP forward by publication lag+forecast horizon
+    forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
+    # Regress selected indicators on forward-shifted BIP
+    length(forward_shifted_BIP)
+    lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
+    # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
+    sum_obj<-summary(lm_obj)
+    sum_obj<-summary(lm_obj)
+    f_vec_hp<-c(f_vec_hp,sum_obj$fstatistic["value"])
+    t_mat_hp<-rbind(t_mat_hp,sum_obj$coef[-1,4])
+    # Technical note: 
+    # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
+    # -Therefore classic OLS tests for statistical significance are biased
+    # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
+    
+    # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
+    direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
+    # Note that this is a full-sample predictor (no out-of-sample span)
+    
+    # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
+    mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
+    colnames(mplot)<-c("BIP","Direct forecast")
+    colo<-c("black","red")
+    main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+    plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+    for (i in 1:ncol(mplot))
+    {
+      lines(mplot[,i],col=colo[i])
+      mtext(colnames(mplot)[i],col=colo[i],line=-i)
+    }
+    abline(h=0)
+    axis(1,at=1:nrow(mplot),labels=rownames(mplot))
+    axis(2)
+    box()
+  }
+  colnames(t_mat_hp)<-select_vec_multi
+  rownames(t_mat_hp)<-paste("h=",0:3)
+  dev.off()
+  
+  
+  
+  # Compute and plot direct HP forecasts: financial crisis
+  file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
+  pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+  
+  par(mfrow=c(2,2))
+  
+  for (h in 0:3)
+  {
+    # Shift BIP forward by publication lag+forecast horizon
+    forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
+    # Regress selected indicators on forward-shifted BIP
+    length(forward_shifted_BIP)
+    lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
+    # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
+    sum_obj<-summary(lm_obj)
+    sum_obj$fstatistic  
+    # Technical note: 
+    # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
+    # -Therefore classic OLS tests for statistical significance are biased
+    # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
+    
+    # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
+    direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
+    # Note that this is a full-sample predictor (no out-of-sample span)
+    
+    # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
+    mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
+    mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
+    colnames(mplot)<-c("BIP","Direct HP forecast")
+    colo<-c("black","red")
+    main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+    plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+    for (i in 1:ncol(mplot))
+    {
+      lines(mplot[,i],col=colo[i])
+      mtext(colnames(mplot)[i],col=colo[i],line=-i)
+    }
+    abline(h=0)
+    axis(1,at=1:nrow(mplot),labels=rownames(mplot))
+    axis(2)
+    box()
+  }
+  
+  dev.off()
 @
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/direct_hp_forecasts.pdf"
-cat("\\begin{figure}[H]")
-cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.", sep = "")
-cat("\\label{direct_hp_forecasts}}", sep = "")
-cat("\\end{center}")
-cat("\\end{figure}")
-@
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
-cat("\\begin{figure}[H]")
-cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct HP forecasts over the curse of the financial crisis.", sep = "")
-cat("\\label{direct_hp_forecasts_financial_crisis}}", sep = "")
-cat("\\end{center}")
-cat("\\end{figure}")
-@
-Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
-<<label=ats_mba_2,echo=FALSE,results=tex>>=
-
-mat_re<-rbind(f_vec_unfiltered,f_vec_hp)
-rownames(mat_re)<-c("Direct forecast","Direct HP forecast")
-colnames(mat_re)<-paste("h=",0:3,sep="")
-mat1<-round(mat_re,3)
-#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
-#center = "centering", file = "", floating = FALSE)
-xtable(mat1, dec = 1,digits=rep(3,dim(mat_re)[2]+1),
-paste("F-statistics of direct forecasts and direct HP forecasts for forecast horizons $h=0,1,2,3$: fully in-sample.  "),
-label=paste("f_stat",sep=""),
-center = "centering", file = "", floating = FALSE)
-@
-We now propose a more refined causal filter design aiming for statistical significance of the resulting predictor at longer forecast horizons, out-of-sample.   
-
-
-
-
-\section{Multivariate Causal Filter: M-SSA}
-
-The application of the one-sided HP-C filter to the indicators has demonstrated improvements in forecast performance. However, the univariate nature of this filter limits its ability to leverage information from the cross-section, as supported by leading indicators. Additionally, the noise suppression capability of the one-sided filter is compromised, as illustrated by high-frequency leakage of the amplitude function in Fig. \eqref{hp_160} and further elaborated upon by Wildi (2025). To address these limitations, we propose an extension of the Smooth Sign Accuracy (SSA) framework introduced by Wildi (2025).
-
-
-\subsection{Optimization criterion}
-
-
-
-Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{i1},...,x_{it})'$. Let $\mathbf{z}_t=(z_{1},...,z_t)$  denote a target series, which typically lies outside the linear space spanned by $\mathbf{X}_t$  (and is unknown at time $t$). For simplicity, we assume stationarity of all time series involved. In this framework, $\mathbf{X}_t$ corresponds to a matrix of selected economic indicators with $n=\Sexpr{length(select_vec_multi)}$, and $z_{it}$   is the output of a two-sided HP(160) filter applied to the $i$-th indicator, $i=1,...,\Sexpr{length(select_vec_multi)}$. Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y^i_{t}=\sum_{j=1}^ny^i_{jt}$, where $y^i_{jt}=\mathbf{b}^i_j~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b^i_{jk}x_{jk}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}^i$, with columns $\mathbf{b}^i_{j}$ of fixed length $L$, $j=1,...,\Sexpr{length(select_vec_multi)}$, assigning weight to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
+  
+  
+    <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+    file = "./Figures/direct_hp_forecasts.pdf"
+  cat("\\begin{figure}[H]")
+  cat("\\begin{center}")
+  cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+  cat("\\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.", sep = "")
+  cat("\\label{direct_hp_forecasts}}", sep = "")
+  cat("\\end{center}")
+  cat("\\end{figure}")
+  @
+  
+    <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+    file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
+  cat("\\begin{figure}[H]")
+  cat("\\begin{center}")
+  cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+  cat("\\caption{Direct HP forecasts over the curse of the financial crisis.", sep = "")
+  cat("\\label{direct_hp_forecasts_financial_crisis}}", sep = "")
+  cat("\\end{center}")
+  cat("\\end{figure}")
+  @
+    Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
+  <<label=ats_mba_2,echo=FALSE,results=tex>>=
+    
+    mat_re<-rbind(f_vec_unfiltered,f_vec_hp)
+  rownames(mat_re)<-c("Direct forecast","Direct HP forecast")
+  colnames(mat_re)<-paste("h=",0:3)
+  mat1<-round(mat_re,3)
+  #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+  #center = "centering", file = "", floating = FALSE)
+  xtable(mat1, dec = 1,digits=rep(3,dim(mat_re)[2]+1),
+         paste("F-statistics of direct forecasts and direct HP forecasts for forecast horizons $h=0,1,2,3$: fully in-sample.  "),
+         label=paste("f_stat",sep=""),
+         center = "centering", file = "", floating = FALSE)
+  @
+    We now propose a more refined causal filter design aiming for statistical significance of the resulting predictor at longer forecast horizons, out-of-sample.   
+  
+  
+  
+  
+  \section{Multivariate Causal Filter: M-SSA}
+  
+  The application of the one-sided HP-C filter to the indicators has demonstrated improvements in forecast performance. However, the univariate nature of this filter limits its ability to leverage information from the cross-section, as supported by leading indicators. Additionally, the noise suppression capability of the one-sided filter is compromised, as illustrated by high-frequency leakage of the amplitude function in Fig. \eqref{hp_160} and further elaborated upon by Wildi (2025). To address these limitations, we propose an extension of the Smooth Sign Accuracy (SSA) framework introduced by Wildi (2025).
+  
+  
+  \subsection{Optimization criterion}
+  
+  
+  
+  Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{i1},...,x_{it})'$. Let $\mathbf{z}_t=(z_{1},...,z_t)$  denote a target series, which typically lies outside the linear space spanned by $\mathbf{X}_t$  (and is unknown at time $t$). For simplicity, we assume stationarity of all time series involved. In this framework, $\mathbf{X}_t$ corresponds to a matrix of selected economic indicators with $n=\Sexpr{length(select_vec_multi)}$, and $z_{it}$   is the output of a two-sided HP(160) filter applied to the $i$-th indicator, $i=1,...,\Sexpr{length(select_vec_multi)}$. Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y^i_{t}=\sum_{j=1}^ny^i_{jt}$, where $y^i_{jt}=\mathbf{b}^i_j~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b^i_{jk}x_{jk}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}^i$, with columns $\mathbf{b}^i_{j}$ of fixed length $L$, $j=1,...,\Sexpr{length(select_vec_multi)}$, assigning weight to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
 For the sake of clarity, we now omit the upper-case index  $i$ for all variables, assuming $z_t=z^{i_0}_{t}$ for some fixed $i_0$.% Additionally, we assume a fixed filter length $L$, such that $\mathbf{B}^i_t=\mathbf{B}_t=\mathbf{B}$, which has dimension $L\times \Sexpr{length(select_vec_multi)}$. 
 The task of `tracking'  a target can be formalized in different ways; here, we focus on the target correlation $\rho(z,y,h)$ between $y_t$ and $z_{t+h}$, where $h\geq 0$ denotes the forecast horizon (backcasting with $h<0$ is ignored in this context). To streamline the notation and avoid unnecessary complexity, we assume a fixed horizon, say $h=h_0$, so that we may drop the reference to $h$ in our notation. In the univariate case ($n=1$), Wildi (2025) proposes the Simple Sign Accuracy (SSA) as an optimization criterion for this task:
-\begin{eqnarray}\label{critssa}
-\left.\begin{array}{c}\rho(z,y)\to\max\\
-\rho(y,1)=\rho_1\end{array}\right\}.
-\end{eqnarray}
-Objective function and constraint are expressed in terms of correlations, namely the target correlation $\rho(z,y)$ between target and predictor and the lag-one autocorrelation $\rho(y,1)$ of the predictor. The parameter $\rho_1$ governs the smoothness of the predictor: higher values of $\rho_1$ generally promote smoother trajectories of $y_t$. Formally, assuming that the process $x_t$ is centered (zero-mean), Wildi (2024) establishes a connection between $\rho(y,1)$ and the expected duration between consecutive zero-crossings (sign changes) of $y_t$, the so-called holding time, denoted by $ht(y)$:
-\begin{eqnarray*}\label{ht}
-ht(y)=\frac{\pi}{\arccos(\rho(y,1))}.
-\end{eqnarray*}
-Since the non-linear transformation involved is strictly monotonic, the SSA criterion can be reformulated as the optimization problem:
-\begin{eqnarray}\label{critssaht}
-\left.\begin{array}{c}\rho(z,y)\to\max\\
-\frac{\arccos(\rho(y,1))}{\pi}=1/ht_1\end{array}\right\},
+    \begin{eqnarray}\label{critssa}
+  \left.\begin{array}{c}\rho(z,y)\to\max\\
+  \rho(y,1)=\rho_1\end{array}\right\}.
+  \end{eqnarray}
+  Objective function and constraint are expressed in terms of correlations, namely the target correlation $\rho(z,y)$ between target and predictor and the lag-one autocorrelation $\rho(y,1)$ of the predictor. The parameter $\rho_1$ governs the smoothness of the predictor: higher values of $\rho_1$ generally promote smoother trajectories of $y_t$. Formally, assuming that the process $x_t$ is centered (zero-mean), Wildi (2024) establishes a connection between $\rho(y,1)$ and the expected duration between consecutive zero-crossings (sign changes) of $y_t$, the so-called holding time, denoted by $ht(y)$:
+    \begin{eqnarray*}\label{ht}
+  ht(y)=\frac{\pi}{\arccos(\rho(y,1))}.
+  \end{eqnarray*}
+  Since the non-linear transformation involved is strictly monotonic, the SSA criterion can be reformulated as the optimization problem:
+    \begin{eqnarray}\label{critssaht}
+  \left.\begin{array}{c}\rho(z,y)\to\max\\
+  \frac{\arccos(\rho(y,1))}{\pi}=1/ht_1\end{array}\right\},
 \end{eqnarray}
 where the smoothness parameter $1/ht_1$ expresses the rate of zero-crossings of the predictor\footnote{Formally, the exact relationship between the zero-crossing rate and the lag-one autocorrelation of the predictor assumes Gaussian time series, but Wildi (2024) demonstrates robustness to deviations from this assumption.}. \\
 
@@ -910,13 +917,11 @@ Second, the concept can be extended to a multivariate framework, denoted as M-SS
 
 For illustration, we consider the target $z_t$ generated by the output of the two-sided HP(160) filter applied to BIP, which we denote by HP-BIP. We compare four nowcast methods: the univariate HP-C, the multivariate MSE predictor (denoted by M-MSE), and two M-SSA predictors based on different HT constraints. The first design enforces $ht_1=1.5ht_{MSE}$, aiming to produce approximately $33\%$ fewer zero-crossings than the M-MSE predictor over the long term. The second design sets $ht_1=ht_{HP-C}$, ensuring that its zero-crossing rate matches that of the univariate HP-C. These constraints are intended to systematically compare the effects of different levels of smoothness on prediction performance. The estimation of the underlying VAR(1) model employed for the M-MSE and M-SSA nowcasts is based on data observations up to January 2008. This approach ensures a lengthy out-of-sample period that encompasses significant events such as the financial crisis, the sovereign debt crisis, and the COVID-19 pandemic. Further details and background information are available in Wildi (2025b). All computations are performed utilizing the M-SSA package, as documented in Wildi (2025b).
 <<label=init,results=hide>>=
-# Section 4.2: Nowcast M-SSA and M-MSE
 
 # Compute and compare M-SSA and M-MSE nowcasts
 h_vec<-0
 
-# We rely on data with Pandemic
-#   -M-SSA is not affected since the in-sample span ends in 2008
+
 if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
@@ -930,9 +935,9 @@ if (recompute_results)
   ht_hp_c<-8
 
 
-  ht_mssa_vec_HP_C<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
+  ht_mssa_vec<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
 
-  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi)
+  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
 
   save(mssa_indicator_obj,file=paste(path.result,"/nowcast_obj",sep=""))
   save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
@@ -1001,6 +1006,7 @@ for (i in 1:ncol(mplot))
 
 dev.off()
 
+dim(mmse_array)
 
 mssa<-t(mssa_array[,,1])
 mmse<-t(mmse_array[,,1])
@@ -1089,7 +1095,6 @@ The influence of the forecast horizon on the M-SSA design is depicted in Fig. \e
 
 M-SSA predictors are compared to the traditional univariate HP-C in Fig. \eqref{multivar_vs_univar} across the periods of the financial crisis (top panels) and the COVID-19 pandemic (bottom panels), for forecast horizons $h=0,...,6$. The nowcast from the previous section is included for reference. All series are standardized to facilitate visual comparison. The primary distinction of the M-SSA approach is the progressive left-shift of the predictor as a function of $h$; this shift becomes more pronounced with increasing $h$ and appears to be consistent across all levels, including the peaks and troughs of the series. Conversely, the positions of peaks and troughs in the HP-C series appear to remain largely unaffected by variations in $h$. The more pronounced and systematic left-shift observed in the M-SSA forecasts can be partly attributed to the increasing weight assigned to the additional indicators leading BIP, which dominate the BIP component at larger forecast horizons. %In comparison, the effect of phase shifts—arising from the cyclical nature of the HP-filter and manifesting in the HP-C forecasts (shown in the left panels)—seems less systematic. 
 <<label=init,results=hide>>=
-# Section 4.3: M-SSA forecasts
 # Forecast horizons: M-SSA is optimized for each forecast horizon in h_vec 
 h_vec<-0:6
 
@@ -1115,8 +1120,6 @@ predictor_mssa_mat<-mssa_indicator_obj$predictor_mssa_mat
 #   -For each forecast horizon and for each indicator we obtain the M-SSA predictor when targeting 
 #     the two-sided HP applied to this indicator, see exercise 1.1 below
 mssa_array<-mssa_indicator_obj$mssa_array
-# Same but M-MSE
-mmse_array<-mssa_indicator_obj$mmse_array
 
 # M-SSA outputs targeting HP-BIP at forecasts horizons h=0,...,6
 mssa_array["BIP",,]
@@ -1136,16 +1139,14 @@ file = "./Figures/bk_h.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
 par(mfrow=c(1,2))
-# h=0, see above
 mplot<-bk
 colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main="M-SSA: h=0")
 for (i in 1:ncol(mplot))
   mtext(colnames(mplot)[i],col=colo[i],line=-i)
-
-# h=4
 bk<-matrix(mssa_indicator_obj$bk_x_array[select,select,,"h=4"],nrow=L)
 colnames(bk)<-colnames(gammak)<-select_vec_multi
+
 mplot<-bk
 colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main="M-SSA: h=4")
@@ -1244,8 +1245,7 @@ box()
 
 dev.off()
 
-#----------------------------------------------------------------------------
-# Section 5.1
+
 # M-SSA predictor: for each forecast horizon h=0,...,6 this is the equally-weighted average of all M-SSA outputs
 file = "./Figures/mssa_predictor.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
@@ -1299,18 +1299,14 @@ dev.off()
 
 
 
-#------------------------------------------------------------
-# Section 5.2
+
 
 
 # Compute performances of original M-SSA predictor
-#   -Predictor: equal weighting of all M-SSA components
-#   -Target: two-sided HP applied to BIP (easier to forecast than BIP)
-
 # Select start of out-of-sample span (entire financial crisis is out-of-sample)
 in_out_separator<-"2007"
 # We can specify the selection of macro-indicators for the direct forecast, see tutorial 7.3
-#   Note: these results will not be used here (but we need to specify a selection anyway)
+# Note: these results will not be used in this tutorial (but we need to specify a selection anyway)
 select_direct_indicator<-c("ifo_c","ESI")
 perf_obj<-compute_perf_func(x_mat,target_shifted_mat,predictor_mssa_mat,predictor_mmse_mat,in_out_separator,select_direct_indicator,h_vec) 
 
@@ -1318,9 +1314,10 @@ perf_obj<-compute_perf_func(x_mat,target_shifted_mat,predictor_mssa_mat,predicto
 p_value_HAC_HP_BIP_oos_wc<-perf_obj$p_value_HAC_HP_BIP_oos_wc
 
 p_value_HAC_HP_BIP_oos_wc
-# Strong significance
-# Systematic pattern: minimal p-Values on diagonal of matrix
-# Can predict low-frequency part of BIP
+# The p-values are empirical significance levels of the regressions of the (out-of-sample) M-SSA predictors
+#   (optimized for forecast horizon h in h_vec: the columns of the matrix) on BIP shifted forward by shift 
+#   plus publication lag (the rows of the matrix)
+
 
 
 @
@@ -1426,8 +1423,7 @@ Tables \eqref{p_val_wc} and \eqref{rRMSE_mSSA_comp_mean_wc} present HAC-adjusted
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
 
 <<label=init,results=hide>>=
-# Section 5.3
-
+recompute_results<-F
 sel_vec_pred<-c("BIP")
 
 shift_vec<-0:5
@@ -1450,11 +1446,11 @@ if (recompute_results)
   pb <- txtProgressBar(min=min(h_vec),max=max(h_vec)-1,style=3)
   
 # The following double loop computes all combinations of forward-shifts (of BIP) and forecast horizons (of M-SSA)
-  for (shift in shift_vec)#shift<-1
+  for (shift in shift_vec)#shift<-5
   {
 # Progress bar: see R-console
     setTxtProgressBar(pb, shift)
-    for (j in h_vec)#j<-0
+    for (j in h_vec)#j<-6
     {
 # Horizon j corresponds to k=j+1-th entry of array    
       k<-j+1
@@ -1601,7 +1597,7 @@ rRMSE_mSSA_direct_mean_without_covid[,1]
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 
 
-# P-values
+
 mat1<-round(p_mat_mssa_components_without_covid,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
@@ -1610,7 +1606,7 @@ paste("HAC adjusted p-values of regressions of M-SSA component predictors optimi
 label=paste("p_val_wc",sep=""),
 center = "centering", file = "", floating = FALSE)
 
-# rRMSEs: M-SSA vs. mean
+
 mat1<-round(rRMSE_mSSA_comp_mean_without_covid,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
@@ -1627,13 +1623,12 @@ center = "centering", file = "", floating = FALSE)
 
 
 <<label=init,results=hide>>=
-# Section 6.1: revisions (regression)
 
 # Select h and shift
 h<-4
 shift<-4
 
-# Plot final predictor (based on full-sample regression of M-SSA on future BIP)
+
 file = "./Figures/revisions1.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -1657,8 +1652,25 @@ axis(2)
 box()
 
 dev.off()
+# Notes: 
+# 1. The above plot compares real-time and final predictors for maximal shift and maximal forecast horizon
+#     -Last run in the double-loop of exercise 1.3.5 above 
+#     -Similar plots could be obtained for all combinations of forward-shift and forecast horizon (with no systematic change/difference)
+# 2. The last data point in the above plot does not correspond to Jan-2025 (because the target is forward-shifted and NAs are removed)
+tail(mplot)
+#     -The purpose of the above plot is to illustrate revisions 
+#     -It does not show the current forecast at the series end (Jan-2025)
 
-# Plot the regression weights 
+# Comments (revisions): 
+# -To the left of the plot, the real-time predictor is volatile because the sample is short (revisions are large)
+# -With increasing sample size (from left to right), the real-time predictor approaches the final estimate 
+# -The vertical black line in the plot indicates the start of the evaluation period, relevant for 
+#     out-of-sample MSEs and p-value statistics, see exercise 1.3.5 above
+# -As time progresses, we expect better out-of-sample forecast performances because the part imputable to the 
+#   above revision error will decrease
+
+# 2.2 We now examine the effect of the revisions on the regression weights 
+
 file = "./Figures/revisions2.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 
@@ -1683,9 +1695,7 @@ box()
 dev.off()
 @
 Revisions refer to changes in the historical values of a time series resulting from updates with new information. Revisions of the M-SSA component predictor can arise from data updates, which we do not analyze further here\footnote{Except for BIP, the other indicators are not or only slightly revised. Moreover, the smoothing effect of filters mitigates the effect of revisions when compared to direct forecasts.}, or from updates to predictor parameters. The latter can be further separated into changes in VAR parameters and regression weights. 
-
-
-\subsection{Revisions: Regression Equation Only}
+\subsection{Revisions: Regression Parameters}
 
 For illustration, we here focus on a forecast horizon $h=\Sexpr{h}$ for the BIP component predictor and a forward-shift $shift=\Sexpr{shift}$ for BIP, noting that similar results would be obtained with other combinations of $h$ and $shift$. 
 %???Check left-shift of MA-inversion of M-SSA and M-MSE
@@ -1715,11 +1725,10 @@ cat("\\end{figure}")
 @
 
 
-\subsection{Revisions: M-SSA Only}
+\subsection{Revisions: M-SSA}
 
 The second source of revisions in the M-SSA component predictor arises from updates to the VAR model within the M-SSA filter. We compare the original estimates, based on data up to January 2008, with the final estimates obtained using $h=\Sexpr{h}$ and $shift=\Sexpr{shift}$ (similar findings apply to other values of forecast horizon and forward-shift).  For consistency, we excluded the entire pandemic episode from the data. Fig.\eqref{up_dated_ma_inv_multi_ip} compares the MA-inversions (impulse responses) of the BIP equation derived from the 'old' and the updated VAR models: unlike the former, the latter incorporates ESI as an additional explanatory variable for BIP. Fig.\eqref{bk_2008_all} illustrates the resulting effect on the M-SSA filter targeting HP-BIP at forecast horizon $h=\Sexpr{h}$. The updated filter (right panel) assigns more weight to the additional 'leading' indicators relative to BIP. Finally, Fig.\eqref{revisions3} compares the M-SSA BIP predictors. To isolate the effect of the regression revision, the figure displays standardized series. The update to the VAR model influences the left-shift of the predictor (blue line), which appears slightly 'faster' than the original predictor (red line). This suggests that the out-of-sample performance of the M-SSA component predictor may be better than reported in Section \eqref{oosp}, which is based on the fixed and increasingly outdated version of M-SSA.
 <<label=init,results=hide>>=
-# Section 6.2: revisions due to VAR-updating
 
 # Up-date M-SSA and M-MSE
 # In-sample span for VAR, use all data for VAR
@@ -2068,3 +2077,4 @@ center = "centering", file = "", floating = FALSE)
 
 
 \end{document}
+
