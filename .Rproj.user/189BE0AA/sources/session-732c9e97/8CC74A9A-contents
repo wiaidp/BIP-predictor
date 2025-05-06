@@ -46,7 +46,7 @@ fig_size<-4
 
 #------------------------------
 
-recompute_results<-F
+recompute_results<-T
 
 paper<-"BIP_predictor"
 
