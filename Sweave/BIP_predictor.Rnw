@@ -121,7 +121,7 @@ fig_size<-4
 
 #------------------------------
 
-recompute_results<-F
+recompute_results<-T
 
 
 
@@ -992,7 +992,6 @@ for (i in 1:ncol(mplot))
 
 dev.off()
 
-dim(mmse_array)
 
 mssa<-t(mssa_array[,,1])
 mmse<-t(mmse_array[,,1])
@@ -1106,6 +1105,8 @@ predictor_mssa_mat<-mssa_indicator_obj$predictor_mssa_mat
 #   -For each forecast horizon and for each indicator we obtain the M-SSA predictor when targeting 
 #     the two-sided HP applied to this indicator, see exercise 1.1 below
 mssa_array<-mssa_indicator_obj$mssa_array
+# Same but M-MSE
+mmse_array<-mssa_indicator_obj$mmse_array
 
 # M-SSA outputs targeting HP-BIP at forecasts horizons h=0,...,6
 mssa_array["BIP",,]
