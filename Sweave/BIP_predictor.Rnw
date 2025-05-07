@@ -835,7 +835,7 @@ file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct HP forecasts over the curse of the financial crisis.", sep = "")
+cat("\\caption{Direct HP forecasts over the curse of the financial crisis:  regression based on all indicators and full sample information.", sep = "")
 cat("\\label{direct_hp_forecasts_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
