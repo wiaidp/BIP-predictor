@@ -1072,7 +1072,7 @@ The results validate that the smoothing constraint incorporated into the multiva
 The previously described nowcast example can be systematically extended to generate forecasts of the target variable. This extension utilizes the same empirical framework, incorporating an assumed $50\%$ increase in the HT over the M-MSE, and considers forward shifts of $h=1,...,6$  quarters of HP-BIP (note that M-SSA does not target BIP explicitly). %This approach facilitates the assessment of forecast performance across multiple horizons within the established methodological context. 
 The influence of the forecast horizon on the M-SSA design is depicted in Fig. \eqref{bk_h}, which contrasts nowcast and one-year-ahead forecast: as $h$ increases (right panel), the scaling factor diminishes (zero-shrinkage), attributable to increased forecast uncertainty, and there is a relative amplification of the influence of the relevant indicators, leading BIP in relative terms.Additionally, a phase shift associated with the filter applied to BIP is observed (red line, right panel), reflecting the cyclical characteristics inherent to the HP filter. While this phase effect might cause an effective sign change in the BIP filter output as $h$ increases—something to be avoided in this context—the low-pass filters assigned to the additional 'leading' indicators (green and violet lines, right panel) continue to effectively track the low-frequency components of HP-BIP. The combination of the phase effect, applied to BIP, and level-tracking through these additional indicators enables more refined and effective tracking of the target compared to univariate forecasts, which rely solely on the phase-effect of the filter to look ahead of time.\\
 
-M-SSA predictors are compared to the traditional univariate HP-C in Fig. \eqref{multivar_vs_univar} across the periods of the financial crisis (top panels) and the COVID-19 pandemic (bottom panels), for forecast horizons $h=0,...,6$. The nowcast from the previous section is included for reference. All series are standardized to facilitate visual comparison. The primary distinction of the M-SSA approach is the progressive left-shift of the predictor as a function of $h$; this shift becomes more pronounced with increasing $h$ and appears to be consistent across all levels, including the peaks and troughs of the series. Conversely, the positions of peaks and troughs in the HP-C series appear to remain largely unaffected by variations in $h$. The more pronounced and systematic left-shift observed in the M-SSA forecasts can be partly attributed to the increasing weight assigned to the additional indicators leading BIP, which dominate the BIP component at larger forecast horizons. %In comparison, the effect of phase shifts—arising from the cyclical nature of the HP-filter and manifesting in the HP-C forecasts (shown in the left panels)—seems less systematic. 
+M-SSA predictors are compared to the traditional univariate HP-C in Figs. \eqref{multivar_vs_univar} and \eqref{mssa_hpc_financial_crisis}. In the first figure, we compare both filters across the periods of the financial crisis (top panels) and the COVID-19 pandemic (bottom panels), for forecast horizons $h=0,...,6$. The nowcast from the previous section is included for reference. In the second figure we compare both filters to the forward-shifted BIP for shifts larger than two quarters. All series are standardized to facilitate visual comparison. The primary distinction of the M-SSA approach is the progressive left-shift of the predictor as a function of $h$; this shift becomes more pronounced with increasing $h$ and appears to be consistent across all levels, including the peaks and troughs of the series. Conversely, the positions of peaks and troughs in the HP-C series appear to remain largely unaffected by variations in $h$. The more pronounced and systematic left-shift observed in the M-SSA forecasts can be partly attributed to the increasing weight assigned to the additional indicators leading BIP, which dominate the BIP component at larger forecast horizons. %In comparison, the effect of phase shifts—arising from the cyclical nature of the HP-filter and manifesting in the HP-C forecasts (shown in the left panels)—seems less systematic. 
 <<label=init,results=hide>>=
 # Section 4.3: M-SSA forecasts
 # Forecast horizons: M-SSA is optimized for each forecast horizon in h_vec 
@@ -1083,10 +1083,15 @@ if (recompute_results)
 # Run the wrapper, see tutorial 7.2
 #   -The function computes M-SSA for each forecast horizon h in h_vec
   mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+# Without pandemic  
+  mssa_indicator_obj_wc<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+
   save(mssa_indicator_obj,file=paste(path.result,"/mssa_indicator_obj",sep=""))
+  save(mssa_indicator_obj_wc,file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
 } else
 {
   load(file=paste(path.result,"/mssa_indicator_obj",sep=""))
+  load(file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
 }
 # Target series: output of two-sided HP applied to BIP: 
 #   -This is the target for which the original M-SSA predictor (tutorial 7.3) has been designed
@@ -1229,6 +1234,42 @@ box()
 
 dev.off()
 
+
+# Plot of M-SSA and HP-C, only financial crisis
+file = "./Figures/mssa_hpc_financial_crisis.pdf"
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+
+par(mfrow=c(2,2))
+for (h in 3:6)#h<-1
+{
+  # Shift BIP forward by publication lag+forecast horizon
+  forward_shifted_BIP<-c(x_mat[(1+lag_vec[1]+h):nrow(x_mat),"BIP"],rep(NA,h+lag_vec[1]))
+
+  # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
+#  mplot<-scale(cbind(forward_shifted_BIP,hp_c_array_wc[select,,h+1],mssa_array_wc[select,,h+3]))
+#  mplot<-scale(cbind(forward_shifted_BIP,hp_c_array_wc[select,,h+1],predictor_mssa_mat_wc[,h+3]))
+  mplot<-scale(cbind(forward_shifted_BIP,mssa_array["BIP",,h+1],hp_c_array["BIP",,h+1]))
+  rownames(mplot)<-rownames(x_mat)
+
+  mplot<-mplot[which(rownames(mplot)>2006&rownames(mplot)<2011),]
+  colnames(mplot)<-c("BIP","M-SSA","HP-C")
+  colo<-c("black","blue","red")
+  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+  plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+  for (i in 1:ncol(mplot))
+  {
+    lines(mplot[,i],col=colo[i])
+    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+  }
+  abline(h=0)
+  axis(1,at=1:nrow(mplot),labels=rownames(mplot))
+  axis(2)
+  box()
+}
+dev.off()
+
+
+
 #----------------------------------------------------------------------------
 # Section 5.1
 # M-SSA predictor: for each forecast horizon h=0,...,6 this is the equally-weighted average of all M-SSA outputs
@@ -1324,12 +1365,22 @@ file = "./Figures/multivar_vs_univar.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Now- and forecasts of HP-BIP for $h=0,...,6$: HP-C (left) vs. M-SSA (right) across the financial crisis (top) and the pandemic (bottom).", sep = "")
+cat("\\caption{Now- and forecasts of HP-BIP for $h=0,...,6$: HP-C (top) vs. M-SSA (bottom) across the financial crisis (left) and the pandemic (right).", sep = "")
 cat("\\label{multivar_vs_univar}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
 
+<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+file = "./Figures/mssa_hpc_financial_crisis.pdf"
+cat("\\begin{figure}[H]")
+cat("\\begin{center}")
+cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\caption{Forward-shifted BIP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis.", sep = "")
+cat("\\label{mssa_hpc_financial_crisis}}", sep = "")
+cat("\\end{center}")
+cat("\\end{figure}")
+@
 
 
 \section{M-SSA Component Predictor}
