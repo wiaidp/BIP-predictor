@@ -120,7 +120,7 @@ path.result<-paste(path.main,"/Results/",sep="")
 fig_size<-4
 
 #------------------------------
-
+# Section 2.1: data
 recompute_results<-F
 
 
@@ -224,7 +224,7 @@ dev.off()
 
 
 #--------------------------------------------------------
-# Section 2: dependence
+# Section 2.2: dependence
 
 
 
@@ -1035,7 +1035,7 @@ rownames(mat_cor_ht)<-c("Target correlation","HT")
 
 @
 
-Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, where increased smoothing achieved through the M-SSA method manifests as a distinct pattern in the filter weights, notably influencing the rate of decay across increasing lags. The resulting filtered series, presented in Figure \ref{mssa_msse_now}, are standardized to enable direct comparisons. The M-SSA nowcast adheres to the specified constraint, exhibiting approximately one-third fewer zero-crossings than the M-MSE, confirming the effectiveness of the smoothness control imposed during the design. This is further corroborated by Table \ref{corhtnow}, which reports empirical holding times and target correlations. %: increased smoothness is obtained by a slight degradation of tracking accuracy, highlighting the inherent trade-off (prediction dilemma) between smoothness (zero-crossing rate) and predictive accuracy (target correlation) in the M-SSA criterion.
+Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, where increased smoothing achieved through the M-SSA method manifests as a distinct pattern in the filter weights, notably influencing the rate of decay across increasing lags. The resulting filtered series, presented in Figure \ref{mssa_msse_now}, are standardized to enable direct comparisons. The M-SSA nowcast adheres to the specified constraint, exhibiting approximately one-third fewer zero-crossings than the M-MSE, confirming the effectiveness of the smoothness control imposed during the design. This is further corroborated by Table \ref{corhtnow}, which reports empirical holding times and target correlations. Increased smoothness achieved by the M-SSA comes at the cost of a slight reduction in tracking accuracy, as indicated by a marginally lower target correlation. This highlights the inherent trade-off—often referred to as the prediction dilemma—between smoothness (zero-crossing rate) and predictive accuracy (target correlation) within the M-SSA criterion.
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
 file = "./Figures/bk_gammak.pdf"
 cat("\\begin{figure}[H]")
