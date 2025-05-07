@@ -1051,7 +1051,7 @@ file = "./Figures/mssa_msse_now.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Nowcasting: two-sided HP(160) applied to BIP (target, black),  M-SSA (blue) and and M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The first L=31 observations are lost due to initialization and the two-sided filter does not extend to the sample end.", sep = "")
+cat("\\caption{Two-sided HP(160) applied to BIP (target, black) and nowcasts:  M-SSA (blue) and  M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The first L=31 observations are lost due to initialization and the two-sided filter does not extend to the sample end.", sep = "")
 cat("\\label{mssa_msse_now}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
