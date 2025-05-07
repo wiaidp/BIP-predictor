@@ -1,26 +1,26 @@
 {
-    "id": "90E0BC36",
+    "id": "AFCE31BE",
     "path": "C:/Users/marca/OneDrive/2025/BIP-predictor/Sweave/BIP_predictor.Rnw",
     "project_path": "Sweave/BIP_predictor.Rnw",
     "type": "sweave",
-    "hash": "0",
+    "hash": "1360798064",
     "contents": "",
-    "dirty": true,
-    "created": 1746518410870.0,
+    "dirty": false,
+    "created": 1746623288126.0,
     "source_on_save": false,
-    "relative_order": 2,
+    "relative_order": 3,
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "1031,19",
-        "scrollLine": "1011"
+        "cursorPosition": "1952,0",
+        "scrollLine": "1916"
     },
     "folds": "",
-    "lastKnownWriteTime": 1746614974,
+    "lastKnownWriteTime": 1746630722,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1746615960182,
+    "last_content_update": 1746630723204,
     "read_only": false,
     "read_only_alternatives": []
 }

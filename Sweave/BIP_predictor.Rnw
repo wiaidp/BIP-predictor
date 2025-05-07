@@ -102,7 +102,6 @@ source(paste(getwd(),"/R/HP_JBCY_functions.r",sep=""))
 # Utility functions for M-SSA, see tutorial 
 source(paste(getwd(),"/R/M_SSA_utility_functions.r",sep=""))
 # Set of performance metrics and tests of unequal predictability
-#source(paste(getwd(),"/R/performance_statistics_functions.r",sep=""))
 
 
 
@@ -1118,6 +1117,7 @@ dim(mssa_indicator_obj$bk_x_array)
 # 2. The corresponding M-SSA components
 # 3. L*length(select_vec): filter weights attributed to the indicators for each target
 # 4. Forecast horizon h
+select<-"BIP"
 bk<-matrix(mssa_indicator_obj$bk_x_array[select,select,,"h=0"],nrow=L)
 gammak<-matrix(mssa_indicator_obj$gammak_x_mse[select,select,,"h=0"],nrow=L)
 colnames(bk)<-colnames(gammak)<-select_vec_multi
