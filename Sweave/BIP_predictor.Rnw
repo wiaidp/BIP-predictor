@@ -1377,7 +1377,7 @@ file = "./Figures/mssa_hpc_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Forward-shifted BIP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis.", sep = "")
+cat("\\caption{Forward-shifted BIP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis. All series are standardized for better visual inspection.", sep = "")
 cat("\\label{mssa_hpc_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
