@@ -574,7 +574,7 @@ file = "./Figures/direct_wc_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct forecast  across the financial crisis.", sep = "")
+cat("\\caption{Direct forecast  across the financial crisis:  regression based on all indicators and full sample information.", sep = "")
 cat("\\label{direct_wc_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
