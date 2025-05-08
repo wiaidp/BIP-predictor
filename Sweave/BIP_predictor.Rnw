@@ -101,7 +101,7 @@ source(paste(getwd(),"/R/functions_MSSA.r",sep=""))
 source(paste(getwd(),"/R/HP_JBCY_functions.r",sep=""))
 # Utility functions for M-SSA, see tutorial 
 source(paste(getwd(),"/R/M_SSA_utility_functions.r",sep=""))
-# Set of performance metrics and tests of unequal predictability
+source(paste(getwd(),"/R/M_SSA_paper_functions.r",sep=""))
 
 
 
@@ -140,6 +140,22 @@ rownames(x_mat)<-rownames(data)
 n<-dim(x_mat)[2]
 # Number of observations
 len<-dim(x_mat)[1]
+
+# Read original data 
+h0<-0
+trim_threshold<-3
+na_rw_lin<-T
+data_file_name<-c("Data_HWI_2025_02.csv","gdp_2025_02.csv")
+select_vec<-select_vec_multi
+diff_lag<-3
+
+
+read_obj<-read_data_func_monthly(path.data,select_vec,h0,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+data_table<-read_obj$data_select_unshifted_xts
+colnames(data_table)[1]<-"GDP"
+
+tail(data_table)
+
 
 # Settings for M-SSA
 ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
@@ -220,6 +236,8 @@ axis(2)
 box()
 
 dev.off()
+
+
 
 
 #--------------------------------------------------------
@@ -377,6 +395,30 @@ dev.off()
 \item Revisions and publication lags:  BIP lagged by quarter and ip lagged by two months in Jan-2025 data set
 \item Real-time data: all series are artificially aligned at end point. BIP and ip are advanced by their lags.
 \end{itemize}
+
+<<label=ats_mba_2,echo=FALSE,results=tex>>=
+
+mat1<-as.matrix(tail(data_table))
+#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+#center = "centering", file = "", floating = FALSE)
+xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
+paste("Ragged end.  "),
+label=paste("f_stat",sep=""),
+center = "centering", file = "", floating = FALSE)
+
+math<-as.matrix(tail(data_table,10))
+mat2<-cbind(math[2:7,1],math[3:8,2],math[5:10,3:5])
+colnames(mat2)<-colnames(mat1)
+#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+#center = "centering", file = "", floating = FALSE)
+xtable(mat2, dec = 1,digits=rep(3,dim(mat1)[2]+1),
+paste("Data aligned at sample end."),
+label=paste("f_stat",sep=""),
+center = "centering", file = "", floating = FALSE)
+
+
+@
+
 
 The transformed quarterly series are displayed in Fig. \ref{data}, while Fig. \ref{data_lags} offers a close-up view of the financial crisis and the pandemic. The latter figure illustrates that the real-time GDP and industrial production series are synchronized at dips and peaks (coincident), whereas the other indicators tend to lead in relative terms. This characteristic of the additional explanatory variables can be leveraged in a multivariate approach to enhance forecasting performance compared to univariate benchmarks. 
 

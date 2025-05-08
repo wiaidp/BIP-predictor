@@ -1,0 +1,2152 @@
+
+
+
+read_data_func<-function(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,quarterly_TF,diff_lag)
+{
+  if (quarterly_TF)
+  {
+    read_obj<-read_data_func_quarterly(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+      
+  } else
+  {
+    read_obj<-read_data_func_monthly(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+    
+  }
+  
+  # Main data set for computing predictors
+  data=read_obj$data
+  # Same as above but xts object: can play with dates and shift data
+  data_xts=read_obj$data_xts
+  # Same as above but without transformation: data in levels, no trimming, but real-time with target 
+  data_select_xts_filled=read_obj$data_select_xts_filled 
+  # Same as above but data not shifted, no interpolation of BIP (if selected)
+  data_select_unshifted_xts=read_obj$data_select_unshifted_xts
+  # Original data set, i.e., all columns, xts format
+  # Same as above but selected columns only
+  data_select_xts=read_obj$data_select_xts
+  # Same as data above but without standardization: used for calibration of predictor
+  returns_unscaled=read_obj$returns_unscaled
+  # Vector of publication lags
+  lag_vec=read_obj$lag_vec
+# Lags of series in months (in original monthly/quarterly data sets): typically, BIP and ip are lagged   
+  lag_data=read_obj$lag_data
+  
+  ts.plot(data)
+  
+
+  return(list(data=data,data_xts=data_xts,data_select_xts_filled=data_select_xts_filled,data_select_unshifted_xts=data_select_unshifted_xts,data_select_xts=data_select_xts,lag_vec=lag_vec,returns_unscaled=returns_unscaled,lag_data=lag_data))
+}  
+  
+
+# Monthly data sample
+read_data_func_monthly<-function(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+{
+  # 1 Data
+  # Read data
+  data_all<-read.csv(paste(path.data,data_file_name[1],sep=""))
+  tail(data_all)
+  tail(data_all)[,"ifo_exp"]
+  
+  
+  # Convert into xts and select most important series
+  data_all_long_xts<-xts(data_all[,-1], order.by=as.Date(data_all[,1],format="%d/%m/%Y"))
+  
+  # Load quarterly series
+  data_gdp<-read.csv(paste(path.data,data_file_name[2],sep=""))
+  
+  
+  # Convert to xts: use function as.yearqtr which assumes that year comes first (which is not the case in this data set...)
+  # Compute new date vector with year as first entry
+  date_vec<-NULL
+  for (i in 1:nrow(data_gdp))#i<-1
+    date_vec<-c(date_vec,paste(c(substr(data_gdp[i,1],4,8),substr(data_gdp[i,1],1,3)),collapse=" "))
+  # Create xts object with as.yearqtr function
+  data_gdp_xts<-xts(data_gdp[,-1], order.by=as.yearqtr(date_vec))
+  
+  tail(data_gdp_xts)
+  
+  
+  # Merge quarterly and monthly series
+  merged_data.xts<-merge.xts(data_all_long_xts,data_gdp_xts)
+  
+  tail(merged_data.xts)
+#  merged_data.xts[,"BIP"]<-lag(merged_data.xts[,"BIP"],k=2)
+#  tail(merged_data.xts)
+  
+  data_all_xts<-merged_data.xts#[paste(anf,"/",enf,sep="")]
+  
+  # Select data: target and explanatories
+
+  data_select_unshifted_xts<-data_all_xts[,select_vec]
+  
+  plot(scale(data_select_unshifted_xts))
+  tail(data_select_unshifted_xts,10)
+  head(data_select_unshifted_xts,10)
+  
+  
+  # Ragged end: shift lagged data to obtain real-time data matrix
+  # target: first column is ip or gdp (BIP) shifted forward by forecast horizon
+  data_select_xts<-lag(data_select_unshifted_xts[,1],k=-h)
+  # Vector of publication lags: is used when determining delta=h+lag for real-time filters
+  lag_vec<-NULL
+  # Explanatory variables: all columns (including ip) shifted by publication lag
+  for (i in 1:ncol(data_select_unshifted_xts))#i<-1
+  {
+    # Publication lag: number of NAs in tail of series  
+    shift<-sum(is.na(tail(data_select_unshifted_xts)[,i]))
+    # Last non-NA in last 10 data points  
+    last_non_NA<-which(!is.na(tail(data_select_unshifted_xts,10)[,i]))[length(which(!is.na(tail(data_select_unshifted_xts,10)[,i])))]
+    shift<-10-last_non_NA
+    lag_vec<-c(lag_vec,shift)
+    # shift i-th column if publication lag>0  
+    data_select_xts<-cbind(data_select_xts,lag(data_select_unshifted_xts[,i],k=shift))
+  }
+  names(lag_vec)<-select_vec
+  colnames(data_select_xts)[1:2]<-c("target",colnames(data_select_unshifted_xts)[1])
+  tail(data_select_xts,20)
+  
+  # Quarterly data: fill NAs with latest entry (no linear interpolation)
+  if ("BIP"%in%select_vec)
+  {
+    if (na_rw_lin)
+    {
+# Random-walk interpolation: does not assume knowledge of next data point      
+      data_select_xts_filled<-na.locf(data_select_xts)
+    } else
+    {
+# Linear interpolation: assumes knowledge of next data point      
+      data_select_xts_filled<-na.approx(data_select_xts)
+    } 
+        
+  } else
+  {
+    data_select_xts_filled<-data_select_xts
+  }
+  tail(data_select_xts_filled,10)
+  tail(data_select_xts,10)
+  
+  if ("spr_10y_3m"%in%select_vec)
+  {
+# Transform data: scaled log-returns for all series except spread which is differenced only
+# 1. Log    
+    mat<-cbind(log(data_select_xts_filled[,-which(colnames(data_select_xts_filled)=="spr_10y_3m")]),data_select_xts_filled[,"spr_10y_3m"])
+# Quarterly differences    
+    diff_mat<-mat
+    for (i in 1:ncol(mat))
+    {
+      diff_mat[,i]<-diff(mat[,i],lag=diff_lag)
+    } 
+    data_t<-scale(diff_mat,scale=T,center=F)
+# Original (not standardized) returns
+    returns_unscaled<-diff_mat
+  } else
+  {
+# Log-transformation
+    # Transform data: scaled log-returns for all series except spread which is differenced only
+    mat<-cbind(log(data_select_xts_filled[,-which(colnames(data_select_xts_filled)=="spr_10y_3m")]),data_select_xts_filled[,"spr_10y_3m"])
+# Quarterly differences    
+    diff_mat<-mat
+    for (i in 1:ncol(mat))
+    {
+      diff_mat[,i]<-diff(mat[,i],lag=diff_lag)
+    } 
+    data_t<-scale(diff_mat,scale=T,center=F)
+# Log-returns without standardization    
+    returns_unscaled<-diff_mat
+  }
+  data_xts<-xts(data_t,order.by=index(data_select_xts)[(nrow(data_select_xts)-nrow(data_t)+1):nrow(data_select_xts)])
+  tail(data_xts)
+# Trim data (singular pandemic episode)  
+  for (i in 1:ncol(data_xts))
+    data_xts[which(data_xts[,i]< (-trim_threshold)),i]<--trim_threshold
+  for (i in 1:ncol(data_xts))
+    data_xts[which(data_xts[,i]> (trim_threshold)),i]<-trim_threshold
+  plot(data_xts)
+# Replace pandemic by noise
+  if (F)
+  {
+    set.seed(143)
+    for (i in 1:ncol(data_xts))
+      data_xts["2019/2021",i]<-0.5*rnorm(length(data_xts["2019/2021",i]))
+    data_xts["2019/2020"]
+  }
+  # Matrix: no xts object anymore
+  data<-matrix(data_xts,ncol=ncol(data_xts))
+  colnames(data)<-colnames(data_xts)
+  rownames(data)<-as.character(index(data_xts))
+  
+  tail(data)
+  ts.plot(data)
+  
+
+  dim(na.exclude(data))
+  return(list(data=data,data_xts=data_xts,data_select_xts_filled=data_select_xts_filled,data_select_unshifted_xts=data_select_unshifted_xts,data_select_xts=data_select_xts,lag_vec=lag_vec,returns_unscaled=returns_unscaled))
+  
+}
+
+
+
+
+
+
+# Quarterly data sample
+read_data_func_quarterly<-function(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+{
+# Load monthly data: without forecast horizon since the latter will be implemented further down, once transformed into quarterly design
+  h_monthly<-0
+# Publication lag of one quarter added to forecast horizon  
+  h_quarterly<-1+h
+  
+  
+# Read monthly data  
+  read_midas_obj<-read_data_func_monthly(path.data,select_vec,h_monthly,trim_threshold,na_rw_lin,data_file_name,diff_lag)
+  data_select_xts_midas=read_midas_obj$data_select_xts
+# Lags in data set: typically, BIP and ip are lagged  
+  lag_data<-read_midas_obj$lag_vec
+  tail(data_select_xts_midas,10)
+  plot(scale(na.exclude(data_select_xts_midas)),col=rainbow(ncol(data_select_xts_midas)))
+# Correct for month in quarter: monthly indicators should be aligned to match last release date of BIP
+# 1. Find date of last non NA BIP  
+  dh<-as.matrix(data_select_xts_midas)
+  dhexna<-na.exclude(dh[,1])
+  index_last_non_na<-which(dh[,1]==dhexna[length(dhexna)])
+  index_last_non_na<-index_last_non_na[length(index_last_non_na)]
+  last_dgp_date<-names(index_last_non_na)
+# Compute month in quarter: 
+# 1. Compute the number of days between last observation and last GDP release: if it is (a multiple of) 3 months then no shift
+  diff_days<-as.integer((as.Date(rownames(dh)[nrow(dh)])-as.Date(last_dgp_date)))
+# 2. Same but in months  
+  diff_months<-round(diff_days/30)
+# 3. Modulo three to determine the shift (note that we do not care the number of quarters but only the month in the quarter: therefore we use the modulo)  
+  shift<-diff_months%%3
+# We now apply the month-in-quarter shift to the monthly indicators  
+# 1. Select monthly indicators
+  sel_mon<-which(select_vec!="BIP")
+# 2. Lag monthly indicators: first column is target, therefore we use 1+sel_mon 
+  datahh<-lag(data_select_xts_midas,k=shift)[,1+sel_mon]
+# Add BIP aligned to sample end: second column in data_select_xts_midas 
+  datah<-cbind(data_select_xts_midas[,2],datahh)
+  tail(datah)
+# Apply log transform /except spread
+  datah[,-which(colnames(datah)=="spr_10y_3m")]<-log(datah[,-which(colnames(datah)=="spr_10y_3m")])
+  tail(datah)
+# Compute quarterly differences and remove NAs
+# First remove all rows with NAs and then compute differences (which are then all quarterly differences): keep only quarterly publication dates of BIP
+  data_midas<-na.exclude(diff(na.exclude(datah)))
+# Standardize
+  data_midas<-scale(data_midas)
+  tail(data_midas)
+  plot(data_midas[,1:2],col=c("red","orange"))  
+# Trim data (singular pandemic episode)  
+  for (i in 1:ncol(data_midas))
+    data_midas[which(data_midas[,i]< (-trim_threshold)),i]<--trim_threshold
+  for (i in 1:ncol(data_midas))
+    data_midas[which(data_midas[,i]> (trim_threshold)),i]<-trim_threshold
+  
+# Add shifted target column  
+  data_midas<-cbind(lag(data_midas[,1],k=-h_quarterly),data_midas)
+  colnames(data_midas)[1:2]<-c("target",colnames(data_midas)[1])
+  plot(data_midas[,1:2],col=c("red","orange"))  
+  
+  data_midas<-na.locf(data_midas)
+  tail(data_midas,10)
+  data_xts<-data_select_xts_filled<-data_select_unshifted_xts<-data_select_xts<-returns_unscaled<-data_midas
+  plot(data_xts[,2:3],col=c("red","orange"))
+  # Replace pandemic by noise
+  if (F)
+  {
+    set.seed(143)
+    for (i in 1:ncol(data_xts))
+      data_xts["2019/2021",i]<-0.5*rnorm(length(data_xts["2019/2021",i]))
+    data_xts["2019/2020"]
+  }
+  
+  data<-as.matrix(data_xts)
+  tail(data,10)
+# Standard deviation is smaller one after trimming  
+  apply(data,2,sd)
+  ts.plot(data[,2:3])
+  
+  
+  lag_vec<-c(1,rep(0,length(select_vec)-1))
+  names(lag_vec)<-select_vec
+  
+  return(list(data=data,data_xts=data_xts,data_select_xts_filled=data_select_xts_filled,data_select_unshifted_xts=data_select_unshifted_xts,data_select_xts=data_select_xts,lag_vec=lag_vec,returns_unscaled=returns_unscaled,lag_data=lag_data))
+  
+}
+
+
+
+# This function computes sample target correlations, sign accuracies, t-statistics and hts for all combinations of forecast excess delta and M-SSA outputs
+compute_combination_delta_mssa_cor_sa_ht_func<-function(target,forecast_excess_vec,select_vec_multi,predictor)
+{
+  f_vec<-c(0,forecast_excess_vec)
+  sa_mat<-cor_mat<-se_mat<-ht_mat<-t_mat<-NULL
+  for (k in 1:length(f_vec))#k<-1
+  {
+    # For each delta: Select columns  
+    extract_columns<-(k-1)*length(select_vec_multi)+1:(length(select_vec_multi))
+    # Extract M-SSA series for fixed delta from y_mat_look_ahead and combine with target zdelta_mat_delta0[,1] 
+    #   -zdelta_mat_delta0 is obtained from setting delta=0, i.e., it is the effective BIP-trend target for forecast horizon h+delta=h
+    datmat_all<-scale(cbind(target,predictor[,extract_columns]))
+    datmat_all<-scale(cbind(target,predictor[,extract_columns]))
+    # Remove NAs  
+    datmat<-na.exclude(datmat_all)
+    # Compute sample correlation and sign accuracy for each M-SSA output
+    sa_vec<-cor_vec<-ht_vec<-t_vec<-NULL
+    for (j in 1:length(select_vec_multi))#j<-1
+    {
+      # Sign accuracy    
+      sa<-sum(datmat[,1]*datmat[,1+j]>0,na.rm=T)/nrow(datmat)
+      sa_vec<-c(sa_vec,sa)
+      # target correlation    
+      cor<-cor(cbind(datmat[,1],datmat[,1+j]))[1,2]
+      cor_vec<-c(cor_vec,cor)
+      ht_vec<-cbind(ht_vec,compute_empirical_ht_func(datmat_all[,1+j])$empirical_ht)
+      t_vec<-c(t_vec,summary(lm(datmat[,1]~datmat[,1+j]))$coef[2,3])
+      
+    }
+    # Sign accuracy  
+    sa_mat<-rbind(sa_mat,sa_vec)
+    # Standard error of sign accuracy  
+    se_mat<-rbind(se_mat,sqrt(sa_vec*(1-sa_vec)/nrow(datmat)))
+    # Correlation  
+    cor_mat<-rbind(cor_mat,cor_vec)
+    # HT  
+    ht_mat<-rbind(ht_mat,ht_vec)
+    # t-stat
+    t_mat<-rbind(t_mat,t_vec)
+  }
+  rownames(sa_mat)<-rownames(se_mat)<-rownames(cor_mat)<-rownames(ht_mat)<-rownames(t_mat)<-paste("delta=",f_vec,sep="")
+  colnames(sa_mat)<-colnames(se_mat)<-colnames(cor_mat)<-colnames(ht_mat)<-colnames(t_mat)<-select_vec_multi
+  sa_mat
+  se_mat
+  cor_mat
+  ht_mat
+  t_mat
+  return(list(sa_mat=sa_mat,se_mat=se_mat,cor_mat=cor_mat,ht_mat=ht_mat,t_mat=t_mat))
+}
+
+
+
+
+
+# Perform simulations for Signal Extraction applications (univariate SSA and bivariate M-SSA): check convergence of sample performances to expected (true) expressions
+
+# This function applies filters to data and computes expected and sample performances: MSE, SA, HT, target correlations
+# It generates filtered data based on x_mat (original data) or epsilon (MA-inversion) if the latter is provided: both should be identical up to finte MA-inversion error
+# It returns expected and sample performances and filtered series
+# It also demonstrates the formula in the paper when deriving expected measures
+
+# Inputs:
+# -hp_classic_concurrent and hp_classic_concurrent_eps: classic concurrent HP applied to x and epsilon (the first is used for filtering and the second for computing theoretical performance measures)
+# -gammak_mse,gammak_x_mse: MSE estimates of two-sided HP applied to x and epsilon
+# -gamma_target: left tail of acausal HP target 
+# -gamma_target_long: convolution of acausal target with MA inversion: used for computing MSEs
+# -bk_x_mat,bk_mat: SSA solution applied to x and epsilon
+# -x_mat data
+# -m: Selection of m-th series (useful in univariate design)
+# -L_short: is smaller than L and allows to compute the acausal filter closer to the series boundaries
+# -L filter length
+# -M_tilde,I_tilde: system matrices
+# -var_target: variance of acausal target
+# -ht_ssa_vec: HTs imposed in constraints
+# -epsilon_mat: model residuals (currently not used)
+
+
+
+# Outputs: filtered series and expected as well as sample performances
+filter_perf_func<-function(delta,SSA_obj,hp_classic_concurrent,hp_classic_concurrent_eps,gammak_mse,gammak_x_mse,gamma_target,gamma_target_long,bk_x_mat,bk_mat,x_mat,m,L_short,L,M_tilde,I_tilde,var_target,ht_ssa_vec,Sigma,epsilon_mat=NULL)
+{  
+#x_mat<-x_mat[,m]  hp_classic_concurrent<-hp_classic_concurrent_x[,m]  hp_classic_concurrent_eps<-hp_classic_concurrent_eps[,m]
+# gammak_mse<-gammaeps_mat[,m]   gammak_x_mse<-gammax_mat[,m]  gamma_target<-gamma_target_mat[,m]  
+# gamma_target_long<-gamma_target_long_mat[,m]   bk_x_mat<-bx_mat[,m]  bk_mat<-beps_mat[,m] var_target<-var_target_mat[m]
+
+# Sanity checks: works for uni- and multivariate designs
+  if (!is.matrix(x_mat))
+  {
+    xnames<-names(x_mat)
+    x_mat<-matrix(x_mat,ncol=1)
+    rownames(x_mat)<-xnames
+  }
+  if (is.vector(hp_classic_concurrent))
+    hp_classic_concurrent<-matrix(hp_classic_concurrent,ncol=1)
+  if (is.vector(hp_classic_concurrent_eps))
+    hp_classic_concurrent_eps<-matrix(hp_classic_concurrent_eps,ncol=1)
+  if (is.vector(epsilon_mat))
+    epsilon_mat<-matrix(epsilon_mat,ncol=1)
+  if (is.vector(gammak_mse))
+    gammak_mse<-matrix(gammak_mse,ncol=1)
+  if (is.vector(gammak_x_mse))
+    gammak_x_mse<-matrix(gammak_x_mse,ncol=1)
+  if (is.vector(gamma_target))
+    gamma_target<-matrix(gamma_target,ncol=1)
+  if (is.vector(gamma_target_long))
+    gamma_target_long<-matrix(gamma_target_long,ncol=1)
+  if (is.vector(bk_x_mat))
+    bk_x_mat<-matrix(bk_x_mat,ncol=1)
+  if (is.vector(bk_mat))
+    bk_mat<-matrix(bk_mat,ncol=1)
+  n<-ncol(bk_x_mat)
+  len<-nrow(x_mat)
+# Transpose if necessary  
+  if (dim(gamma_target)[1]<dim(gamma_target)[2])
+    gamma_target<-t(gamma_target)
+  if (is.vector(var_target))
+    var_target<-matrix(var_target)
+# Univariate design  
+  if (n==1)
+    m<-1
+# Check that series are centered i.e. mean zero: otherwise sample HTs are generally not properly defined
+  if (max(apply(x_mat,2,mean)/apply(x_mat,2,sd))>0.001)
+  {
+    print("Warning: the time series are possibly not centered (not zero-mean). Therefore sample HTs are eventually not properly defined")
+  }
+
+# 0. Classic concurrent HP: apply filter to m-th column of x_mat: we use hp_classic_concurrent (not hp_classic_concurrent_eps)
+  z_classic_HP<-rep(NA,len)  
+  for (j in L:len)
+    z_classic_HP[j]<-apply(hp_classic_concurrent*(x_mat[j:(j-L+1),m]),2,sum)
+# 1. Generate yt in either of two equivalent ways:        
+# 1.a Apply bk_x_mat to x_mat
+  bk<-NULL
+# Extract coefficients applied to m-th series    
+  for (j in 1:n)#j<-2
+    bk<-cbind(bk,bk_x_mat[((j-1)*L+1):(j*L),m])
+  ts.plot((bk))
+  y<-rep(NA,len)
+#  y_bi<-matrix(nrow=len,ncol=n)
+  for (j in L:len)#j<-L
+  {
+    y[j]<-sum(apply(bk*(x_mat[j:(j-L+1),]),2,sum))
+#    y_bi[j,]<-apply(bk*(x_mat[j:(j-L+1),]),2,sum)
+  }
+#  ts.plot(cbind(y_bi,apply(y_bi,1,sum)),lty=1:3,ylim=c(-0.5,0.5))
+  
+# 1.b Apply bk_mat to epsilon_mat
+# The M-SSA solution bk_mat is the convolution of bk_x_mat and MA-inversion: it is applied to WN epsilon
+  if (!is.null(epsilon_mat))
+  {
+    bk<-NULL
+# Extract coefficients applied to m-th series    
+    for (j in 1:n)#j<-2
+      bk<-cbind(bk,bk_mat[((j-1)*L+1):(j*L),m])
+    ts.plot(scale(bk))
+    y_eps<-rep(NA,len)
+    for (j in L:len)
+      y_eps[j]<-sum(apply(bk*(epsilon_mat[j:(j-L+1),]),2,sum))
+# y and y_eps should be nearly identical (up to finite MA-inversion error)
+  }
+  
+# 2. MSE-estimate 
+# 2.a Apply gammak_x_mse to x_mat
+  gammak<-NULL
+  for (j in 1:n)#j<-2
+    # gammak_mse is convolution of MSE with Wold-decomposition: must be applied to epsilont      
+    gammak<-cbind(gammak,gammak_x_mse[((j-1)*L+1):(j*L),m])
+  ts.plot(gammak,lty=1:2)
+  z_mse<-rep(NA,len)
+#  z_mse_bi<-matrix(rep(NA,n*len),ncol=n)
+  for (j in L:len)
+  {  
+    z_mse[j]<-sum(apply(gammak*x_mat[j:(j-L+1),],2,sum))
+#    z_mse_bi[j,]<-apply(gammak*x_mat[j:(j-L+1),],2,sum)
+  }
+#  ts.plot(cbind(z_mse_bi,apply(z_mse_bi,1,sum)),lty=1:3,ylim=c(-0.5,0.5))
+# 2.b Apply gammak_mse to epsilon_mat
+  if (!is.null(epsilon_mat))
+  {
+    bk<-NULL
+    for (j in 1:n)#j<-2
+      gammak<-cbind(gammakk,gammak_mse[((j-1)*L+1):(j*L),m])
+    ts.plot(scale(gammak))
+    z_mse_eps<-rep(NA,len)
+    for (j in L:len)
+      z_mse_eps[j]<-sum(apply(gammak*(epsilon_mat[j:(j-L+1),]),2,sum))
+# z_mse and z_mse_eps should be nearly identical (up to finite MA-inversion error)
+  }
+  
+# 3.Target zt+delta: based on xt 
+  gammak<-NULL
+  for (j in 1:n)#j<-1
+    #  gamma_target is original Signal extraction filter as applied to xt : L_short allows for longer sample, closer to sample boundary
+    gammak<-cbind(gammak,(gamma_target)[((j-1)*L+1):((j-1)*L+L_short),m])
+  z<-rep(NA,len)
+  # Truncated two-sided filter
+  if ( (len-L_short)-L>30)
+  {
+    for (j in L:(len-L_short))
+      z[j]<-sum(apply(gammak*x_mat[j:(j-L_short+1),],2,sum))+sum(apply(matrix(gammak[-1,]*x_mat[(j+1):(j+L_short-1),]),2,sum))
+    # Shift z by delta    
+    if (delta>0)
+    {  
+      zdelta<-c(z[(delta+1):len],rep(NA,delta))
+    } else
+    {
+      if (delta<0)
+      {
+        zdelta<-c(rep(NA,delta),z[1:(len-abs(delta))])
+      } else
+      {
+        zdelta<-z
+      }
+    }
+    names(zdelta)<-names(y)<-names(z_mse)<-rownames(x_mat)
+    hp_classic_concurrent<-as.vector(hp_classic_concurrent)
+  } else
+  {
+    print(paste("Sample too short for estimation: L-(len-L_short)=",L-(len-L_short),sep=""))
+    return()
+  }
+#-------------------------------------------------------
+# Performances: MSE, target correlations HT and SA for (M-)SSA and MSE (expected and sample)
+# We need filters applied to WN (not xt) to compute theoretical performances (all formula rely on convolution of filters with MA-inversion) 
+# 1. MSE: empirical and expected MSE
+# For the MSE between M-SSA and acausal target we need
+# a. gamma_target_long : acausal target convolved with MA inversion and shifted by delta
+# b. bk_mat: bk convolved with MA-inversion
+#   But we must extended the filter with zeroes on left tail (corresponding to future epsilons of acausal target)  
+# c. Compute the differences between both filters and compute variance
+# d. For that purpose we need I_tilde_long computed for long filters: they all have length 2*L-1
+  
+# Let's first proceed to a.
+# Shift two-sided as applied to WN by delta
+# gamma_target_long is two-sided convolved with xi but without shift by delta
+# we then need to shift it by delta  
+  gamma_long<-c(gamma_target_long[(delta+1):(2*L-1),m],rep(0,delta))
+  if (n>1)
+  { 
+    for (i in 2:n)#i<-2
+      gamma_long<-c(gamma_long,c(gamma_target_long[(i-1)*(2*L-1)+(delta+1):(2*L-1),m],rep(0,delta)))
+  }
+# This is used for d.  
+  M_obj_long<-M_func(2*L-1,Sigma)
+  I_tilde_long<-M_obj_long$I_tilde
+  dim(I_tilde_long)
+# Let's now proceed to MSE of one-sided classic HP-C  
+# 1.1 Classic HP concurrent  
+  HP_long<-gamma_HP_classic<-NULL
+# Compute one-sided univariate HP-concurrent with zeroes to the left tail 
+# Univariate filter is applied to m-th series only (all other coefficients vanish)  
+  for (i in 1:n)#i<-1
+  {
+    HP_long<-c(HP_long,c(rep(0,L-1),hp_classic_concurrent_eps[(i-1)*L+1:L,m]))
+  }
+  gamma_HP_classic<-hp_classic_concurrent_eps[,m]
+  
+# Compute difference of classic HP and acausal target shifted by delta 
+  filter_diff_long<-HP_long-gamma_long
+  ts.plot(cbind(HP_long,gamma_long))
+# MSE: SSA vs acausal target  
+  true_mse_HP_classic_ref_target<-as.double(filter_diff_long%*%I_tilde_long%*%filter_diff_long)
+  sample_mse_HP_classic_ref_target<-mean(na.exclude((z_classic_HP-zdelta))^2)
+# Let's now compute MSE of M-SSA  
+# 1.2 SSA  
+  filter_diff_long<-NULL
+# Compute one-sided SSA with zeroes to the left tail  
+  filter_diff_long<-c(filter_diff_long,c(rep(0,L-1),bk_mat[1:L,m]))
+  if (n>1)
+  { 
+    for (i in 2:n)
+      filter_diff_long<-c(filter_diff_long,c(rep(0,L-1),bk_mat[(i-1)*L+1:L,m]))
+  }
+# Compute difference of SSA and shifted acausal target: both as applied to WN  
+  filter_diff_long<-filter_diff_long-gamma_long
+#  filter_diff_long<-filter_diff_long-gamma_target_long[,m]
+  # MSE: SSA vs acausal target  
+  true_mse_SSA_ref_target<-as.double(filter_diff_long%*%I_tilde_long%*%filter_diff_long)
+  sample_mse_SSA_ref_target<-mean(na.exclude((y-zdelta))^2)
+# Let's now compute MSE of M-MSE  
+# 1.3 MSE
+# Causal MSE vs. acausal target  
+  filter_diff_long<-NULL
+  # Compute one-sided SSA with zeroes to the left tail  
+  filter_diff_long<-c(filter_diff_long,c(rep(0,L-1),gammak_mse[1:L,m]))
+  if (n>1)
+  { 
+    for (i in 2:n)
+      filter_diff_long<-c(filter_diff_long,c(rep(0,L-1),gammak_mse[(i-1)*L+1:L,m]))
+  }
+# Compute difference of SSA and acausal target  
+  filter_diff_long<-filter_diff_long-gamma_long
+  true_mse_mse_ref_target<-as.double(filter_diff_long%*%I_tilde_long%*%filter_diff_long)
+  sample_mse_mse_ref_target<-mean(na.exclude((z_mse-zdelta))^2)
+# Less relevant:  
+# 1.4 MSE of SSA when target is one-sided MSE (instead of two-sided acausal filter)  
+  true_mse_SSA_ref_mse<-as.double((bk_mat[,n]-gammak_mse[,n])%*%I_tilde%*%(bk_mat[,n]-gammak_mse[,n]))
+  sample_mse_SSA_ref_mse<-mean(na.exclude((z_mse-y))^2)
+# 1.5 MSE referenced against MSE (error vanishes)
+  true_mse_mse_ref_mse<-0
+  sample_mse_mse_ref_mse<-0
+  
+  perf_mat_true<-c(true_mse_HP_classic_ref_target,true_mse_SSA_ref_target,true_mse_mse_ref_target,true_mse_SSA_ref_mse,true_mse_mse_ref_mse)
+  perf_mat_sample<-c(sample_mse_HP_classic_ref_target,sample_mse_SSA_ref_target,sample_mse_mse_ref_target,sample_mse_SSA_ref_mse,sample_mse_mse_ref_mse)
+  names(perf_mat_true)<-names(perf_mat_sample)<-c("MSE: HP vs. target","MSE: SSA vs. target","MSE: MSE vs. Target","MSE: SSA vs. MSE","MSE: MSE vs. MSE")
+  if (n==1)
+  {
+    names(perf_mat_true)<-names(perf_mat_sample)<-c("MSE: HP vs. target","MSE: SSA vs. target","MSE: MSE vs. Target","MSE: SSA vs. MSE","MSE: MSE vs. MSE")
+  } else
+  {
+    names(perf_mat_true)<-names(perf_mat_sample)<-c("MSE: HP vs. target","MSE: M-SSA vs. target","MSE: MSE vs. Target","MSE: SSA vs. MSE","MSE: MSE vs. MSE")
+  }
+  
+# 2. Correlations
+# 2.1 Classic HP  
+  sample_crit_HP_classic_ref_target<-cor(na.exclude(cbind(zdelta,z_classic_HP)))[2]
+  true_crit_HP_classic_ref_target<-as.double(gamma_HP_classic%*%I_tilde%*%gammak_mse[,m]/sqrt(as.double(gamma_HP_classic%*%I_tilde%*%gamma_HP_classic)*var_target[m,m]))
+# 2.2 SSA as referenced against acausal target  
+  sample_crit_SSA_ref_target<-cor(na.exclude(cbind(zdelta,y)))[2]
+#  true_crit_SSA_ref_target is the same as SSA_obj$crit_rhoy_target[m]
+  true_crit_SSA_ref_target<-as.double(bk_mat[,m]%*%I_tilde%*%gammak_mse[,m]/sqrt(as.double(bk_mat[,m]%*%I_tilde%*%bk_mat[,m])*var_target[m,m]))
+# 2.3 MSE as referenced against acausal target  
+  sample_crit_mse_ref_target<-cor(na.exclude(cbind(zdelta,z_mse)))[2]
+  true_crit_mse_ref_target<-as.double(gammak_mse[,m]%*%I_tilde%*%gammak_mse[,m]/sqrt(as.double(gammak_mse[,m]%*%I_tilde%*%gammak_mse[,m])*var_target[m,m]))
+# 2.4 SSA as referenced against MSE  
+  sample_crit_SSA_ref_mse<-cor(na.exclude(cbind(z_mse,y)))[1,2]
+#  true_crit_SSA_ref_mse is the same as SSA_obj$crit_rhoy[m]
+  true_crit_SSA_ref_mse<-as.double(bk_mat[,m]%*%I_tilde%*%gammak_mse[,m]/sqrt(as.double(bk_mat[,m]%*%I_tilde%*%bk_mat[,m])*gammak_mse[,m]%*%I_tilde%*%gammak_mse[,m]))
+# 2.5 MSE as referenced against itself
+  true_crit_mse_ref_mse<-1
+  sample_crit_mse_ref_mse<-1
+  
+  perf_mat_true<-c(perf_mat_true,true_crit_HP_classic_ref_target,true_crit_SSA_ref_target,true_crit_mse_ref_target,true_crit_SSA_ref_mse,true_crit_mse_ref_mse)
+  perf_mat_sample<-c(perf_mat_sample,sample_crit_HP_classic_ref_target,sample_crit_SSA_ref_target,sample_crit_mse_ref_target,sample_crit_SSA_ref_mse,sample_crit_mse_ref_mse)
+  if (n==1)
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-4):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-4):length(perf_mat_sample)]<-c("Cor. HP vs. target","Cor. SSA vs. target","Cor. MSE vs. target","Cor. SSA vs. MSE","Cor. MSE vs. MSE")
+  } else
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-4):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-4):length(perf_mat_sample)]<-c("Cor. HP vs. target","Cor. SSA vs. target","Cor. MSE vs. target","Cor. SSA vs. MSE","Cor. MSE vs. MSE")
+  } 
+  
+  
+# 3. Empirical and theoretical HT
+# 3.1 HP classic
+# Without centering: x_mat is assumed to be standardized
+  mplot<-(na.exclude(z_classic_HP))
+#  sample_ht_HP_classic<-length(mplot)/length(which(mplot[2:length(mplot)]*mplot[1:(length(mplot)-1)]<0))
+  sample_ht_HP_classic<-compute_empirical_ht_func(z_classic_HP)$empirical_ht
+  # First compute lag-one ACF and then HT 
+  acf1_HP_classic<-gamma_HP_classic%*%M_tilde%*%gamma_HP_classic/gamma_HP_classic%*%I_tilde%*%gamma_HP_classic
+  true_ht_HP_classic<-compute_holding_time_from_rho_func(acf1_HP_classic)$ht
+# 3.2 SSA  
+# Centering not necessary since data is standardized  
+  mplot<-(na.exclude(y))
+#  sample_ht_SSA<-length(mplot)/length(which(mplot[2:length(mplot)]*mplot[1:(length(mplot)-1)]<0))
+  sample_ht_SSA<-compute_empirical_ht_func(y)$empirical_ht
+    
+# First compute lag-one ACF and then HT 
+  acf1_mssa<-bk_mat[,m]%*%M_tilde%*%bk_mat[,m]/bk_mat[,m]%*%I_tilde%*%bk_mat[,m]
+  ht_mssa<-compute_holding_time_from_rho_func(acf1_mssa)$ht
+# Is the same as ht_ssa_vec[m] if optimization converged i.e. difference below should be negligible (they become smaller when increasing split_grid)
+  ht_mssa-ht_ssa_vec[m]
+  true_ht_SSA<-ht_mssa
+# 3.3 MSE
+# Sample HT
+  mplot<-(na.exclude(z_mse))
+  sample_ht_MSE<-length(mplot)/length(which(mplot[2:length(mplot)]*mplot[1:(length(mplot)-1)]<0))
+  sample_ht_MSE<-compute_empirical_ht_func(z_mse)$empirical_ht
+  acf1_mse<-t(gammak_mse[,m])%*%M_tilde%*%gammak_mse[,m]/t(gammak_mse[,m])%*%I_tilde%*%gammak_mse[,m]
+  true_ht_MSE<-pi/acos(acf1_mse)
+
+  perf_mat_true<-c(perf_mat_true,true_ht_HP_classic,true_ht_SSA,true_ht_MSE)
+  perf_mat_sample<-c(perf_mat_sample,sample_ht_HP_classic,sample_ht_SSA,sample_ht_MSE)
+  if (n==1)
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-c("HT HP","HT SSA","HT MSE")
+  } else
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-c("HT HP","HT M-SSA","HT MSE")
+  }
+  
+
+# 4. Sign accuracies SA (probabilities of same sign, see proof of proposition 1 in paper for 'true' criterion with arcsin transformation) 
+# 4.1 HP classic
+# We remove NA's  
+  mplot<-na.exclude(cbind(zdelta,z_classic_HP))
+  sample_SA_crit_HP_classic_ref_target<-length(which(sign(mplot[,1])==sign(mplot[,2])))/nrow(mplot)
+  cor_HP_classic_target<-gammak_mse[,m]%*%I_tilde%*%gamma_HP_classic/sqrt(gamma_HP_classic%*%I_tilde%*%gamma_HP_classic*var_target[m,m])
+  true_SA_crit_HP_classic_ref_target<-0.5+asin(cor_HP_classic_target)/pi
+# 4.2 SSA  
+  mplot<-na.exclude(cbind(zdelta,y))
+  ts.plot(mplot)
+  sample_SA_crit_SSA_ref_target<-length(which(sign(mplot[,1])==sign(mplot[,2])))/nrow(mplot)
+  cor_MSSA_target<-gammak_mse[,m]%*%I_tilde%*%bk_mat[,m]/sqrt(bk_mat[,m]%*%I_tilde%*%bk_mat[,m]*var_target[m,m])
+# Is the same as SSA_obj$crit_rhoy_target[m] i.e. difference below vanishes 
+  cor_MSSA_target-SSA_obj$crit_rhoy_target[m]
+  true_SA_crit_SSA_ref_target<-0.5+asin(cor_MSSA_target)/pi
+  mplot<-na.exclude(cbind(zdelta,z_mse))
+  sample_SA_crit_mse_ref_target<-length(which(sign(mplot[,1])==sign(mplot[,2])))/nrow(mplot)
+# 4.3 MSE  
+# Correlation of causal MSE with acausal target  
+  cor_mse_target<-gammak_mse[,m]%*%I_tilde%*%gammak_mse[,m]/sqrt(gammak_mse[,m]%*%I_tilde%*%gammak_mse[,m]*var_target[m,m])
+  true_SA_crit_mse_ref_target<-0.5+asin(cor_mse_target)/pi
+  
+  perf_mat_true<-c(perf_mat_true,true_SA_crit_HP_classic_ref_target,true_SA_crit_SSA_ref_target,true_SA_crit_mse_ref_target)
+  perf_mat_sample<-c(perf_mat_sample,sample_SA_crit_HP_classic_ref_target,sample_SA_crit_SSA_ref_target,sample_SA_crit_mse_ref_target)
+  if (n==1)
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-c("SA: HP vs. target","SA: SSA vs. target","SA: MSE vs. target")
+  } else
+  {
+    names(perf_mat_sample)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-names(perf_mat_true)[(length(perf_mat_sample)-2):length(perf_mat_sample)]<-c("SA: HP vs. target","SA: SSA vs. target","SA: MSE vs. target")
+  }
+  
+  return(list(perf_mat_true=perf_mat_true,perf_mat_sample=perf_mat_sample,zdelta=zdelta,y=y,z_mse=z_mse,z_classic_HP=z_classic_HP))
+}
+
+
+
+
+
+
+
+# Perform simulations for Forecasting application: check convergence of sample performances to expected (true) expressions
+sample_series_performances_func<-function(A,Sigma,len,bk_mat,bk_x_mat,gammak_mse,L,setseed)
+{
+  n<-dim(Sigma)[1]
+  set.seed(setseed)
+  eps1iid<-rnorm(len)
+  eps2iid<-rnorm(len)
+  
+  eps_mat<-matrix(ncol=dim(Sigma)[1],nrow=len)
+  
+  # Generate eps with cross-correlation corresponding to Sigma
+  eigen_obj<-eigen(Sigma)
+  # Square-root of diagonal
+  D<-diag(sqrt(eigen_obj$values))
+  U<-eigen_obj$vectors
+  Sigma_sqrt<-(U)%*%D%*%t(U)
+  # Check_ should vanish
+  t(Sigma_sqrt)%*%Sigma_sqrt-Sigma
+  # Generate eps_mat
+  eps_mat<-t(Sigma_sqrt%*%rbind(eps1iid,eps2iid))
+  # Check: empirical cov should match Sigma
+  cov(eps_mat)
+  Sigma
+  # 1.2 VAR  
+  x_mat<-eps_mat
+  for (i in 2:len)
+  {
+    x_mat[i,]<-as.double(A%*%(x_mat[i-1,]))+eps_mat[i,] 
+  }
+  #---------------  
+  # 2. Generate yt (M-SSA), zt (target) and z_mse (MSE predictor) from eps_mat
+  perf_mat_SSA<-perf_mat_MSE<-NULL
+  z_mse_mat<-zdelta_mat<-y_mat<-yx_mat<-NULL
+  for (m in 1:n)#m<-1
+  {
+    # Plot coefficients  
+    mplot<-cbind(bk_mat[1:L,m],bk_mat[(L+1):(2*L),m])
+    colo<-c("blue","red","green")
+    ts.plot(mplot,col=colo)
+    # 2.1 yt: we can generate M-SSA based on WN or VAR
+    # 2.1.1 First case A above: Specify multivariate filter for m-th series: we select bk_mat as applied to epsilont   
+    bk<-NULL
+    for (j in 1:dim(Sigma)[1])
+      bk<-cbind(bk,bk_mat[((j-1)*L+1):(j*L),m])
+    y<-rep(NA,len)
+    # Filter WN    
+    for (j in L:len)
+      y[j]<-sum(apply(bk*eps_mat[j:(j-L+1),],2,sum))
+    y_mat<-cbind(y_mat,y)
+    # 2.1.2 Second case B above: bk_x_mat as applied to xt differs from bk_mat as applied to epsilont    
+    if (!is.null(xi))
+    {
+      bkx<-NULL
+      for (j in 1:dim(Sigma)[1])
+        bkx<-cbind(bkx,bk_x_mat[((j-1)*L+1):(j*L),m])
+      yx<-rep(NA,len)
+      # Filter VAR
+      for (j in L:len)
+        yx[j]<-sum(apply(bkx*x_mat[j:(j-L+1),],2,sum))
+      yx_mat<-cbind(yx_mat,yx)
+      # Check: both M-SSA predictors should be nearly the same (up to finite MA-inversion error)    
+      max(abs(yx-y),na.rm=T)/sd(yx,na.rm=T) 
+    } else
+    {
+      yx<-y
+      yx_mat<-y_mat
+    }
+    # 2.2 Target: zt 
+    z<-x_mat[,m]
+    # Shift z by delta    
+    if (delta>0)
+    {  
+      zdelta<-c(z[(delta+1):len],rep(NA,delta))
+    } else
+    {
+      if (delta<0)
+      {
+        zdelta<-c(rep(NA,delta),z[1:(len-abs(delta))])
+      } else
+      {
+        zdelta<-z
+      }
+    }
+    par(mfrow=c(2,1))
+    ts.plot(gammak)
+    ts.plot(bk)
+    
+    ts.plot(scale(cbind(zdelta,y),scale=T)[500:600,],lty=1:2)
+    zdelta_mat<-cbind(zdelta_mat,zdelta)
+    # 2.3 MSE (this is used in MSSA_func internally)   
+    gammak_n<-cbind(gammak_mse[m,1:L],gammak_mse[m,L+1:L])
+    z_mse<-rep(NA,len)
+    for (j in L:len)
+      z_mse[j]<-sum(apply(gammak_n*eps_mat[j:(j-L+1),],2,sum))
+    z_mse_mat<-cbind(z_mse_mat,z_mse)    
+    #-------------------------
+    # Performances: empirical and theoretical criterion values and lag-one acfs: one use either y (based on MA inversion) or yx
+    perf_mat_SSA<-rbind(perf_mat_SSA,c(cor(na.exclude(cbind(z_mse[1:len],yx[1:len])))[1,2], SSA_obj$crit_rhoyz[m],length(na.exclude(yx))/length(which(yx[(L+1):len]*yx[L:(len-1)]<0)), ht_vec[m]))
+    
+    perf_mat_MSE<-rbind(perf_mat_MSE,c(length(na.exclude(z_mse))/length(which(z_mse[(L+1):len]*z_mse[L:(len-1)]<0))))
+    
+    
+    # Criterion value is with respect to MSE-target: 
+    #   Optimized solutions are identical but criterion measures performances against MSE i.e. against 'benchmark'    
+  } 
+  colnames(perf_mat_SSA)<-c("Sample crit.","True crit.","Sample ht SSA","True ht SSA")
+  perf_mat_SSA
+  
+  # Keep sample for plot of filter outputs  
+  y_mat<-y_mat[1:min(1000,len),]
+  zdelta_mat<-zdelta_mat[1:min(1000,len),]
+  z_mse_mat<-z_mse_mat[1:min(1000,len),]
+  
+  #-------------------  
+  # Additional checks
+  # 1. Holding-times (lag-one acfs)  
+  M_obj<-M_func(L,Sigma)
+  
+  M_tilde<-M_obj$M_tilde
+  I_tilde<-M_obj$I_tilde
+  rho_mse_1<-gammak_mse[1,]%*%M_tilde%*%gammak_mse[1,]/gammak_mse[1,]%*%I_tilde%*%gammak_mse[1,]
+  rho_ssa_1<-bk_mat[,1]%*%M_tilde%*%bk_mat[,1]/bk_mat[,1]%*%I_tilde%*%bk_mat[,1]
+  rho_mse_2<-gammak_mse[2,]%*%M_tilde%*%gammak_mse[2,]/gammak_mse[2,]%*%I_tilde%*%gammak_mse[2,]
+  rho_ssa_2<-bk_mat[,2]%*%M_tilde%*%bk_mat[,2]/bk_mat[,2]%*%I_tilde%*%bk_mat[,2]
+  
+  # Check: best approximation on grid should be close to effective holding-time constraints  
+  compute_holding_time_from_rho_func(rho_ssa_1)$ht
+  compute_holding_time_from_rho_func(rho_ssa_2)$ht
+  ht_vec
+  # 2. Criteria: MSE is trivially one since correlation of MSE with itself is one (our target is MSE which leads to the same solution as using z_{t+\delta})
+  #   The criteria computed here correspond to the values in perf_mat_SSA above  
+  crit_mse_1<-gammak_mse[1,]%*%I_tilde%*%gammak_mse[1,]/gammak_mse[1,]%*%I_tilde%*%gammak_mse[1,]
+  crit_ssa_1<-gammak_mse[1,]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(gammak_mse[1,]%*%I_tilde%*%gammak_mse[1,]))
+  crit_mse_2<-gammak_mse[2,]%*%I_tilde%*%gammak_mse[2,]/gammak_mse[2,]%*%I_tilde%*%gammak_mse[2,]
+  crit_ssa_2<-gammak_mse[2,]%*%I_tilde%*%bk_mat[,2]/(sqrt(bk_mat[,2]%*%I_tilde%*%bk_mat[,2])*sqrt(gammak_mse[2,]%*%I_tilde%*%gammak_mse[2,]))
+
+  return(list(perf_mat_SSA=perf_mat_SSA,y_mat=y_mat,zdelta_mat=zdelta_mat,z_mse_mat=z_mse_mat,perf_mat_MSE=perf_mat_MSE,z_mse_mat=z_mse_mat))
+}
+
+
+
+
+
+
+# Perform simulations for Smoothing application: check convergence of sample performances to expected (true) expressions
+sample_series_performances_smooth_func<-function(A,Sigma,len,bk_mat,bk_x_mat,gammak_mse,L,setseed)
+{
+  
+  eps1iid<-rnorm(len)
+  eps2iid<-rnorm(len)
+  eps3iid<-rnorm(len)
+  
+  eps_mat<-matrix(ncol=dim(Sigma)[1],nrow=len)
+  
+  # Generate eps with cross-correlation corresponding to Sigma
+  eigen_obj<-eigen(Sigma)
+  # Square-root of diagonal
+  D<-diag(sqrt(eigen_obj$values))
+  U<-eigen_obj$vectors
+  Sigma_sqrt<-(U)%*%D%*%t(U)
+  # Check_ should vanish
+  t(Sigma_sqrt)%*%Sigma_sqrt-Sigma
+  # Generate eps_mat
+  eps_mat<-t(Sigma_sqrt%*%rbind(eps1iid,eps2iid,eps3iid))
+  # Check: empirical cov should match Sigma
+  cov(eps_mat)
+  Sigma
+  
+  # Generate x either of two ways: 
+  # 1. Wold decomposition
+  if (!is.null(xi))
+  {  
+    x<-rep(0,n)
+    x_mat<-matrix(nrow=len,ncol=n)
+    for (m in 1:n)#j<-1
+    {
+      x<-rep(NA,len)
+      xi_mat<-cbind(xi[m,1:L],xi[m,L+1:L],xi[m,2*L+1:L])
+      for (i in L:len)#i<-L
+      {
+        x[i]<-sum(apply(xi_mat*eps_mat[i:(i-L+1),],2,sum))
+      }
+      x_mat[,m]<-x
+    }
+  } else
+  {
+    x_mat<-eps_mat
+  }
+  # Check
+  if (F)
+  {  
+    # 2. VAR(1) equation: note that Xi_0=xi[,(0:(n-1))*L+1] is an identity (otherwise one could account for identity with Sigma)
+    #   Therefore we use eps_mat[i,] in the VAR-equation below i.e. e_{it} appears only in the equation of x_{it}   xx_mat<-NULL
+    x<-x_mat[L,]
+    xx_mat<-matrix(nrow=L,ncol=n)
+    for (i in (L+1):len)#i<-L+1
+    {
+      xx_mat<-rbind(xx_mat,matrix(A%*%x+eps_mat[i,]+B%*%eps_mat[i-1,],nrow=1))
+      x<-xx_mat[nrow(xx_mat),]
+      x-x_mat[i,]
+    }
+    
+    # Check: both VAR-computations are the same up to negligible errors dur to finite-length of Wold-decomposition   
+    ts.plot(cbind(xx_mat[,1],x_mat[,1])[(len-100):len,],lty=1:2)
+  }
+  
+  # 3. Generate yt, zt and z_mse from eps_mat
+  perf_mat_sample<-perf_mat_true<-NULL
+  y_mat<-zdelta_mat<-z_mse_mat<-NULL
+  
+  for (m in 1:dim(Sigma)[1])#m<-2
+  {
+    
+    # Generate yt in either of two equivalent ways:        
+    # 3.1. convolution of SSA with white noise solution bk_mat (solution of theorem)   
+    bk<-NULL
+    for (j in 1:dim(Sigma)[1])#j<-1
+      bk<-cbind(bk,bk_mat[((j-1)*L+1):(j*L),m])
+    y<-rep(NA,len)
+    for (j in L:len)#j<-L
+      y[j]<-sum(apply(bk*eps_mat[j:(j-L+1),],2,sum))
+    y_mat<-cbind(y_mat,y[1: min(len,1000)])
+    # Check:    
+    if (F)
+    {
+      # 3.2 use deconvoluted solution bk_x_mat applied to xt (obtained from theorem after inversion of convolution) 
+      bk<-NULL
+      for (j in 1:dim(Sigma)[1])
+        bk<-cbind(bk,bk_x_mat[((j-1)*L+1):(j*L),m])
+      yh<-rep(NA,len)
+      for (j in L:len)
+        yh[j]<-sum(apply(bk*(x_mat[j:(j-L+1),]),2,sum))
+      
+      ts.plot(scale(cbind(y,yh)),lty=1:2)
+    }
+    # 3.3 Target: MSE-estimate of zt    
+    gammak<-NULL
+    for (j in 1:dim(Sigma)[1])#j<-1
+      # in this example gammak_mse is identical with Wold-decomposition (delta=0)
+      #  z_mse is just the original data   
+      gammak<-cbind(gammak,gammak_mse[m,((j-1)*L+1):(j*L)])
+    z_mse<-rep(NA,len)
+    for (j in L:len)
+      z_mse[j]<-sum(apply(gammak*eps_mat[j:(j-L+1),],2,sum))
+    z_mse_mat<-cbind(z_mse_mat,z_mse[1: min(len,1000)])
+    # Check: if Gamma is the identity then MSE should match Wold decomposition xi  
+    max(abs(gammak_mse-xi))
+    # Check: MSE is just X (because delta=0: nowcast)  
+    max(abs(na.exclude(z_mse-x_mat[,m])))
+    # 3.4 Target: zt+delta    
+    gammak<-NULL
+    for (j in 1:dim(Sigma)[1])#j<-1
+      #  gamma_target is original Signal extraction filter as applied to xt     
+      gammak<-cbind(gammak,gamma_target[m,((j-1)*L+1):(j*L)])
+    z<-rep(NA,len)
+    # Truncated bi-infinite sum (acausal filter) 
+    # gamma_target is applied to xt (in contrast to gammak_mse above which is convolution of mse with wold-decomposition)    
+    for (j in L:(len-L))
+      z[j]<-sum(apply(gammak*x_mat[j:(j-L+1),],2,sum))+sum(apply(gammak[-1,]*x_mat[(j+1):(j+L-1),],2,sum))
+    # Shift z by delta1: delta1 is zero (nowcast)    
+    if (delta1>0)
+    {  
+      zdelta<-c(z[(delta1+1):len],rep(NA,delta1))
+    } else
+    {
+      if (delta1<0)
+      {
+        zdelta<-c(rep(NA,abs(delta1)),z[1:(len-abs(delta1))])
+      } else
+      {
+        zdelta<-z
+      }
+    }
+    zdelta_mat<-cbind(zdelta_mat,zdelta[1: min(len,1000)])
+    #----------------
+    # Series of checks    
+    sample_var_target<-var(na.exclude(zdelta))
+    sample_var_target
+    # Compute theoretical variance of z_mse
+    variance_mse<-t(gammak_mse[m,])%*%I_tilde%*%gammak_mse[m,]
+    # Check sample and theoretical values    
+    variance_mse
+    var(na.exclude(z_mse))
+    # Criterion value with MSE target    
+    gammak_mse[1,]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(gammak_mse[1,]%*%I_tilde%*%gammak_mse[1,]))
+    # Criterion value with target: covariance in nominator is the same as with MSE but variance of target changes in denominator: use sample variance of target zdelta    
+    gammak_mse[1,]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(sample_var_target))
+    # Check: This should fit sample criterion with respect to effective target zdelta (instead of MSE as above)    
+    cor(na.exclude(cbind(zdelta,y)))[2]
+    
+    #------------
+    # Performances: empirical and theoretical criterion values and lag-one acfs
+    sample_crit_SSA_ref_target<-cor(na.exclude(cbind(zdelta,y)))[2]
+    sample_crit_SSA_ref_mse<-cor(na.exclude(cbind(z_mse,y)))[1,2]
+    true_crit_SSA_ref_mse<-SSA_obj$crit_rhoyz[m]
+    # Since the criterion is not calculated with respect to target in our function we use a trick:
+    #   One can replace variance of MSE by variance of target in denominator of correlation
+    true_crit_SSA_ref_target<-true_crit_SSA_ref_mse*sqrt(variance_mse)/sqrt(sample_var_target)
+    # Latest update: criterion is calculated with respect to effective target     
+    true_crit_SSA_ref_target<-SSA_obj$crit_rhoy_target[m]
+    sample_ht_SSA<-length(na.exclude(y))/length(which(y[(L+1):len]*y[L:(len-1)]<0))
+    true_ht_SSA<-ht_vec[m]
+    sample_ht_MSE<-length(na.exclude(z_mse))/length(which(z_mse[(L+1):len]*z_mse[L:(len-1)]<0))
+    acf1_mse<-t(gammak_mse[m,])%*%M_tilde%*%gammak_mse[m,]/t(gammak_mse[m,])%*%I_tilde%*%gammak_mse[m,]
+    true_ht_MSE<-pi/acos(acf1_mse)
+    # Here we compute sign accuracies i.e. probabilities of same sign (see proof of proposition 1 in paper for 'true' criterion with arcsin transformation)  
+    sample_SA_crit_SSA_ref_target<-length(which(sign(zdelta)==sign(y)))/(nrow(na.exclude(cbind(y,zdelta))))
+    true_SA_crit_SSA_ref_target<-0.5+asin(true_crit_SSA_ref_target)/pi
+    
+    perf_mat_sample<-rbind(perf_mat_sample,c(sample_crit_SSA_ref_target,sample_crit_SSA_ref_mse,sample_SA_crit_SSA_ref_target,sample_ht_SSA,sample_ht_MSE))
+    perf_mat_true<-rbind(perf_mat_true,c(true_crit_SSA_ref_target,true_crit_SSA_ref_mse,true_SA_crit_SSA_ref_target,true_ht_SSA,true_ht_MSE))
+    # Criterion value is with respect to MSE-target: 
+    #   Optimized solutions are identical but criterion measures performances against MSE i.e. against 'benchmark'    
+  } 
+  colnames(perf_mat_sample)<-colnames(perf_mat_true)<-c("Cor. with target","Cor. with MSE","Sign accuracy","ht","ht MSE")
+  rownames(perf_mat_sample)<-rownames(perf_mat_true)<-paste("Series ",1:n,sep="")
+  
+  perf_mat_sample
+  perf_mat_true
+  
+  
+  
+  
+  perf_mat<-rbind(perf_mat_sample,perf_mat_true)
+  cor(na.exclude(x_mat))
+  # Need only first 1000 data points of x_mat for plots: the other data files have been already shortened above 
+  x_mat<-x_mat[1:1000,]
+  return(list(perf_mat_sample=perf_mat_sample,perf_mat_true=perf_mat_true,bk_mat=bk_mat,gammak_mse=gammak_mse,y_mat=y_mat,zdelta_mat=zdelta_mat,z_mse_mat=z_mse_mat,x_mat=x_mat,ht_ar=ht_ar))
+}
+
+
+
+
+
+
+
+
+
+
+# This function computes MSE performances with respect to h-step ahead forecast of ip: target is not trend but ip
+HWI_uni_perf<-function(h,lambda_HP,select_vec,p,q,L,date_to_fit,ht_multiplicator,filter_span,lag_vec,trim_threshold,use_hp_c_for_SSA_target,use_hp_c_for_filter_target,standardize_data,na_rw_lin,data_file_name,quarterly_TF,diff_lag)
+{
+  # Univariate approaches
+  n<-1
+  
+  # 1 Data
+  read_obj<-read_data_func(path.data,select_vec,h,trim_threshold,na_rw_lin,data_file_name,quarterly_TF,diff_lag)
+  
+  data=read_obj$data
+  data_xts=read_obj$data_xts
+  data_select_xts_filled=read_obj$data_select_xts_filled  
+  tail(data)
+  ts.plot(data)
+
+  #----------------------------------
+  # HP filter
+# Long target filter (for plots only)  
+  HP_obj<-HP_target_mse_modified_gap(2*(L-1)+1+2*h,lambda_HP)
+  hp_symmetric_long=HP_obj$target
+
+  HP_obj<-HP_target_mse_modified_gap(L,lambda_HP)
+  
+  hp_symmetric=HP_obj$target
+  compute_holding_time_func(hp_symmetric)
+  
+  hp_classic_concurrent=HP_obj$hp_trend
+  hp_one_sided<-HP_obj$hp_mse
+  Sigma<-NULL
+  #-------------------------------------
+  # Data for filtering: all explanatory variables and all time points, without target (shifted and transformed data)
+  # If filter_span=NULL then we supply the date of the last data point
+  if (is.null(filter_span))
+    filter_span<-rownames(data)[nrow(data)]
+  if (T)
+  {
+# This one does not remove data at sample end (see below)
+    indexts<-which(rownames(data)<=filter_span)[length(which(rownames(data)<=filter_span))]
+    x_mat<-na.exclude(data[1:indexts,2:ncol(data)])
+    x_mat_all<-cbind(data[which(rownames(data)==rownames(x_mat)[1]):which(rownames(data)==rownames(x_mat)[nrow(x_mat)]),1],x_mat)
+    colnames(x_mat_all)[1]<-"target"
+    tail(x_mat_all)
+    if (standardize_data)
+    {
+      x_mat<-scale(x_mat)
+      x_mat_all<-scale(x_mat_all)
+    }
+    
+  } else
+  {
+# This removes data at sample end because target is forward shifted and rows with NAs are removed    
+    indexts<-which(rownames(data)<=filter_span)[length(which(rownames(data)<=filter_span))]
+    x_mat<-((data[1:indexts,]))[,2:ncol(data)]
+    x_mat<-(na.exclude(data[1:indexts,]))[,2:ncol(data)]
+    x_mat_all<-((data[1:indexts,]))
+    x_mat_all<-(na.exclude(data[1:indexts,]))
+    if (standardize_data)
+    {
+      x_mat<-scale(x_mat)
+      x_mat_all<-scale(x_mat_all)
+    }
+    
+  }
+  tail(x_mat)
+  # With additional target
+  tail(x_mat_all)
+  
+  len<-nrow(x_mat)
+  apply(x_mat_all,2,var)
+  
+  perf_mat_sample<-perf_mat_true<-bx_mat<-gammax_mat<-y_mat<-zdelta_mat<-z_mse_mat<-xi_mat<-arma_coef_mat<-var_target_mat<-sigma_vec<-rho0_uni_vec<-gammaeps_mat<-beps_mat<-gamma_target_mat<-gamma_target_long_mat<-ht_ssa_vec<-Sigma_vec<-hp_classic_concurrent_eps<-hp_classic_concurrent_x<-coef_mat<-NULL
+  # Data for model fitting: all time points up to date_to_fit
+  data_fit<-na.exclude(data[which(rownames(data)<date_to_fit),select_vec])
+  if (standardize_data)
+    data_fit<-scale(data_fit)
+  # Compute ACFs
+  for (i in 1:ncol(data_fit))#i<-1
+  {
+    acf(data_fit[,i])
+  }
+  ###################################################################
+  # Univariate designs: loop through each series 
+  for (i in 1:ncol(data_fit))#i<-3  p<-3  p<-1
+  {
+    # Fit model: use restricted data set data_fit
+    arma_obj<-arima(data_fit[,i],order=c(p,0,q))
+    # Collect parameters
+    coef_mat<-rbind(coef_mat,arma_obj$coef)
+    tsdiag(arma_obj)
+    acf(data_fit[,i])
+    #  Potentially confusing notation: arma_obj$sigma is sigma^2 (it is squared, already) 
+    sigma_vec<-c(sigma_vec,arma_obj$sigma)
+    # MA inversion: need to complete sequence with weight of epsilon at lak k=0
+    if (p>0)
+    {
+      if (q>0)
+      {
+        xi<-c(1,ARMAtoMA(ar=arma_obj$coef[1:p],ma=arma_obj$coef[p+1:q],lag.max=L-1))
+      } else
+      {
+        xi<-c(1,ARMAtoMA(ar=arma_obj$coef[1:p],ma=0,lag.max=L-1))
+      }
+    } else
+    {  
+      if (q>0)
+      {
+        xi<-c(1,ARMAtoMA(ar=0,ma=arma_obj$coef[1:q],lag.max=L-1))
+      } else
+      {
+        xi<-c(1,rep(0,L-1))
+      }
+    }
+    ts.plot(xi)
+    xi_mat<-cbind(xi_mat,xi)
+    arma_coef_mat<-cbind(arma_coef_mat,arma_obj$coef)
+    
+# delta is h plus publication lag    
+    delta<-h+lag_vec[select_vec[i]]
+# MSE nowcast: compute the convolution of ARMA and HP_symmetric and set future epsilons to zero
+# The MSE filter is only used for specifying HT constraint    
+# Otherwise, the MSE filter is not relevant for M-SSA (M-SSA computes MSE filter internally)    
+    conv<-conv_two_filt_func(hp_symmetric_long,xi)$conv
+    ts.plot(conv)
+    hp_mse<-c(conv[((length(conv)-1)/2+1+delta):length(conv)],rep(0,lag_vec[i]))
+# Older code: MSE less precise
+    if (F)
+    {  
+      conv<-conv_two_filt_func(hp_symmetric,xi)$conv
+      hp_mse<-c(conv[((L-1)/2+1+delta):L],rep(0,delta+(L-1)/2))
+      ts.plot(hp_mse)
+    }
+    ts.plot(hp_mse)
+    
+    # Compute convolution of classic HP concurrent and MA inversion: this is not used by SSA (used further down for computing expected performances)  
+    conv<-conv_two_filt_func(hp_classic_concurrent,xi)$conv
+    hp_classic_concurrent_eps<-cbind(hp_classic_concurrent_eps,conv)
+    # Same as above but applied to x, i.e., without convolution with xi  
+    hp_classic_concurrent_x<-cbind(hp_classic_concurrent_x,hp_classic_concurrent)
+    
+    # HT: compute expected HT of MSE nowcast assuming the data to follow the ARMA(2,1) model
+    ht_rho_obj<-compute_holding_time_func(hp_mse)
+    ht_mse<-ht_rho_obj$ht
+    rho_mse<-ht_rho_obj$rho_ff1
+    #------------------------------------------    
+# Target for SSA optimization: we can specify the two-sided acausal target or the causal HP-C
+# Two-sided: supply the right tail of the filter, setting symmetric_target<-T and delta=h
+# In this case the right tail will be mirrored around the center point
+# This assumes L to be odd such that symmetric filter has a single peak at the center
+    if (!use_hp_c_for_SSA_target)
+    {
+# Two-sided HP      
+      gamma_target<-hp_one_sided
+      symmetric_target<-T
+    } else
+    {
+# One-sided classic caudal HP-C: SSA replicates HP-C subject to HT-constraint and forecast horizon      
+      gamma_target<-hp_classic_concurrent
+      symmetric_target<-F
+    }
+# Target for filtering
+# This assumes L to be odd such that symmetric filter has a single peak at the center
+    if (!use_hp_c_for_filter_target)
+    {
+# Two-sided HP      
+      gamma_target_filter<-hp_one_sided
+# We don't need to specify symmetric_target since the filter function always mirrors the right tail to the left      
+    } else
+    {
+# One-sided classic caudal HP-C: SSA replicates HP-C subject to HT-constraint and forecast horizon      
+      gamma_target_filter<-hp_classic_concurrent
+    }
+    
+# We can compute MSE filter alternatively: this is slightly better than hp_mse computed above because it relies on longer filter (it mirrors right tail to the left and obtains a HP of double length when compared to hp_symmetric above). 
+# The MSE filter is only used for specifying HT constraint    
+# Otherwise, the MSE filter is not relevant for M-SSA (M-SSA computes MSE filter internally)    
+    M_obj<-M_MSE_target_func(gamma_target,xi,delta,symmetric_target,Sigma)
+# Compare both MSE filters: 
+#  If use_hp_c_for_filter_target==F (so that gamma_target<-hp_one_sided and symmetric_target<-T) 
+#   then differences in following plot are generally small if L is large: practically mostly irrelevant    
+    ts.plot(cbind(t(M_obj$gamma_mse),hp_mse),lty=1:2)
+    # Alternative target specification of two-sided HP (unused but working) 
+    if (F)
+    {
+      # Symmetric filter    
+      gamma_target<-hp_symmetric
+      # Does not have to be mirrored    
+      symmetric_target<-F
+      # Symmetric is causal and we need to right-shift the center point (forecast acausal (L-1)/2 steps ahead)     
+      delta<-(L-1)/2
+    }
+    # Specify HT constraint: 50% larger than MSE benchmark
+    ht_ssa<-ht_multiplicator*ht_mse
+    #  ht_ssa<-2*ht_mse
+    ht_ssa_vec<-c(ht_ssa_vec,ht_ssa)
+    # We supply lag-one ACF (not HT) to M-SSA: rho0 is relevant in HT constraint   
+    rho0<-compute_rho_from_ht(ht_ssa)$rho
+    # with_negative_lambda==F discards unsmoothing: since HT is larger than benchmark we want to smooth (setting with_negative_lambda<-T would not change optimization outcome but optimization would be slightly longer)
+    with_negative_lambda<-F
+    # Default setting for smoothing
+    lower_limit_nu<-"rhomax"
+    # Optimization whith half-way triangulation: effective resolution is 2^split_grid. It is much faster than brute-force grid-search. Setting split_grid<-10 is fast and reasonably accurate in most cases
+    split_grid<-10
+    rho0_uni_vec<-c(rho0_uni_vec,rho0)
+    # We can supply Sigma<-NULL or Sigma<-matrix(arma_obj$sigma2): in the former case the problem must be univariate and a unit variance is assumed. Sigma is used for computing the variance of the acausal target 
+    Sigma<-NULL
+    # Note that arma_obj$sigma2=arma_obj$sigma is sigma^2    
+    Sigma<-arma_obj$sigma2
+    Sigma_vec<-c(Sigma_vec,Sigma)
+    #-------------------------------
+    # Compute SSA  
+    SSA_obj<-MSSA_func(split_grid,L,delta,grid_size,gamma_target,rho0,with_negative_lambda,xi,lower_limit_nu,Sigma,symmetric_target)
+    
+    # Target correlation: correlation with causal MSE  
+    SSA_obj$crit_rhoyz
+    # Target correlation: correlation with acausal target (generally smaller than above)  
+    SSA_obj$crit_rhoy_target  
+    # Lag-one ACF: in numerical optimization succeeded then this should be close to imposed rho0 (otherwise one should increase split_grid)  
+    SSA_obj$crit_rhoyy
+    # Very small error: optimization succeeded  
+    rho0-SSA_obj$crit_rhoyy
+    # Optimal nu (see theorem 1)  
+    SSA_obj$nu_opt
+    # SSA as applied to epsilont (convolution)
+    bk_mat<-SSA_obj$bk_mat
+    beps_mat<-cbind(beps_mat,bk_mat)
+    # SSA as applied to xt (deconvolution)
+    bk_x_mat<-SSA_obj$bk_x_mat
+    bx_mat<-cbind(bx_mat,bk_x_mat)
+    # MSE as applied to epsilont: this is the same as gamma_mse above
+    gammak_mse<-SSA_obj$gammak_mse
+    gammaeps_mat<-cbind(gammaeps_mat,gammak_mse)
+    # MSE as applied to xt
+    gammak_x_mse<-SSA_obj$gammak_x_mse
+    gammax_mat<-cbind(gammax_mat,gammak_x_mse)
+    ts.plot(cbind(bk_x_mat,gammak_x_mse),col=c("blue","red"))
+    # Target: effective acausal filter convolved with xi
+    gamma_target_long<-SSA_obj$gammak_target
+    gamma_target_long_mat<-cbind(gamma_target_long_mat,gamma_target_long)
+    # Symmetric target: length is doubled because we mirrored right tail about center point
+    ts.plot(gamma_target_long,col=c("blue","red"))
+    gamma_target_mat<-cbind(gamma_target_mat,gamma_target)
+    # Variance of acausal target  
+    var_target<-SSA_obj$var_target
+    var_target_mat<-c(var_target_mat,var_target)
+    #----------------------------
+    # Checks of formula: HT and lag-one ACFs
+    # Compute M
+    M_obj<-M_func(L,Sigma)
+    M_tilde<-M_obj$M_tilde
+    I_tilde<-M_obj$I_tilde
+    # Compute lag-one ACFs of SSA and MSE based on optimal filters
+    rho_mse<-gammak_mse[,1]%*%M_tilde%*%gammak_mse[,1]/gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]
+    rho_ssa<-bk_mat[,1]%*%M_tilde%*%bk_mat[,1]/bk_mat[,1]%*%I_tilde%*%bk_mat[,1]
+    # Check: best approximation on grid should be close to effective holding-time constraints  
+    compute_holding_time_from_rho_func(rho_ssa)$ht
+    # Nearly the same as ht_SSA (optimization succeeded: increasing split_grid will enhance fit)  
+    ht_ssa
+    # Compute ht of MSE
+    compute_holding_time_from_rho_func(rho_mse)$ht
+    ht_mse
+    
+    # 11. Checks of formula: target correlations 
+    #   The SSA criteria computed here correspond to SSA_obj$crit_rhoyz above
+    crit_mse<-gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]/gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]
+    crit_ssa<-gammak_mse[,1]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]))
+    # Compare the latter with   SSA_obj$crit_rhoyz: the same...
+  }
+  names(ht_ssa_vec)<-colnames(bx_mat)<-colnames(x_mat)
+  
+  #############################################################  
+  # Filter data and compute expected and sample performances
+  len<-nrow(x_mat)
+  perf_mat_sample<-perf_mat_true<-zdelta_mat<-y_mat<-z_mse_mat<-classic_HP_mat<-NULL
+  for (m in 1:ncol(x_mat))#m<-1
+  {
+    print(m)
+    Sigma<-Sigma_vec[m]
+    M_obj<-M_func(L,Sigma)
+    M_tilde<-M_obj$M_tilde
+    I_tilde<-M_obj$I_tilde
+    
+    # Shorter filter for implementing acausal target closer to time series boundary  
+    L_short<-min(70,L)
+# Shift depends on series (ragged end)    
+    delta<-h+lag_vec[select_vec[m]]
+# We supply gamma_target_filter for filtering: the filter function automatically mirrors the right half to the left
+#   Note that gamma_target_filter can differ from target gamma_target used for SSA optimization    
+    filter_perf_obj<-filter_perf_func(delta,SSA_obj,hp_classic_concurrent_x[,m],hp_classic_concurrent_eps[,m],
+    gammaeps_mat[,m],gammax_mat[,m],gamma_target_filter,gamma_target_long_mat[,m],bx_mat[,m],beps_mat[,m],
+    x_mat[,m],m,L_short,L,M_tilde,I_tilde,var_target_mat[m],ht_ssa_vec,Sigma)
+    
+    perf_mat_true=rbind(perf_mat_true,filter_perf_obj$perf_mat_true)
+    perf_mat_sample=rbind(perf_mat_sample,filter_perf_obj$perf_mat_sample)
+    zdelta_mat=cbind(zdelta_mat,filter_perf_obj$zdelta)
+    y_mat=cbind(y_mat,filter_perf_obj$y)
+    z_mse_mat=cbind(z_mse_mat,filter_perf_obj$z_mse)
+    classic_HP_mat=cbind(classic_HP_mat,filter_perf_obj$z_classic_HP)
+    rownames(zdelta_mat)<-names(filter_perf_obj$zdelta)
+    rownames(z_mse_mat)<-names(filter_perf_obj$z_mse)
+    rownames(y_mat)<-names(filter_perf_obj$y)
+    rownames(classic_HP_mat)<-names(filter_perf_obj$y)
+    # Criterion value is with respect to MSE-target: 
+    #   Optimized solutions are identical but criterion measures performances against MSE i.e. against 'benchmark'    
+  }
+  colnames(classic_HP_mat)<-colnames(x_mat)
+  
+  rownames(perf_mat_sample)<-rownames(perf_mat_true)<-colnames(z_mse_mat)<-colnames(y_mat)<-colnames(zdelta_mat)<-colnames(x_mat)
+  # True and estimated performances should match if sample is sufficiently long and if ARMA-models are not misspecified  
+  perf_mat_sample
+  perf_mat_true
+#  print(perf_mat_sample[,"HT SSA"])
+  
+  y_mat_uni<-y_mat
+  zdelta_uni_mat<-zdelta_mat
+  # We compute the bivariate MA-inversion and Sigma that would correspond to the two independent univariate models above: check perfs further down
+  xi_mat_uni_bi<-rbind(c(xi_mat[,1],rep(0,L)),c(rep(0,L),xi_mat[,2]))
+  Sigma_uni_bi<-diag(sigma_vec)
+  
+  ############################################################################
+  # Forecast performances: target is ip h steps ahead
+  
+  # Benchmark forecasts
+  head(x_mat_all)
+  tail(x_mat_all)
+  bench1<-0
+# Must discard first L data points to match the sample of the filters
+  bench2<-mean(x_mat_all[L:nrow(x_mat_all),"ip"],na.rm=T)
+  bench3<-x_mat_all[L:nrow(x_mat_all),"ip"]
+# Can regress on all data points but MSE computation must match sample of filters  
+  lm_obj<-lm(x_mat_all[,"target"]~x_mat_all[,"ip"])
+  summary(lm_obj)
+# Match sample of filters, i.e., start at L 
+  bench4<-lm_obj$coef[1]+lm_obj$coef[2]*x_mat_all[L:nrow(x_mat_all),"ip"]
+  mse_vec<-c(mean((x_mat_all[L:nrow(x_mat_all),"target"]-bench1)^2,na.rm=T),
+             mean((x_mat_all[L:nrow(x_mat_all),"target"]-bench2)^2,na.rm=T),
+             mean((x_mat_all[L:nrow(x_mat_all),"target"]-bench3)^2,na.rm=T))
+    
+
+  bench_hwi<-NULL
+# HWI benchmarks based on `direct' AR(1) (regression) applied to explanatory series  
+  for (i in 2:ncol(x_mat_all))
+  {
+# Can regress on all data points    
+    lm_obj<-lm(x_mat_all[,"target"]~x_mat_all[,i])
+    summary(lm_obj)
+# Match sample of filters    
+    bench_hwi<-cbind(bench_hwi,lm_obj$coef[1]+lm_obj$coef[2]*x_mat_all[L:nrow(x_mat_all),i])
+    mse_vec<-c(mse_vec,mean((x_mat_all[L:nrow(x_mat_all),"target"]-bench_hwi[,ncol(bench_hwi)])^2,na.rm=T))
+  }
+  colnames(bench_hwi)<-colnames(x_mat)
+  ht_ar<-NULL
+  for (i in 1:ncol(bench_hwi))
+    ht_ar<-c(ht_ar,compute_empirical_ht_func(bench_hwi[,i])$empirical_ht)
+  names(ht_ar)<-colnames(bench_hwi)
+# lm_mse_vec and mse_vec are identical for the benchmark regressions
+# For the filters they differ: mse_vec is the MSE of the filter as direct forecast of target and lm_mse_vec is resudualvariance of filter regressed on target
+  lm_mse_vec<-mse_vec
+# Signal extraction: compute MSE between filter output and direct (filter output is considered as direct forecast)
+# HP: regression omits L data points since filter output is NA
+  mse_vec<-c(mse_vec,mean((x_mat_all[,"target"]-classic_HP_mat[,"ip"])^2,na.rm=T))
+# MSE and SSA  
+  for (i in 1:ncol(y_mat))
+  {
+# SSA and MSE filters: regression omits L data points since filter outputs are NA
+    mse_vec<-c(mse_vec,mean((x_mat_all[,"target"]-y_mat[,i])^2,na.rm=T),
+               mean((x_mat_all[,"target"]-z_mse_mat[,i])^2,na.rm=T))
+  }
+# Calibrated filters with corresponding prediction errors  
+# Consider filter as explanatory variable: regress filter on target and predictor is regression output
+# In this case MSE is variance of regression residual
+# This is consistent with direct forecast benchmarks which rely also on regression of explanatories on target
+# Note that MSE will be smaller than direct filter forecast above
+# Accordingly we also compute calibrated SSA and MSE filter outputs
+  lm_mse_vec<-c(lm_mse_vec,mean(lm(x_mat_all[,"target"]~classic_HP_mat[,"ip"])$res^2))
+# MSE and SSA regression predictors: regress filter outputs on target (indirect forecast)
+  y_mat_reg<-z_mse_mat_reg<-NULL
+  for (i in 1:ncol(y_mat))#i<-1
+  {
+    lm_obj_ssa<-lm(x_mat_all[,"target"]~y_mat[,i])
+    lm_obj_mse<-lm(x_mat_all[,"target"]~z_mse_mat[,i])
+    # SSA and MSE filters: regression omits L data points since filter outputs are NA
+    lm_mse_vec<-c(lm_mse_vec,summary(lm_obj_ssa)$sigma^2,
+                  summary(lm_obj_mse)$sigma^2)
+    y_mat_reg<-cbind(y_mat_reg,lm_obj_ssa$coef[1]+lm_obj_ssa$coef[2]*y_mat[,i])
+    z_mse_mat_reg<-cbind(z_mse_mat_reg,lm_obj_mse$coef[1]+lm_obj_mse$coef[2]*z_mse_mat[,i])
+  }
+  colnames(z_mse_mat_reg)<-colnames(y_mat_reg)<-colnames(y_mat)
+  
+# Compute equally weighted consensus: direct filter outputs without first column (ip)
+  consensus_mse<-apply(z_mse_mat[,-which(colnames(z_mse_mat)=="ip")],1,mean)
+  consensus_ssa<-apply(y_mat[,-which(colnames(y_mat)=="ip")],1,mean)
+  mse_vec<-c(mse_vec,mean((x_mat_all[,"target"]-consensus_mse)^2,na.rm=T),
+             mean((x_mat_all[,"target"]-consensus_ssa)^2,na.rm=T))
+# Compute equally weighted consensus: regressed filter outputs 
+  lm_consensus_mse<-apply(z_mse_mat_reg[,-which(colnames(z_mse_mat_reg)=="ip")],1,mean)
+  lm_consensus_ssa<-apply(y_mat_reg[,-which(colnames(y_mat_reg)=="ip")],1,mean)
+  lm_obj_ssa<-lm(x_mat_all[,"target"]~lm_consensus_ssa)
+  lm_obj_mse<-lm(x_mat_all[,"target"]~lm_consensus_mse)
+  lm_mse_vec<-c(lm_mse_vec,summary(lm_obj_ssa)$sigma^2,
+                summary(lm_obj_mse)$sigma^2)
+  lm_mse_vec/lm_mse_vec[4]
+  
+# Assign names to mse_vec  
+  names_mse_vec<-c("Zero","Mean","Last")
+  for (i in 1:ncol(y_mat))
+  {
+    names_mse_vec<-c(names_mse_vec,paste("AR ",colnames(y_mat)[i],sep=""))
+  }
+  names_mse_vec<-c(names_mse_vec,"HP")
+  for (i in 1:ncol(y_mat))
+  {
+    names_mse_vec<-c(names_mse_vec,paste(c("SSA ","MSE "),colnames(y_mat)[i],sep=""))
+  }
+  names_mse_vec<-c(names_mse_vec,"Consensus MSE","Consensus SSA")
+  names(mse_vec)<-names(lm_mse_vec)<-names_mse_vec
+  
+  mse_vec/mse_vec[4]
+
+
+# Compute t-values of regression of benchmark predictors on target (shifted ip)  
+  t_mat_direct<-NULL
+  for (i in 1:ncol(y_mat))
+  {
+    t_mat_direct<-rbind(t_mat_direct,summary(lm(x_mat_all[L:nrow(x_mat_all),"target"]~bench_hwi[,i]))$coef[1:2,3])
+  }
+  rownames(t_mat_direct)<-colnames(bench_hwi)
+  colnames(t_mat_direct)<-c("Direct AR t-intercept","Direct AR t-coef")
+  x_mat_all[,1]
+  
+# Compute t-values of regression of SSA predictors on target (shifted ip)  
+  t_mat_SSA<-NULL
+  for (i in 1:ncol(y_mat))
+  {
+    t_mat_SSA<-rbind(t_mat_SSA,summary(lm(x_mat_all[,"target"]~y_mat[,i]))$coef[1:2,3])
+  }
+  rownames(t_mat_SSA)<-colnames(y_mat)
+  colnames(t_mat_SSA)<-c("SSA t-intercept","SSA t-coef")
+# Compute t-values of regression of MSE predictors on target (shifted ip)  
+  t_mat_mse<-NULL
+  for (i in 1:ncol(y_mat))
+  {
+    t_mat_mse<-rbind(t_mat_mse,summary(lm(x_mat_all[,"target"]~z_mse_mat[,i]))$coef[1:2,3])
+  }
+  rownames(t_mat_mse)<-colnames(y_mat)
+  colnames(t_mat_mse)<-c("MSE t-intercept","MSE t-coef")
+# Consensus forecast
+  t_mat_consensus_mse<-summary(lm(x_mat_all[,"target"]~consensus_mse))$coef[1:2,3]
+  names(t_mat_consensus_mse)<-c("Consensus MSE t-intercept","Consensus MSE t-coef")
+  t_mat_consensus_ssa<-summary(lm(x_mat_all[,"target"]~consensus_ssa))$coef[1:2,3]
+  names(t_mat_consensus_ssa)<-c("Consensus SSA t-intercept","Consensus SSA t-coef")
+  
+  consensus_direct<-apply(bench_hwi,1,mean)
+  t_mat_consensus_direct<-summary(lm(x_mat_all[L:nrow(x_mat_all),"target"]~consensus_direct))$coef[1:2,3]
+  names(t_mat_consensus_mse)<-c("Consensus MSE t-intercept","Consensus MSE t-coef")
+  t_mat_consensus_ssa<-summary(lm(x_mat_all[,"target"]~consensus_ssa))$coef[1:2,3]
+  names(t_mat_consensus_ssa)<-c("Consensus SSA t-intercept","Consensus SSA t-coef")
+  
+# To ensure that the multivariate filters rely on the same data set we provide the dates of the univariate setting  
+  dates_for_multivariate_setting<-rownames(x_mat)
+  
+  
+  
+  return(list(dates_for_multivariate_setting=dates_for_multivariate_setting,mse_vec=mse_vec,lm_mse_vec=lm_mse_vec,y_mat=y_mat,z_mse_mat=z_mse_mat,zdelta_mat=zdelta_mat,t_mat_SSA=t_mat_SSA,t_mat_mse=t_mat_mse,t_mat_direct=t_mat_direct,t_mat_consensus_mse=t_mat_consensus_mse,t_mat_consensus_ssa=t_mat_consensus_ssa,ht_ssa_vec=ht_ssa_vec,t_mat_consensus_direct=t_mat_consensus_direct,perf_mat_sample=perf_mat_sample,perf_mat_true=perf_mat_true,xi_mat=xi_mat,hp_symmetric_long=hp_symmetric_long,bx_mat=bx_mat,gammax_mat=gammax_mat,hp_classic_concurrent=hp_classic_concurrent,x_mat_all=x_mat_all,ht_ar=ht_ar,bench_hwi=bench_hwi,SSA_obj=SSA_obj,perf_mat_sample=perf_mat_sample,perf_mat_true=perf_mat_true,classic_HP_mat=classic_HP_mat,z_mse_mat_reg=z_mse_mat_reg,y_mat_reg=y_mat_reg))
+}
+
+
+
+
+
+#L<-10 dev.off()
+
+
+HWI_multi_perf<-function(h,lambda_HP,select_vec_multi,p_mult,q_mult,L,filter_from,filter_to,ht_multiplicator,ht_ssa_multi,forecast_excess,trim_threshold,date_to_fit,ht_percent_larger_or_of_univariate,lag_vec,L_short,threshold,use_hp_c_for_SSA_target,use_hp_c_for_filter_target,standardize_data,na_rw_lin,data_file_name,quarterly_TF,diff_lag)
+{ 
+#  p<-p_mult<-3
+  p<-p_mult
+  q<-q_mult
+
+  # Load Data
+  read_obj<-read_data_func(path.data,select_vec_multi,h,trim_threshold,na_rw_lin,data_file_name,quarterly_TF,diff_lag)
+  
+  data=read_obj$data[,c("target",select_vec_multi)]
+  tail(data)
+
+  #----------------------------------
+  # HP filter
+  HP_obj<-HP_target_mse_modified_gap(L,lambda_HP)
+  
+  hp_symmetric=HP_obj$target
+  compute_holding_time_func(hp_symmetric)
+  
+  hp_classic_concurrent=HP_obj$hp_trend
+  hp_one_sided<-HP_obj$hp_mse
+  Sigma<-NULL
+  #-------------------------------------
+  # Data for filtering: all explanatory variables and all time points, without target (shifted and transformed data)
+  if (T)
+  {
+    # This one does not remove data at sample end (see below)
+    anf_m<-which(rownames(data)>=filter_from)[1]
+    enf_m<-which(rownames(data)<=filter_to)[length(which(rownames(data)<=filter_to))]
+    x_mat<-na.exclude(data[anf_m:enf_m,2:ncol(data)])
+    x_mat_all<-cbind(data[anf_m:enf_m,1],x_mat)
+    colnames(x_mat_all)[1]<-"target"
+    tail(x_mat_all)
+    if (standardize_data)
+    {
+      x_mat<-scale(x_mat)
+      x_mat_all<-scale(x_mat_all)
+    }
+    
+  } else
+  {
+    # This removes data at sample end because target is forwrad shifted and rows with NAs are removed    
+    x_mat<-((data[1:which(rownames(data)==filter_span),]))[,2:ncol(data)]
+    x_mat<-(na.exclude(data[1:which(rownames(data)==filter_span),]))[,2:ncol(data)]
+    x_mat_all<-((data[1:which(rownames(data)==filter_span),]))
+    x_mat_all<-(na.exclude(data[1:which(rownames(data)==filter_span),]))
+    if (standardize_data)
+    {
+      x_mat<-scale(x_mat)
+      x_mat_all<-scale(x_mat_all)
+    }
+    
+    
+  }
+  tail(x_mat)
+  # With additional target
+  tail(x_mat_all)
+  
+  apply(x_mat_all,2,var)
+  len<-nrow(x_mat)
+  perf_mat_sample<-perf_mat_true<-bx_mat<-gammax_mat<-y_mat<-zdelta_mat<-z_mse_mat<-xi_mat<-arma_coef_mat<-var_target_mat<-sigma_vec<-rho0_uni_vec<-gammaeps_mat<-beps_mat<-gamma_target_mat<-gamma_target_long_mat<-ht_ssa_vec<-Sigma_vec<-hp_classic_concurrent_eps<-hp_classic_concurrent_x<-coef_mat<-NULL
+  # Data for model fitting: all time points up to date_to_fit; explanatory variables only,i.e., BIP is not shifted
+  data_fit<-na.exclude(data[which(rownames(data)<date_to_fit),select_vec_multi])#date_to_fit<-"2019-01-01"
+  acf(data_fit)
+  tail(data_fit)
+  if (standardize_data)
+  {
+    data_fit<-scale(data_fit)
+  }
+  
+  
+  
+# VARMA modelling
+  set.seed(12)
+  V_obj<-VARMA(data_fit[,select_vec_multi],p=p,q=q)
+  V_obj<-refVARMA(V_obj, thres = threshold)
+  
+  if (F)
+    MTSdiag(V_obj)
+# Sigma
+  Sigma<-V_obj$Sigma
+  V_obj$Phi
+  V_obj$Theta
+  n<-dim(Sigma)[1]
+# MA inversion
+  xi_psi<-PSIwgt(Phi = V_obj$Phi, Theta = V_obj$Theta, lag = L, plot = F, output = F)
+  xi_p<-xi_psi$psi.weight
+# Transform Xi_p into Xi: first L entries, from left to right, are weights of first WN, next L entries are weights of second WN 
+  xi<-matrix(nrow=n,ncol=n*L)
+  for (i in 1:n)
+  {
+    for (j in 1:L)
+      xi[,(i-1)*L+j]<-xi_p[,i+(j-1)*n]
+  }
+# Plot MA inversions  
+  par(mfrow=c(1,n))
+  for (i in 1:n)#i<-1
+  {
+    mplot<-xi[i,1:min(10,L)]
+    
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
+      
+    }
+    ts.plot(mplot,col=rainbow(ncol(mplot)),main=paste("MA inversion ",colnames(data_fit)[i],sep=""))
+  }
+# AR inversion: verify invertibility of VARMA
+  eta_pi<-PIwgt(Phi = V_obj$Phi, Theta = V_obj$Theta, lag = L)
+  eta_p<-eta_pi$pi.weight
+  eta<-matrix(nrow=n,ncol=n*L)
+  for (i in 1:n)
+  {
+    for (j in 1:L)
+      eta[,(i-1)*L+j]<-eta_p[,i+(j-1)*n]
+  }
+  # Plot AR inversions  
+  par(mfrow=c(1,n))
+  for (i in 1:n)#i<-1
+  {
+    mplot<-eta[i,1:min(10,L)]
+    
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,eta[i,(j-1)*L+1:min(10,L)])
+      
+    }
+    ts.plot(mplot,col=rainbow(ncol(mplot)),main=paste("AR inversion ",colnames(data_fit)[i],sep=""))
+  }
+  if (F)
+  {
+  # Check: MA-inversion replicates original data up to level (if non-vanishing mu) and finite MA inversion error
+    eps<-V_obj$residuals
+  # Select series
+    k<-1
+    w<-matrix(xi[k,],nrow=L)
+    x_eps<-rep(NA,nrow(eps))
+    for (i in L:nrow(eps))
+    {
+      x_eps[i]<-sum(apply(w*eps[i:(i-L+1),],2,sum))
+    }
+    
+    x_all<-data_fit[,select_vec_multi]
+    x<-x_all[,k]
+    
+    length(x_eps)
+    length(x)
+# Check: bot series should match on common span up to level (non-vanishing mean) and finite MA inversion error    
+    ts.plot(cbind(c(rep(NA,p),x_eps),x))
+  }
+  
+  
+
+# Check invertibility: check if weights are larger at lags L/2:L than at lags 0:L/2  
+  max_max<-NULL
+  for (i in 1:n)#i<-1  ts.plot(eta[i,])   dev.off()
+  {
+    for (j in 1:n)#j<-2
+    {
+# Compute max of absolute weights for lags 0:L/2 and for lags (L/2):L      
+      max_max<-rbind(max_max,c(max(abs(eta[i,(j-1)*L+1:(L/2)])),max(abs(eta[i,(j-1)*L+L/2+1:(L/2)]))))
+    }
+  }
+# If for any series the weights at high lags are large: print error message and interrupt  
+  if (sum(max_max[,1]<max_max[,2])>0)
+  {
+    print("##############################################################################")
+    print("Error message")
+    print("VARMA-model is not invertible: modify q (and maybe p)")
+    print("##############################################################################")
+    return()
+  }
+
+  # Compute MA-inversion of univariate classic HP: this differs from univariate model above because VARMA model is different from univariate ARMA-models above
+  # a. Compute bivariate expression of univariate design
+  HP_mult<-c(hp_classic_concurrent,rep(0,(n-1)*L))
+  if (n>1)
+  {
+    for (i in 2:n)
+      HP_mult<-rbind(HP_mult,c(rep(0,(i-1)*L),hp_classic_concurrent,rep(0,(n-i)*L)))
+  }
+  # b. MA inversion: convolve with xi  
+  hp_classic_concurrent_eps<-t(M_conv_two_filt_func(HP_mult,xi)$conv)
+  
+  
+#-----------------------------------------------------------------------------------------
+# 3. Target for M-SSA: two-sided acausal HP or one-side classic HP (HP-C) 
+  if (!use_hp_c_for_SSA_target)
+  {
+# 3.1 Target: right tail of two-sided target applied to each series
+    gamma_target<-c(hp_one_sided,rep(0,(n-1)*L))
+    if (n>1)
+    {
+      for (i in 2:n)
+        gamma_target<-rbind(gamma_target,c(rep(0,(i-1)*L),hp_one_sided,rep(0,(n-i)*L)))
+    }
+# Target is two sided: this selection has implications on MA-inversion, MSE-nowcast, target correlation, variance (of target) 
+# Internally, the two-sided target is obtained by mirroring hp_one_sided as follows: c(hp_one_sided[L:2],hp_one_sided)
+# Note that we do not compute c(hp_one_sided[L:1],hp_one_sided), i.e. hp_one_sided[1] is the center point or point of symmetry
+# This assumes L to be odd when computing the two-sided HP
+    symmetric_target<-T
+# Plot
+    ts.plot(t(gamma_target),col=rainbow(ncol(data)))
+  } else
+  {
+# Use classic HP-c as target: SSA tries to replicate HP-C subject to HT-constraint and forecast horizon    
+    gamma_target<-c(hp_classic_concurrent,rep(0,(n-1)*L))
+    if (n>1)
+    {
+      for (i in 2:n)
+        gamma_target<-rbind(gamma_target,c(rep(0,(i-1)*L),hp_classic_concurrent,rep(0,(n-i)*L)))
+    }
+# Target is one-sided
+    symmetric_target<-F
+# Plot
+    ts.plot(t(gamma_target),col=rainbow(ncol(data)))
+  }
+
+# Target for filtering (not used in deriving M-SSA): use two-sided acausal HP or symmetrized HP-C
+# Symmetrized HP-C: right half is mirrored in filter function  
+  if (!use_hp_c_for_filter_target)
+  {
+    gamma_target_filter<-c(hp_one_sided,rep(0,(n-1)*L))
+    if (n>1)
+    {
+      for (i in 2:n)
+        gamma_target_filter<-rbind(gamma_target_filter,c(rep(0,(i-1)*L),hp_one_sided,rep(0,(n-i)*L)))
+    }
+# We do not need to specify symmetric_target because target is always mirrored in filter function    
+# Plot
+    ts.plot(t(gamma_target_filter),col=rainbow(ncol(data)))
+  } else
+  {
+# Use classic HP-c as target: SSA tries to replicate HP-C subject to HT-constraint and forecast horizon    
+    gamma_target_filter<-c(hp_classic_concurrent,rep(0,(n-1)*L))
+    if (n>1)
+    {
+      for (i in 2:n)
+        gamma_target_filter<-rbind(gamma_target_filter,c(rep(0,(i-1)*L),hp_classic_concurrent,rep(0,(n-i)*L)))
+    }
+    
+# We do not need to specify symmetric_target because target is always mirrored in filter function    
+# Plot
+    ts.plot(t(gamma_target_filter),col=rainbow(ncol(data)))
+  }
+  
+# delta accounts for h, publication lag and forecast_excess  
+#   -forecast_excess>0 allows for a left-shift advancement when compared to forecast_excess=0
+#   -lag_vec accounts for publication lag
+#     -M-SSA has a single fixed delta across series (not series dependent delta)
+#     -However, different series of multivariate design might have different publication lags
+#     -We here make a compromise: use the publication lag of the first series (which the also determines delta of the other series) 
+#     -In this case, the trend of the first series is ensured to have the correct delta for the intended target
+#     -The intended target is the two-sided filter applied to the first series and shifted h+forecast_excess into the future
+  delta<-h+lag_vec[select_vec_multi[1]]+forecast_excess  
+  #delta<-5
+  
+  # 3.2 Compute MSE filter: as applied to epsilon
+  # This is used for computing ht_mse_vec which can be used to specify the HT constraint of M-SSA (50% larger than MSE) or for diagnostic/validation purposes (see further down). Otherwise, the MSE filter is not relevant for M-SSA (in fact M-SSA also computes the MSE filter internally, i.e., M-SSA replicates gamma_mse, see below for a corresponding check/validation) 
+  # We can provide gamma_target or xi in either original or transposed form: the function automatically adjusts (transposes) if necessary
+  mse_obj<-M_MSE_target_func(gamma_target,xi,delta,symmetric_target,Sigma)
+  gamma_mse<-mse_obj$gamma_mse
+  # Plot
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-gamma_mse[i,1:L]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,gamma_mse[i,(j-1)*L+1:L])
+    }
+    ts.plot(mplot,main=paste("MSE applied to eps: series ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+  # Compute system matrices: M_tilde and I_tilde (used for derivation of Variances and lag-one ACFs)
+  M_obj<-M_func(L,Sigma)
+  M=M_obj$M;M_tilde=M_obj$M_tilde;I_tilde=M_obj$I_tilde;eigen_M_obj=M_obj$eigen_M_obj;eigen_M_tilde_obj=M_obj$eigen_M_tilde_obj;eigen_I_tilde_obj=M_obj$eigen_I_tilde_obj
+  # Compute lag-one ACF (ACF on diagonal of CCF)
+  rho_mse_vec<-diag(gamma_mse%*%M_tilde%*%t(gamma_mse))/diag(gamma_mse%*%I_tilde%*%t(gamma_mse))
+  # Compute HT of (causal) MSE nowcast
+  ht_mse_vec<-compute_holding_time_from_rho_func(rho_mse_vec)$ht
+  # Compute MSE filter as applied to xt
+  # Deconvolute filt2 from filt1: filt1 is the convolution
+  gamma_mse_x<-t(M_deconvolute_func(gamma_mse,xi)$deconv)
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-gamma_mse_x[1:L,i]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,gamma_mse_x[(j-1)*L+1:L,i])
+    }
+    ts.plot(mplot,main=paste("MSE applied to x: series ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+
+# Check that gamma_mse_x applied to x is the same as gamma_mse applied to eps (differences may be due to level, i.e., non-vanishing mean and/or finite MA inversion)   
+  if (F)
+  {
+    x<-data_fit[,select_vec_multi]
+    y1<-rep(NA,nrow(x))
+    length(y1)
+    # Select a series    
+    l<-1
+# gamma_mse_x has lags along the rows and series along the columns    
+    filt<-matrix(gamma_mse_x[,l],nrow=L)
+    for (i in L:nrow(x))
+    {
+      y1[i]<-sum(apply(filt*x[i:(i-L+1),],2,sum))
+    }
+    eps<-V_obj$residuals
+    nrow(eps)
+    y2<-rep(NA,nrow(eps))
+# gamma_mse has lags along the columns and series along the rows (transposed)    
+    filt<-matrix(gamma_mse[l,],nrow=L)
+    for (i in L:nrow(eps))
+    {
+      y2[i]<-sum(apply(filt*eps[i:(i-L+1),],2,sum))
+    }
+    par(mfrow=c(1,1))
+    ts.plot(cbind(y2,y1[(p+1):length(y1)]))
+    
+  }
+
+  #---------------------------
+  # 4. M-SSA 
+  # 4.1 Specify hyperparameters and perform estimation
+  # We can impose 50% larger HTs than MSE benchmark or we impose the same HTs as in univariate case: we here do the latter to make comparisons between bivariate and multivariate more compelling
+  if (ht_percent_larger_or_of_univariate)
+  {
+    # Impose 50% larger HT    
+    ht_ssa_vec<-1.5*ht_mse_vec
+  } else
+  {
+    # Use HT of univariate model    
+    ht_ssa_vec<-ht_ssa_multi
+  }
+  # Compute corresponding lag-one ACF in HT constraint  
+  rho0<-compute_rho_from_ht(ht_ssa_vec)$rho
+  # with_negative_lambda==T allows the search to extend to unsmoothing (generate more zero-crossings than benchmark): default value is FALSE (smoothing only)
+  with_negative_lambda<-T
+  # All nu possible in grid of [0,2] or [-2,2]
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!
+  # Potential problem: multiple solutions for given ht. The procedure so far selects the solution with the tightest holding-time fit: but this could have bad performances
+  # TO DO: generalize code such that it proposes multiples solutions with large(st) criterion values
+  #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  
+  lower_limit_nu<-"0"
+  # nu>2 we do not achieve the limit of admissibility but no unit-roots
+  lower_limit_nu<-"2"
+  # nu>2*rhomax(L) i.e. we achieve the limit of admissibility: uniqueness and possibly unit-roots
+  # We use this setting which is the default
+  lower_limit_nu<-"rhomax"
+  # New optimization whith half-way triangulation: effective resolution is 2^split_grid. It is much faster than brute-force grid-search. Makes use of monotonicity of lag-one acf if $|nu|>2*rho_max(L)$. If $|nu|<2*rho_max(L)$ one should use grid-search instead which computes and returns all possible solutions to the holding-time constraint (but computationally much more expensive)
+  split_grid<-20
+  
+  # We can replicate univariate models by specifying `diagonal' xi and Sigma as below
+  if (F)
+  {
+    xi<-xi_mat_uni_bi
+    Sigma<-Sigma_uni_bi
+    rho0<-rho0_uni_vec
+    ht_ssa_vec<-compute_holding_time_from_rho_func(rho0)$ht
+    
+  }
+  
+  MSSA_obj<-MSSA_func(split_grid,L,delta,grid_size,gamma_target,rho0,with_negative_lambda,xi,lower_limit_nu,Sigma,symmetric_target)
+  
+  #-----------------------
+  # 4.2 Validation checks: compute  theoretical performances and check HT constraint  
+  # Target correlation: with respect to causal MSE benchmark  
+  MSSA_obj$crit_rhoyz
+  # Target correlation: with respect to effective acausal target  
+  MSSA_obj$crit_rhoy_target
+  # Lag one ACF: should match HT constraint  
+  MSSA_obj$crit_rhoyy
+  # Optimized nu  
+  MSSA_obj$nu_opt
+  # SSA as applied to epsilont (convolution)
+  bk_mat<-MSSA_obj$bk_mat
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-bk_mat[1:L,i]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,bk_mat[(j-1)*L+1:L,i])
+    }
+    ts.plot(mplot,main=paste("SSA applied to epsilon ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+  # SSA as applied to xt (deconvolution)
+  bk_x_mat<-MSSA_obj$bk_x_mat
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-bk_x_mat[1:L,i]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,bk_x_mat[(j-1)*L+1:L,i])
+    }
+    ts.plot(mplot,main=paste("MSSA applied to x ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+  
+  # Check: deconvolute xi from bk_mat gives bk_x_mat  
+  deconv_M<-t(M_deconvolute_func(t(bk_mat),xi)$deconv)
+  max(abs(deconv_M-bk_x_mat))
+  # MSE as applied to epsilont: this is the same as gamma_mse above
+  gammak_mse<-MSSA_obj$gammak_mse
+  # Check: should vanish  
+  max(abs(gammak_mse-t(gamma_mse)))
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-gammak_mse[1:L,i]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,gammak_mse[(j-1)*L+1:L,i])
+    }
+    ts.plot(mplot,main=paste("M-MSE applied to eps ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+  # MSE as applied to xt
+  gammak_x_mse<-MSSA_obj$gammak_x_mse
+  # Check: should vanish
+  max(abs(gammak_x_mse-gamma_mse_x))
+  par(mfrow=c(1,n))
+  for (i in 1:n)# i<-1
+  {
+    mplot<-gammak_x_mse[1:L,i]
+    for (j in 2:n)
+    {
+      mplot<-cbind(mplot,gammak_x_mse[(j-1)*L+1:L,i])
+    }
+    ts.plot(mplot,main=paste("M-MSE applied to x ",colnames(data_fit)[i],sep=""),col=rainbow(ncol(data)))
+  }
+  
+  
+  # Target: effective acausal filter convolved with xi
+  gamma_target_long<-MSSA_obj$gammak_target
+  dim(gamma_target_long)
+  ts.plot(gamma_target_long,col=rainbow(ncol(data)))
+  # Variance-covariance matrix of acausal target  
+  var_target<-MSSA_obj$var_target
+  # Can compare variances on diagonal of acausal target (var_target) and causal MSE (below): the latter are roughly 50% smaller (because MSE is missing future epsilons)
+  t(gammak_mse)%*%I_tilde%*%gammak_mse
+  t(bk_mat)%*%I_tilde%*%bk_mat
+  
+  # 1. Lag-one ACFs and HTs  
+  # Need system matrices M_tilde and I_tilde to compute ACFs
+  M_obj<-M_func(L,Sigma)
+  M_tilde<-M_obj$M_tilde
+  I_tilde<-M_obj$I_tilde
+  # Lag one ACF of MSE nowcast 
+  rho_mse<-gammak_mse[,1]%*%M_tilde%*%gammak_mse[,1]/gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]
+  for (i in 2:n)
+    rho_mse<-c(rho_mse,gammak_mse[,i]%*%M_tilde%*%gammak_mse[,i]/gammak_mse[,i]%*%I_tilde%*%gammak_mse[,i])
+  rho_ssa<-bk_mat[,1]%*%M_tilde%*%bk_mat[,1]/bk_mat[,1]%*%I_tilde%*%bk_mat[,1]
+  for (i in 2:n)
+    rho_ssa<-c(rho_ssa,bk_mat[,i]%*%M_tilde%*%bk_mat[,i]/bk_mat[,i]%*%I_tilde%*%bk_mat[,i])
+# Compute HTs based on ACFs
+  ht_comp<-apply(matrix(rho_ssa,nrow=1),1,compute_holding_time_from_rho_func)[[1]]$ht
+  ht_comp
+# Check: optimization successful if the above HTs based on optimal nowcasts match the imposed HTs
+# Increasing split_grid tightens the fit
+  ht_ssa_vec
+# Compute HTs of MSE
+  apply(matrix(rho_mse,nrow=1),1,compute_holding_time_from_rho_func)[[1]]$ht
+# Check: should be identical  
+  ht_mse_vec
+  
+  # 2. Criteria: MSE is trivially one since correlation of MSE with itself is one (our target is MSE which leads to the same solution as using z_{t+\delta})
+  #   The SSA criteria computed here correspond to MSSA_obj$crit_rhoyz
+  crit_mse<-gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]/gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]
+  for (i in 2:n)
+    crit_mse<-c(crit_mse,gammak_mse[,i]%*%I_tilde%*%gammak_mse[,i]/gammak_mse[,i]%*%I_tilde%*%gammak_mse[,i])
+  crit_ssa<-gammak_mse[,1]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]))
+  for (i in 2:n)
+    crit_ssa<-c(crit_ssa,gammak_mse[,i]%*%I_tilde%*%bk_mat[,i]/(sqrt(bk_mat[,i]%*%I_tilde%*%bk_mat[,i])*sqrt(gammak_mse[,i]%*%I_tilde%*%gammak_mse[,i])))
+  
+  crit_mse_1<-gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]/gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]
+  crit_ssa_1<-gammak_mse[,1]%*%I_tilde%*%bk_mat[,1]/(sqrt(bk_mat[,1]%*%I_tilde%*%bk_mat[,1])*sqrt(gammak_mse[,1]%*%I_tilde%*%gammak_mse[,1]))
+  crit_mse_2<-gammak_mse[,2]%*%I_tilde%*%gammak_mse[,2]/gammak_mse[,2]%*%I_tilde%*%gammak_mse[,2]
+  crit_ssa_2<-gammak_mse[,2]%*%I_tilde%*%bk_mat[,2]/(sqrt(bk_mat[,2]%*%I_tilde%*%bk_mat[,2])*sqrt(gammak_mse[,2]%*%I_tilde%*%gammak_mse[,2]))
+  
+  criterion_mat<-rbind(crit_mse,crit_ssa)
+  colnames(criterion_mat)<-c(paste("Series ",1:n,paste=""))
+  rownames(criterion_mat)<-c("MSE","SSA")
+  criterion_mat
+  # Compare second row with MSSA_obj$crit_rhoyz
+  MSSA_obj$crit_rhoyz
+  
+  
+  
+  #-------------------------------------------------------------
+  # 5. Compute expected performances, filter data and compute empirical performances: check that the latter converge to the former
+  
+  # Check that expected performances computed by function filter_perf_func match sample performances for a long run of the fitted VARMA above: this result does not compute the sample distribution (the latter is computed further down based on multiple realizations of length nrow(data)) 
+
+  
+  # 5.1 Compute expected and sample performances (for the single macro-indicator sample) 
+  #x_mat<-(data)
+  len<-nrow(x_mat)
+
+  
+  perf_mat_sample<-perf_mat_true<-zdelta_mat<-y_mat<-z_mse_mat<-z_classic_HP_mat<-NULL
+  for (m in 1:dim(Sigma)[1])#m<-1
+  {
+# We here provide gamma_target_filter for filtering: this can differ from M-SSA target, see specifications above
+    filter_perf_obj<-filter_perf_func(delta,MSSA_obj,hp_classic_concurrent,hp_classic_concurrent_eps,gammak_mse,gammak_x_mse,gamma_target_filter,gamma_target_long,bk_x_mat,bk_mat,x_mat,m,L_short,L,M_tilde,I_tilde,var_target,ht_ssa_vec,Sigma)
+    perf_mat_true=rbind(perf_mat_true,filter_perf_obj$perf_mat_true)
+    perf_mat_sample=rbind(perf_mat_sample,filter_perf_obj$perf_mat_sample)
+    zdelta_mat=cbind(zdelta_mat,filter_perf_obj$zdelta)
+    y_mat=cbind(y_mat,filter_perf_obj$y)
+    z_mse_mat=cbind(z_mse_mat,filter_perf_obj$z_mse)
+    z_classic_HP_mat<-cbind(z_classic_HP_mat,filter_perf_obj$z_classic_HP)
+    rownames(zdelta_mat)<-names(filter_perf_obj$zdelta)
+    rownames(z_mse_mat)<-names(filter_perf_obj$z_mse)
+    rownames(y_mat)<-names(filter_perf_obj$y)
+    # Criterion value is with respect to MSE-target: 
+    #   Optimized solutions are identical but criterion measures performances against MSE i.e. against 'benchmark'    
+  } 
+  rownames(perf_mat_sample)<-rownames(perf_mat_true)<-colnames(z_mse_mat)<-colnames(y_mat)<-colnames(zdelta_mat)<-colnames(x_mat)
+  perf_mat_sample
+  perf_mat_true
+  perf_mat<-rbind(perf_mat_sample,perf_mat_true)
+
+# We can check that expected and sample performances agree asymptotically by simulating an artificial VAR    
+  if (F)
+  {
+# Specify VAR parameters    
+    p1=V_obj$Phi
+    sig=Sigma
+    th1=V_obj$Theta
+  # Simulate a very long series    
+    len<-100000
+    set.seed(31)
+    m1=VARMAsim(len,arlags=c(p_mult),phi=p1,sigma=sig)
+    x_mat=m1$serie
+
+# Compute expected and sample performances    
+    perf_mat_sample<-perf_mat_true<-zdelta_mat<-y_mat<-z_mse_mat<-z_classic_HP_mat<-NULL
+    for (m in 1:dim(Sigma)[1])#m<-1
+    {
+      # We here provide gamma_target_filter for filtering: this can differ from M-SSA target, see specifications above
+      filter_perf_obj<-filter_perf_func(delta,MSSA_obj,hp_classic_concurrent,hp_classic_concurrent_eps,gammak_mse,gammak_x_mse,gamma_target_filter,gamma_target_long,bk_x_mat,bk_mat,x_mat,m,L_short,L,M_tilde,I_tilde,var_target,ht_ssa_vec,Sigma)
+      perf_mat_true=rbind(perf_mat_true,filter_perf_obj$perf_mat_true)
+      perf_mat_sample=rbind(perf_mat_sample,filter_perf_obj$perf_mat_sample)
+      zdelta_mat=cbind(zdelta_mat,filter_perf_obj$zdelta)
+      y_mat=cbind(y_mat,filter_perf_obj$y)
+      z_mse_mat=cbind(z_mse_mat,filter_perf_obj$z_mse)
+      z_classic_HP_mat<-cbind(z_classic_HP_mat,filter_perf_obj$z_classic_HP)
+      rownames(zdelta_mat)<-names(filter_perf_obj$zdelta)
+      rownames(z_mse_mat)<-names(filter_perf_obj$z_mse)
+      rownames(y_mat)<-names(filter_perf_obj$y)
+      # Criterion value is with respect to MSE-target: 
+      #   Optimized solutions are identical but criterion measures performances against MSE i.e. against 'benchmark'    
+    } 
+    rownames(perf_mat_sample)<-rownames(perf_mat_true)<-colnames(z_mse_mat)<-colnames(y_mat)<-colnames(zdelta_mat)<-colnames(x_mat)
+    perf_mat_sample
+    perf_mat_true
+    
+  }
+  
+# MSE forecast error between filters and target (ip h-steps ahead)  
+  mse_multi_vec<-mean((x_mat_all[,"target"]-y_mat[,1])^2,na.rm=T)
+  for (i in 2:n)#i<-3
+    mse_multi_vec<-c(mse_multi_vec,mean((x_mat_all[,"target"]-y_mat[,i])^2,na.rm=T))
+  for (i in 1:n)
+    mse_multi_vec<-c(mse_multi_vec,mean((x_mat_all[,"target"]-z_mse_mat[,i])^2,na.rm=T))
+  names(mse_multi_vec)<-c(paste("SSA ",colnames(y_mat),sep=""),paste("MSE ",colnames(y_mat),sep=""))
+# Residual variances of regressions of filters onto target 
+#   -These are smaller than mse_multi_vec above
+#   -They match the proceeding behind the direct forecast regressions of explanatories on target
+#     -Filter outputs do not fit traget explicitly
+#     -Filter outputs can be seen as `explanatory' variables
+#     -Therefore regressing these variables on target is pertinent
+  lm_mse_multivec<-summary(lm(x_mat_all[,"target"]~y_mat[,1]))$sigma^2
+  for (i in 2:n)
+    lm_mse_multivec<-c(lm_mse_multivec,summary(lm(x_mat_all[,"target"]~y_mat[,i]))$sigma^2)
+  for (i in 1:n)#i<-1
+    lm_mse_multivec<-c(lm_mse_multivec,summary(lm(x_mat_all[,"target"]~z_mse_mat[,i]))$sigma^2)
+  names(lm_mse_multivec)<-c(paste("SSA ",colnames(y_mat),sep=""),paste("MSE ",colnames(y_mat),sep=""))
+  
+
+  # Compute t-values of regression of MSE predictors on target (shifted ip)  
+  t_mat_multi<-summary(lm(x_mat_all[,"target"]~y_mat[,1]))$coef[1:2,3]
+  for (i in 2:ncol(y_mat))
+  {
+    t_mat_multi<-rbind(t_mat_multi,summary(lm(x_mat_all[,"target"]~y_mat[,i]))$coef[1:2,3])
+  }
+  t_mat_multi<-rbind(t_mat_multi,summary(lm(x_mat_all[,"target"]~z_mse_mat[,1]))$coef[1:2,3])
+  for (i in 2:ncol(y_mat))
+  {
+    t_mat_multi<-rbind(t_mat_multi,summary(lm(x_mat_all[,"target"]~z_mse_mat[,i]))$coef[1:2,3])
+  }
+  rownames(t_mat_multi)<-names(lm_mse_multivec)
+
+# Regressions and t-tests based on data without zero BIP months, i.e., only BIP publication months    
+  if (F)
+  {
+# Extract target from data
+    trgt_all<-data[which(rownames(data)==rownames(x_mat)[1]):which(rownames(data)==rownames(x_mat)[nrow(x_mat)]),1]
+# Remove all o time points, i.e., keep quarterly publication dates only
+    trgt<-trgt_all[-which(trgt_all==0)]
+    tail(trgt)
+    tail(data[,2],20)
+    
+# Regression of target on lagged target: insignificant
+#    k<-2
+#    summary(lm(trgt[k:length(trgt)]~trgt[1:(length(trgt)-k+1)]))
+    
+# Select M-SSA-indicator and extract dates corresponding to trgt (quarterly publication dates)
+    indic<-"ESI"
+    pred<-y_mat[which(rownames(y_mat)%in%names(trgt)),indic]
+    
+    # Regress on target and check t-statistics: significant
+    dat_mat<-na.exclude(cbind(trgt,pred))
+    lm_obj<-lm(dat_mat[,1]~dat_mat[,2])
+    summary(lm_obj)
+    sqrt(mean(lm_obj$res^2))/sqrt(var(dat_mat[,1]))
+    sd(lm_obj$res)/sd(dat_mat[,1])
+  }
+  
+# Calibrated filters with corresponding prediction errors  
+# Consider filter as explanatory variable: regress filter on target and predictor is regression output
+# In this case MSE is variance of regression residual
+# This is consistent with direct forecast benchmarks which rely also on regression of explanatories on target
+# Note that MSE will be smaller than direct filter forecast above
+# Accordingly we also compute calibrated SSA and MSE filter outputs
+  y_mat_reg<-z_mse_mat_reg<-NULL
+  for (i in 1:ncol(y_mat))#i<-1
+  {
+    lm_obj_ssa<-lm(x_mat_all[,"target"]~y_mat[,i])
+    lm_obj_mse<-lm(x_mat_all[,"target"]~z_mse_mat[,i])
+    y_mat_reg<-cbind(y_mat_reg,lm_obj_ssa$coef[1]+lm_obj_ssa$coef[2]*y_mat[,i])
+    z_mse_mat_reg<-cbind(z_mse_mat_reg,lm_obj_mse$coef[1]+lm_obj_mse$coef[2]*z_mse_mat[,i])
+  }
+  colnames(z_mse_mat_reg)<-colnames(y_mat_reg)<-colnames(y_mat)
+  
+  return(list(xi=xi,mse_multi_vec=mse_multi_vec,y_mat=y_mat,z_mse_mat=z_mse_mat,zdelta_mat=zdelta_mat,x_mat_all=x_mat_all,t_mat_multi=t_mat_multi,lm_mse_multivec=lm_mse_multivec,perf_mat_sample=perf_mat_sample,perf_mat_true=perf_mat_true,MSSA_obj=MSSA_obj,y_mat_reg=y_mat_reg,z_mse_mat_reg=z_mse_mat_reg))
+}
+
