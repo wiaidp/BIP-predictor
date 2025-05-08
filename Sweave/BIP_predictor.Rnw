@@ -182,6 +182,7 @@ par(mfrow=c(1,1))
 # Plot the data
 # The real-time BIP (red) is lagging the target (black) by lag_vec[1] quarters (publication lag)
 mplot<-x_mat
+colnames(mplot)[1]<-"GDP"
 colo<-c("black",rainbow(ncol(data)-1))
 main_title<-"Data: standardized diff-log, Pandemic outliers trimmed"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
@@ -207,6 +208,7 @@ par(mfrow=c(1,2))
 # Plot the data
 # The real-time BIP (red) is lagging the target (black) by lag_vec[1] quarters (publication lag)
 mplot<-x_mat[which(rownames(x_mat)>=2007&rownames(x_mat)<=2011),]
+colnames(mplot)[1]<-"GDP"
 colo<-c("black",rainbow(ncol(data)-1))
 main_title<-"Financial Crisis"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
@@ -221,6 +223,7 @@ axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4
 axis(2)
 box()
 mplot<-x_mat[which(rownames(x_mat)>=2019&rownames(x_mat)<=2022),]
+colnames(mplot)[1]<-"GDP"
 colo<-c("black",rainbow(ncol(data)-1))
 main_title<-"Pandemic"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
@@ -259,10 +262,10 @@ lags <- acf_result$lag
 
 par(mfrow=c(1,2))
 k<-3
-plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "CCF")
 abline(h = 0, col = "red")
 k<-4
-plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "")
 abline(h = 0, col = "red")
 
 dev.off()
@@ -285,10 +288,10 @@ lags <- acf_result$lag
 
 par(mfrow=c(1,2))
 k<-3
-plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "CCF")
 abline(h = 0, col = "red")
 k<-4
-plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "")
 abline(h = 0, col = "red")
 
 dev.off()
@@ -480,7 +483,7 @@ file = "./Figures/Data.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sample cross-correlation function (CCF): full data set.", sep = "")
+cat("\\caption{Data: standardized log-differences: pandemic trimmed to $\\pm 3$.", sep = "")
 cat("\\label{data}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -509,7 +512,7 @@ file = "./Figures/CCF.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): full data set, including the pandemic. Correlations at positive lags mean that real-time GDP is lagging in relative terms.", sep = "")
+cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): full data set, including the pandemic. Correlations at positive lags signify that (real-time) GDP is lagging when referenced against the two (real-time) indicators.", sep = "")
 cat("\\label{CCF}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -519,7 +522,7 @@ file = "./Figures/CCF_wc.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): without Pandemic. Correlations at positive lags mean that real-time GDP is lagging in relative terms.", sep = "")
+cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): without pandemic. Correlations at positive lags signify that (real-time) GDP is lagging when referenced against the two (real-time) indicators.", sep = "")
 cat("\\label{CCF_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
