@@ -66,8 +66,8 @@ marc.wildi@zhaw.ch}
 \item Real-time data: all series are artificially aligned at end point. BIP and ip are advanced by their lags.
 \end{itemize}
 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:02 2025
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:18 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -84,8 +84,8 @@ marc.wildi@zhaw.ch}
 \end{tabular}
 \caption{Ragged end.  } 
 \label{f_stat}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:02 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:18 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -128,7 +128,7 @@ The model summarizes key features of the data, where lagging series (GDP and ind
 \subsection{`Classic' Direct Forecast}\label{cdf}
 
 So-called direct forecasts are obtained by regressing the relevant indicators on forward-shifted BIP, accounting for the additional publication lag. For illustration of the concept, we here rely on all indicators and full sample information, excluding the pandemic. In-sample forecasts and the shifted BIP, which serves as the target, are presented in Figs. \ref{direct_wc} (full dataset without the pandemic) and \ref{direct_wc_financial_crisis} (financial crisis) for horizons up to three quarters ahead. 
-\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5in]{./Figures/direct_wc_all.pdf}\caption{Direct forecasts (red lines) based on all indicators and full sample information, without the pandemic: BIP (black line) shifted by zero one, two and three quarters.\label{direct_wc}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5in]{./Figures/direct_wc_financial_crisis.pdf}\caption{Direct forecast  across the financial crisis:  regression based on all indicators and full sample information.\label{direct_wc_financial_crisis}}\end{center}\end{figure}The results indicate that as $h$ increases, the peaks and dips of the direct forecasts become increasingly right-shifted (delayed) relative to the target. Additionally, the F-statistics precipitously decline from $F=3.57$, for $h=2$, to $F=0.46$, for $h=3$, see Table \eqref{f_stat}, suggesting that the predictor becomes statistically insignificant for larger forecast horizons exceeding two quarters (link to Heinisch and Scheufele).   
+\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/direct_wc_all.pdf}\caption{Direct forecasts (red lines) based on all indicators and full sample information, without the pandemic: GDP (black line) shifted by zero one, two and three quarters.\label{direct_wc}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/direct_wc_financial_crisis.pdf}\caption{Direct forecast  across the financial crisis:  regression based on all indicators and full sample information.\label{direct_wc_financial_crisis}}\end{center}\end{figure}The results indicate that as $h$ increases, the peaks and dips of the direct forecasts become increasingly right-shifted (delayed) relative to the target. Additionally, the F-statistics precipitously decline from $F=3.57$, for $h=2$, to $F=0.46$, for $h=3$, see Table \eqref{f_stat}, suggesting that the predictor becomes statistically insignificant for larger forecast horizons exceeding two quarters (link to Heinisch and Scheufele).   
 
 
 \subsection{Filter: HP(160)}
@@ -136,14 +136,14 @@ So-called direct forecasts are obtained by regressing the relevant indicators on
 As shown, the performance of direct forecasts sharply declines for larger forecast horizons. We conjecture that erratic short-term fluctuations -—unpredictable high-frequency noise -— overlay the data, thereby obscuring the effective 'signal' and making a direct regression more susceptible to overfitting. We therefore envisage to highlight the signal by applying a filter to dampen high-frequency noise. 
 The so-called Hodrick-Prescott filter is a classic tool used in business cycle analysis: the filter is specified by a single smoothing parameter $\lambda$ and the value $\lambda=1600$ is specifically recommended for quarterly data. However, Phillips and Jin (2021) suggest that the HP(1600) filter removes relevant information due to excessive smoothing.  In our context, this oversmoothing issue would be further exacerbated when considering forecast horizons shorter than a year -—an interval inconsistent with the mean duration of up to several years of business cycles, as highlighted by the HP(1600). Consequently, we here select a more adaptive HP(160) 'target' filter. 
 While this choice may appear somewhat arbitrary, an analysis of the filter in the frequency domain confirms a more suitable profile for the corresponding amplitude function, assigning greater weight to yearly components -—relevant in our prediction framework-— than the classic quarterly HP filter. This approach also addresses and controls for undesirable high-frequency noise. See Fig. \ref{hp_160}, which presents both two-sided and (classic) one-sided filters (top panels) along with the associated amplitude functions (bottom panels). We now posit the HP(160) filter as a means to achieve better forecasting performance at larger horizons, noting that a comprehensive technical analysis of the effect of $\lambda$ on the resulting BIP predictor can be conducted using the M-SSA package. 
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/hp_160.pdf}\caption{Two-sided HP-160) (top left) and one-sided (concurrent) HP-C filters (top right) with corresponding amplitude functions (bottom).\label{hp_160}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/hp_160.pdf}\caption{Two-sided HP-160) (top left) and one-sided (concurrent) HP-C filters (top right) with corresponding amplitude functions (bottom).\label{hp_160}}\end{center}\end{figure}
 \subsection{Direct HP Forecast}\label{hpdf}
 
 
 Extending the `classic' direct forecast design, we here consider filtered indicators, based on the one-sided HP(160), denoted as HP-C: the filtered indicators are explanatory variables for the regressions on forward-shifted BIP\footnote{Katja and Simon: for each forecast horizon $h=0,1,2,3$ I'm using corresponding forecasts of the real-time filter output, assuming the data to be white noise (assuming an ARMA model does not lead to significantly different results). I think we might ignore these technical details in the paper.}. As in the previous section, we rely on all indicators as well as the full sample estimate for illustration, see Figs.\eqref{direct_hp_forecasts} (all observations with exclusion of the pandemic) and \eqref{direct_hp_forecasts_financial_crisis} (financial crisis). A comparison with the classic direct forecasts in Fig.\eqref{direct_wc_financial_crisis} indicates that the new predictors are slightly less retarded (`faster'). 
-\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5in]{./Figures/direct_hp_forecasts.pdf}\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.\label{direct_hp_forecasts}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/direct_hp_forecasts_financial_crisis.pdf}\caption{Shifted GDP (black), direct HP forecast (blue) and classic direct forecast (red) over the curse of the financial crisis:  regression based on all indicators and full sample information (without pandemic).\label{direct_hp_forecasts_financial_crisis}}\end{center}\end{figure}Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:04 2025
+\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/direct_hp_forecasts.pdf}\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.\label{direct_hp_forecasts}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=5in, width=6in]{./Figures/direct_hp_forecasts_financial_crisis.pdf}\caption{Shifted GDP (black), direct HP forecast (blue) and classic direct forecast (red) over the curse of the financial crisis:  regression based on all indicators and full sample information (without pandemic).\label{direct_hp_forecasts_financial_crisis}}\end{center}\end{figure}Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:18 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -198,8 +198,8 @@ Second, the concept can be extended to a multivariate framework, denoted as M-SS
 For illustration, we consider a nowcast of the target $z_t$ generated by the output of the two-sided HP(160) filter applied to BIP, which we denote by HP-BIP. We compare the classic multivariate mean squared error (MSE) predictor, denoted by M-MSE, with the M-SSA predictor, where we set $ht_1=1.5ht_{MSE}$ in the holding time constraint. This configuration ensures that the M-SSA predictor produces approximately 33$\%$ fewer zero-crossings than M-MSE over the long term. The purpose of this constraint is to compare the effect of a different level of smoothness on the prediction performance (target correlation). The estimation of the underlying VAR(1) model employed for the M-MSE and M-SSA is based on data observations up to January 2008. This approach ensures a lengthy out-of-sample period that encompasses significant events such as the financial crisis, the sovereign debt crisis, and the COVID-19 pandemic. Further details and background information are available in Wildi (2025b). All computations are performed utilizing the M-SSA package, as documented in Wildi (2025b).\\
 
 Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, where increased smoothing achieved through the M-SSA method manifests as a distinct pattern in the filter weights, notably influencing the rate of decay across increasing lags. The resulting filtered series, presented in Figure \ref{mssa_msse_now}, are standardized to enable direct comparisons. The M-SSA nowcast adheres to the specified constraint, exhibiting approximately one-third fewer zero-crossings than the M-MSE, confirming the effectiveness of the smoothness control imposed during the design. This is further corroborated by Table \ref{corhtnow}, which reports empirical holding times and target correlations. Increased smoothness achieved by the M-SSA comes at the cost of a slight reduction in tracking accuracy, as indicated by a marginally lower target correlation. This highlights the inherent trade-off—often referred to as the prediction dilemma—between smoothness (zero-crossing rate) and predictive accuracy (target correlation) within the M-SSA criterion.
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/bk_gammak.pdf}\caption{Multivariate M-MSE (left) and M-SSA  (right) nowcast filters.\label{bk_gammak}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/mssa_msse_now.pdf}\caption{Two-sided HP(160) applied to BIP (target, black) and nowcasts:  M-SSA (blue) and  M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The first L=31 observations are lost due to initialization and the two-sided filter does not extend to the sample end.\label{mssa_msse_now}}\end{center}\end{figure}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:04 2025
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/bk_gammak.pdf}\caption{Multivariate M-MSE (left) and M-SSA  (right) nowcast filters.\label{bk_gammak}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5.5in]{./Figures/mssa_msse_now.pdf}\caption{Two-sided HP(160) applied to GDP (target, black) and nowcasts:  M-SSA (blue) and  M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The two-sided filter does not extend to the sample end.\label{mssa_msse_now}}\end{center}\end{figure}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:18 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrr}
@@ -221,8 +221,8 @@ The previously described nowcast example can be systematically extended to gener
 The influence of the forecast horizon on the M-SSA design is depicted in Fig. \eqref{bk_h}, which contrasts nowcast and one-year-ahead forecast: as $h$ increases (right panel), the scaling factor diminishes (zero-shrinkage), attributable to increased forecast uncertainty, and there is a relative amplification of the influence of the relevant indicators, leading BIP in relative terms.Additionally, a phase shift associated with the filter applied to BIP is observed (red line, right panel), reflecting the cyclical characteristics inherent to the HP filter. While this phase effect might cause an effective sign change in the BIP filter output as $h$ increases—something to be avoided in this context—the low-pass filters assigned to the additional 'leading' indicators (green and violet lines, right panel) continue to effectively track the low-frequency components of HP-BIP. The combination of the phase effect, applied to BIP, and level-tracking through these additional indicators enables more refined and effective tracking of the target compared to univariate forecasts, which rely solely on the phase-effect of the filter to look ahead of time.\\
 
 M-SSA predictors are compared to the traditional univariate HP-C in Figs. \eqref{multivar_vs_univar} and \eqref{mssa_hpc_financial_crisis}. In the first figure, we compare both filters across the periods of the financial crisis (top panels) and the COVID-19 pandemic (bottom panels), for forecast horizons $h=0,...,6$. The nowcast from the previous section is included for reference. In the second figure we compare both filters to the forward-shifted BIP for shifts larger than two quarters. All series are standardized to facilitate visual comparison. The primary distinction of the M-SSA approach is the progressive left-shift of the predictor as a function of $h$; this shift becomes more pronounced with increasing $h$ and appears to be consistent across all levels, including the peaks and troughs of the series. Conversely, the positions of peaks and troughs in the HP-C series appear to remain largely unaffected by variations in $h$. The more pronounced and systematic left-shift observed in the M-SSA forecasts can be partly attributed to the increasing weight assigned to the additional indicators leading BIP, which dominate the BIP component at larger forecast horizons. %In comparison, the effect of phase shifts—arising from the cyclical nature of the HP-filter and manifesting in the HP-C forecasts (shown in the left panels)—seems less systematic. 
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/bk_h.pdf}\caption{Multivariate M-SSA: $h=0$ (nowcast, left) and $h=4$ (one year forecast, right).\label{bk_h}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/multivar_vs_univar.pdf}\caption{Now- and forecasts of HP-BIP for $h=0,...,6$: HP-C (top) vs. M-SSA (bottom) across the financial crisis (left) and the pandemic (right).\label{multivar_vs_univar}}\end{center}\end{figure}
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/mssa_hpc_financial_crisis.pdf}\caption{Forward-shifted BIP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis. All series are standardized for better visual inspection.\label{mssa_hpc_financial_crisis}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5.5in]{./Figures/bk_h.pdf}\caption{Multivariate M-SSA: $h=0$ (nowcast, left) and $h=4$ (one year forecast, right).\label{bk_h}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5.5in]{./Figures/multivar_vs_univar.pdf}\caption{Now- and forecasts of HP-GDP for $h=0,...,6$: HP-C (top) vs. M-SSA (bottom) across the financial crisis (left) and the pandemic (right).\label{multivar_vs_univar}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=4in, width=5.5in]{./Figures/mssa_hpc_financial_crisis.pdf}\caption{Forward-shifted GDP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis. All series are standardized for better visual inspection.\label{mssa_hpc_financial_crisis}}\end{center}\end{figure}
 
 \section{M-SSA Component Predictor}
 
@@ -248,8 +248,8 @@ We now utilize the M-SSA components as regressors on forward-shifted BIP, extend
 
 
 There are various combinations of M-SSA components for tracking BIP. For illustration, we here select the single BIP component resulting from the M-SSA filter tracking HP-BIP. Table \eqref{p_val_hpbip_wc} reports HAC-adjusted p-values from regressions of the out-of-sample predictor on HP-BIP, indicating a strong link between the predictor and the target, out-of-sample. 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:09 2025
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -286,8 +286,8 @@ Tables \eqref{p_val_wc} and \eqref{rRMSE_mSSA_comp_mean_wc} present HAC-adjusted
 
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:09 2025
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -304,8 +304,8 @@ Shift=0 & 0.084 & 0.047 & 0.017 & 0.005 & 0.002 & 0.001 & 0.038 \\
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:09 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -339,15 +339,15 @@ For illustration, we here focus on a forecast horizon $h=4$ for the BIP componen
 %??? Justification HP(160): replace HP(1600) by AR(2) with similar persistency but shorter cycle lengthi, i.e. $a_1=-2"persistency*acos(\theta, a_2=persistency$.
 Fig.\eqref{revisions1} compares the final and real-time predictors: as the sample size increases, the real-time predictor converges steadily to the final predictor and the rate of convergence is partially determined by the simplicity of our design, which avoids incorporating additional M-SSA components. 
 As a confirmation, Fig.\eqref{revisions2} displays the evolution of the intercept and regression weights over time: with increasing sample size, these estimates seem to converge to fixed points, indicating both the stationarity of the process and the consistency of the estimates (note, however, the slightly elevated values of the regression weight assigned to the M-SSA component during the financial crisis and the pandemic, suggesting a stronger link between the target and the predictor).  In contrast, more complex designs based on multiple M-SSA components can exhibit substantial fluctuations in the regression parameters, sometimes changing signs. This suggests instability and complicates interpretation.
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/revisions1.pdf}\caption{Revisions of the M-SSA BIP component predictor are shown, with the final predictor in blue and the real-time design in red. These revisions result from quarterly updates to the regression equations. The M-SSA filter itself remains fixed, based on data up to January 2008.\label{revisions1}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/revisions2.pdf}\caption{Revisions of intercept and regression weight.\label{revisions2}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/revisions1.pdf}\caption{Revisions of the M-SSA GDP component predictor are shown, with the final predictor in blue and the real-time design in red. These revisions result from quarterly updates to the regression equations. The M-SSA filter itself remains fixed, based on data up to January 2008.\label{revisions1}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/revisions2.pdf}\caption{Revisions of intercept and regression weight.\label{revisions2}}\end{center}\end{figure}
 
 \subsection{Revisions: M-SSA Only}
 
 The second source of revisions in the M-SSA component predictor arises from updates to the VAR model within the M-SSA filter. We compare the original estimates, based on data up to January 2008, with the final estimates obtained using $h=4$ and $shift=4$ (similar findings apply to other values of forecast horizon and forward-shift).  For consistency, we excluded the entire pandemic episode from the data. Fig.\eqref{up_dated_ma_inv_multi_ip} compares the MA-inversions (impulse responses) of the BIP equation derived from the 'old' and the updated VAR models: unlike the former, the latter incorporates ESI as an additional explanatory variable for BIP. Fig.\eqref{bk_2008_all} illustrates the resulting effect on the M-SSA filter targeting HP-BIP at forecast horizon $h=4$. The updated filter (right panel) assigns more weight to the additional 'leading' indicators relative to BIP. Finally, Fig.\eqref{revisions3} compares the M-SSA BIP predictors. To isolate the effect of the regression revision, the figure displays standardized series. The update to the VAR model influences the left-shift of the predictor (blue line), which appears slightly 'faster' than the original predictor (red line). This suggests that the out-of-sample performance of the M-SSA component predictor may be better than reported in Section \eqref{oosp}, which is based on the fixed and increasingly outdated version of M-SSA.
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/up_dated_ma_inv_multi_ip.pdf}\caption{MA-inversion (impulse response) of VAR: data up to Jan-2008 (left) vs. entire data set (right).\label{up_dated_ma_inv_multi_ip}}\end{center}\end{figure}
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/bk_2008_all.pdf}\caption{M-SSA filter tracking HP-BIP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set (right).\label{bk_2008_all}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/up_dated_ma_inv_multi_ip.pdf}\caption{MA-inversion (impulse response) of VAR: data up to Jan-2008 (left) vs. entire data set (right).\label{up_dated_ma_inv_multi_ip}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/bk_2008_all.pdf}\caption{M-SSA filter tracking HP-GDP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set (right).\label{bk_2008_all}}\end{center}\end{figure}
 
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/revisions3.pdf}\caption{Revisions resulting from updates to the VAR model in M-SSA. To isolate the effect of the regression revision, all series are standardized. The up-dated M-SSA (blue) is left-shifted at the zero-crossings and appears slightly faster. For consistency, the entire pandemic episode has been removed.\label{revisions3}}\end{center}\end{figure}
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/revisions3.pdf}\caption{Revisions resulting from updates to the VAR model in M-SSA optimized for $h=shift=4$. To isolate the effect of the regression revision, all series are standardized. The up-dated M-SSA (blue) is left-shifted at the zero-crossings and appears slightly faster. For consistency, the entire pandemic episode has been removed.\label{revisions3}}\end{center}\end{figure}
 
 
 \section{Summary and Conclusion}
@@ -368,8 +368,8 @@ In conclusion, the new predictor design integrates the traditional direct foreca
 \subsection{Performances: Without Pandemic}
 
 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -386,8 +386,8 @@ Shift=0 & 0.084 & 0.047 & 0.017 & 0.005 & 0.002 & 0.001 & 0.038 \\
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc5}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -404,8 +404,8 @@ Shift=0 & 0.978 & 0.942 & 0.893 & 0.855 & 0.860 & 0.906 & 0.962 \\
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_mean6}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -422,8 +422,8 @@ Shift=0 & 1.144 & 1.102 & 1.045 & 0.999 & 1.006 & 1.059 & 1.125 \\
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_direct_without_covid7}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -445,8 +445,8 @@ Shift=0 & 0.855 & 0.855 & 0.855 & 0.855 & 0.855 & 0.855 & 0.855 \\
 \newpage
 \subsection{Performances: Including Singular Pandemic Data}
 
-% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -463,8 +463,8 @@ Shift=0 & 0.127 & 0.064 & 0.019 & 0.003 & 0.001 & 0.002 & 0.012 \\
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{p_val1}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -481,8 +481,8 @@ Shift=0 & 1.008 & 0.990 & 0.964 & 0.939 & 0.930 & 0.942 & 0.967 \\
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_mean2}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -499,8 +499,8 @@ Shift=0 & 1.210 & 1.188 & 1.157 & 1.127 & 1.116 & 1.130 & 1.161 \\
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_direct3}
-\end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Thu May  8 07:34:10 2025
+\end{table}% latex table generated in R 4.4.1 by xtable 1.8-4 package
+% Thu May  8 14:00:20 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}

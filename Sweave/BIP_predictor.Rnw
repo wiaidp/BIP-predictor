@@ -606,13 +606,14 @@ for (h in 0:3)
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
   mplot<-cbind(forward_shifted_BIP,direct_forecast)
   rownames(mplot)<-rownames(x_mat_wc)
-  colnames(mplot)<-c("BIP","Direct forecast")
+  colnames(mplot)<-c("GDP","Direct forecast")
   colo<-c("black","red")
-  main_title<-paste("BIP shifted  by ",h," quarters",sep="")
+  main_title<-paste("GDP shifted  by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
+    if (h==0)
     mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
@@ -649,13 +650,14 @@ for (h in 0:3)
   mplot<-cbind(forward_shifted_BIP,direct_forecast)
   rownames(mplot)<-rownames(x_mat_wc)
   mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
-  colnames(mplot)<-c("BIP","Direct forecast")
+  colnames(mplot)<-c("GDP","Direct forecast")
   colo<-c("black","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+  main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
+    if (h==0)
     mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
@@ -669,8 +671,8 @@ dev.off()
 file = "./Figures/direct_wc_all.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct forecasts (red lines) based on all indicators and full sample information, without the pandemic: BIP (black line) shifted by zero one, two and three quarters.", sep = "")
+cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{Direct forecasts (red lines) based on all indicators and full sample information, without the pandemic: GDP (black line) shifted by zero one, two and three quarters.", sep = "")
 cat("\\label{direct_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -679,7 +681,7 @@ cat("\\end{figure}")
 file = "./Figures/direct_wc_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
 cat("\\caption{Direct forecast  across the financial crisis:  regression based on all indicators and full sample information.", sep = "")
 cat("\\label{direct_wc_financial_crisis}}", sep = "")
 cat("\\end{center}")
@@ -706,7 +708,7 @@ HP_obj<-HP_target_mse_modified_gap(L,lambda_HP)
 
 
 file = "./Figures/hp_160.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 par(mfrow=c(2,2))
 hp_two<-c(HP_obj$hp_mse[L:2],HP_obj$hp_mse)
 ts.plot(hp_two,main=paste("Two-sided HP(",lambda_HP,")",sep=""),xlab="",ylab="")
@@ -772,7 +774,7 @@ dev.off()
 file = "./Figures/hp_160.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
 cat("\\caption{Two-sided HP-160) (top left) and one-sided (concurrent) HP-C filters (top right) with corresponding amplitude functions (bottom).", sep = "")
 cat("\\label{hp_160}}", sep = "")
 cat("\\end{center}")
@@ -858,13 +860,14 @@ for (h in 0:3)
   mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
   rownames(mplot)<-rownames(x_mat_wc)
 
-  colnames(mplot)<-c("BIP","Direct forecast")
-  colo<-c("black","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+  colnames(mplot)<-c("GDP","Direct forecast")
+  colo<-c("black","blue")
+  main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
+    if (h==0)
     mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
@@ -928,7 +931,7 @@ for (h in 0:3)
   mplot<-mplot[which(rownames(mplot)>2007&rownames(mplot)<2010),]
   colnames(mplot)<-c("GDP","Direct HP forecast","Direct forecast")
   
-  colo<-c("black","red","blue")
+  colo<-c("black","blue","red")
   main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
@@ -949,7 +952,7 @@ dev.off()
 file = "./Figures/direct_hp_forecasts.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
 cat("\\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.", sep = "")
 cat("\\label{direct_hp_forecasts}}", sep = "")
 cat("\\end{center}")
@@ -960,7 +963,7 @@ file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
-cat("\\caption{Shifted GDP (black), direct HP forecast (red) and classic direct forecast (blue) over the curse of the financial crisis:  regression based on all indicators and full sample information (without pandemic).", sep = "")
+cat("\\caption{Shifted GDP (black), direct HP forecast (blue) and classic direct forecast (red) over the curse of the financial crisis:  regression based on all indicators and full sample information (without pandemic).", sep = "")
 cat("\\label{direct_hp_forecasts_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -1090,19 +1093,22 @@ colnames(bk_HP_HP_C)<-select_vec_multi
 
 
 file = "./Figures/bk_gammak.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 
 par(mfrow=c(1,2))
 mplot<-gammak
+colnames(mplot)[1]<-"GDP"
 colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main="M-MSE",xlab="")
 for (i in 1:ncol(mplot))
   mtext(colnames(mplot)[i],col=colo[i],line=-i)
 mplot<-bk
+colnames(mplot)[1]<-"GDP"
+
 colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main="M-SSA",xlab="")
-for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#for (i in 1:ncol(mplot))
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 #mplot<-bk_HP_HP_C
 #colo<-rainbow(ncol(mplot))
 #ts.plot(mplot,col=colo,main="M-SSA larger HT")
@@ -1117,7 +1123,7 @@ mmse<-t(mmse_array[,,1])
 mssa_HT_HP_C<-t(mssa_array_HT_HP_C[,,1])
 
 file = "./Figures/mssa_msse_now.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 
 hp_c_out<-filter(x_mat[,select],hp_c,side=1)
 par(mfrow=c(1,1))
@@ -1126,12 +1132,13 @@ par(mfrow=c(1,1))
 #colnames(mplot)<-c("Target: HP-BIP","HP-C","M-SSA smaller HT","M-SSA larger HT","M-MSE")
 mplot<-scale(cbind(target_shifted_mat,mssa[,select],mmse[,select]))
 dim(mplot)
-colnames(mplot)<-c("Target: HP-BIP","M-SSA","M-MSE")
+colnames(mplot)<-c("Target: HP-GDP","M-SSA","M-MSE")
 
 rownames(mplot)<-rownames(x_mat)
+mplot<-mplot[L:nrow(mplot),]
 colo<-c("black","violet","blue","orange","green")
 colo<-c("black","blue","green")
-main_title<-"Nowcasting HP-BIP"
+main_title<-"Nowcasting HP-GDP"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))
@@ -1148,8 +1155,8 @@ box()
 dev.off()
 
 
-mat_cor_ht<-rbind(c(cor(na.exclude(mplot[,c("Target: HP-BIP","M-SSA")]))[1,2],
-cor(na.exclude(mplot[,c("Target: HP-BIP","M-MSE")]))[1,2]),
+mat_cor_ht<-rbind(c(cor(na.exclude(mplot[,c("Target: HP-GDP","M-SSA")]))[1,2],
+cor(na.exclude(mplot[,c("Target: HP-GDP","M-MSE")]))[1,2]),
 c(compute_empirical_ht_func(na.exclude(mssa[,select]))$empirical_ht,
 compute_empirical_ht_func(na.exclude(mmse[,select]))$empirical_ht))
 
@@ -1165,7 +1172,7 @@ Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, w
 file = "./Figures/bk_gammak.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
 cat("\\caption{Multivariate M-MSE (left) and M-SSA  (right) nowcast filters.", sep = "")
 cat("\\label{bk_gammak}}", sep = "")
 cat("\\end{center}")
@@ -1175,8 +1182,8 @@ cat("\\end{figure}")
 file = "./Figures/mssa_msse_now.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Two-sided HP(160) applied to BIP (target, black) and nowcasts:  M-SSA (blue) and  M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The first L=31 observations are lost due to initialization and the two-sided filter does not extend to the sample end.", sep = "")
+cat("\\includegraphics[height=4in, width=5.5in]{", file, "}\n",sep = "")
+cat("\\caption{Two-sided HP(160) applied to GDP (target, black) and nowcasts:  M-SSA (blue) and  M-MSE (green). The dashed vertical line delimits in- and out-of-sample spans. The two-sided filter does not extend to the sample end.", sep = "")
 cat("\\label{mssa_msse_now}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -1250,13 +1257,13 @@ colnames(bk)<-colnames(gammak)<-select_vec_multi
 
 
 file = "./Figures/bk_h.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 8, height = 6)
 
 par(mfrow=c(1,2))
 # h=0, see above
 mplot<-bk
 colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-SSA: h=0")
+ts.plot(mplot,col=colo,main="M-SSA: h=0",xlab="")
 for (i in 1:ncol(mplot))
   mtext(colnames(mplot)[i],col=colo[i],line=-i)
 
@@ -1265,9 +1272,9 @@ bk<-matrix(mssa_indicator_obj$bk_x_array[select,select,,"h=4"],nrow=L)
 colnames(bk)<-colnames(gammak)<-select_vec_multi
 mplot<-bk
 colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-SSA: h=4")
-for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+ts.plot(mplot,col=colo,main="M-SSA: h=4",xlab="")
+#for (i in 1:ncol(mplot))
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 
 dev.off()
 
@@ -1275,13 +1282,13 @@ dev.off()
 
 
 file = "./Figures/multivar_vs_univar.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 8, height = 8)
 
 # Select BIP
 i<-1
 # HP-C Financial crisis
 mplot<-scale(hp_c_array[i,,])
-colnames(mplot)<-paste("HP-",colnames(x_mat)[i],": h=",h_vec,sep="")
+colnames(mplot)<-paste("h=",h_vec,sep="")
 par(mfrow=c(2,2))
 colo<-c(rainbow(ncol(mplot)))
 mplot<-mplot[which(rownames(mplot)>2007&rownames(mplot)<2011),]
@@ -1308,11 +1315,11 @@ mplot<-mplot[which(rownames(mplot)>2017&rownames(mplot)<2022),]
 main_title<-paste("HP-C targeting HP-",colnames(x_mat)[i],sep="")
 main_title<-"HP-C: pandemic"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
 {
   lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+#  mtext(colnames(mplot)[j],col=colo[j],line=-j)
 }
 abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
@@ -1328,11 +1335,11 @@ colo<-c(rainbow(ncol(mplot)))
 main_title<-paste("M-SSA targeting HP-",colnames(x_mat)[i],sep="")
 main_title<-"MSSA: financial crisis"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
 {
   lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+#  mtext(colnames(mplot)[j],col=colo[j],line=-j)
 }
 abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
@@ -1348,11 +1355,11 @@ colo<-c(rainbow(ncol(mplot)))
 main_title<-paste("M-SSA targeting HP-",colnames(x_mat)[i],sep="")
 main_title<-"MSSA: pandemic"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
 {
   lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+#  mtext(colnames(mplot)[j],col=colo[j],line=-j)
 }
 abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
@@ -1364,7 +1371,7 @@ dev.off()
 
 # Plot of M-SSA and HP-C, only financial crisis
 file = "./Figures/mssa_hpc_financial_crisis.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 8, height = 8)
 
 par(mfrow=c(2,2))
 for (h in 3:6)#h<-1
@@ -1381,12 +1388,12 @@ for (h in 3:6)#h<-1
   mplot<-mplot[which(rownames(mplot)>2006&rownames(mplot)<2011),]
   colnames(mplot)<-c("BIP","M-SSA","HP-C")
   colo<-c("black","blue","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+  main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#    mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
   axis(1,at=1:nrow(mplot),labels=rownames(mplot))
@@ -1481,7 +1488,7 @@ p_value_HAC_HP_BIP_oos_wc
 file = "./Figures/bk_h.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=3in, width=5.5in]{", file, "}\n",sep = "")
 cat("\\caption{Multivariate M-SSA: $h=0$ (nowcast, left) and $h=4$ (one year forecast, right).", sep = "")
 cat("\\label{bk_h}}", sep = "")
 cat("\\end{center}")
@@ -1491,8 +1498,8 @@ cat("\\end{figure}")
 file = "./Figures/multivar_vs_univar.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Now- and forecasts of HP-BIP for $h=0,...,6$: HP-C (top) vs. M-SSA (bottom) across the financial crisis (left) and the pandemic (right).", sep = "")
+cat("\\includegraphics[height=4in, width=5.5in]{", file, "}\n",sep = "")
+cat("\\caption{Now- and forecasts of HP-GDP for $h=0,...,6$: HP-C (top) vs. M-SSA (bottom) across the financial crisis (left) and the pandemic (right).", sep = "")
 cat("\\label{multivar_vs_univar}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -1502,8 +1509,8 @@ cat("\\end{figure}")
 file = "./Figures/mssa_hpc_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Forward-shifted BIP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis. All series are standardized for better visual inspection.", sep = "")
+cat("\\includegraphics[height=4in, width=5.5in]{", file, "}\n",sep = "")
+cat("\\caption{Forward-shifted GDP (black), M-SSA (blue) and HP-C (red) for $h=3,4,5,6$ across the financial crisis. All series are standardized for better visual inspection.", sep = "")
 cat("\\label{mssa_hpc_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -1802,6 +1809,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 
 par(mfrow=c(1,1))
 mplot<-cbind(final_components_preditor_array[shift,h,],oos_components_preditor_array[shift,h,])
+mplot<-mplot[L:nrow(mplot),]
 colnames(mplot)<-c("Final predictor","Real-time out-of-sample predictor")
 colo<-c("blue",rainbow(length(select_vec_multi)))
 main_title<-paste("Final vs. real-time predictor: h=",h,", shift=",shift,sep=""
@@ -1828,6 +1836,8 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 
 par(mfrow=c(1,1))
 mplot<-track_weights_array[shift,h,,]
+mplot<-mplot[(L:nrow(mplot)),]
+#mplot<-t(t(mplot)/mplot[nrow(mplot),])
 #colnames(mplot)[2:ncol(track_weights)]<-paste("Weight of M-SSA component ",colnames(track_weights)[2:ncol(track_weights)])
 colo<-c("black","blue","red")
 main_title<-paste("Intercept and regression weight over time: h=",h,", shift=",shift,sep="")
@@ -1861,7 +1871,7 @@ file = "./Figures/revisions1.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Revisions of the M-SSA BIP component predictor are shown, with the final predictor in blue and the real-time design in red. These revisions result from quarterly updates to the regression equations. The M-SSA filter itself remains fixed, based on data up to January 2008.", sep = "")
+cat("\\caption{Revisions of the M-SSA GDP component predictor are shown, with the final predictor in blue and the real-time design in red. These revisions result from quarterly updates to the regression equations. The M-SSA filter itself remains fixed, based on data up to January 2008.", sep = "")
 cat("\\label{revisions1}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -1936,13 +1946,14 @@ colnames(mssa_final_vs_prem_wc)<-c("Predictor based on final M-SSA","Predictor b
 
 
 file = "./Figures/revisions3.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 par(mfrow=c(1,1))
 
 colo<-c("blue","red")
 mplot<-scale(mssa_final_vs_prem_wc)
+mplot<-mplot[L:nrow(mplot),]
 colnames(mplot)<-colnames(mssa_final_vs_prem_wc)
-main_title<-paste("BIP component predictors: final and 2007-MSSA (h=",h,", shift=",shift,")",sep="")
+main_title<-paste("GDP component predictors: final and 2007-MSSA (h=",h,", shift=",shift,")",sep="")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (jj in 1:ncol(mplot))
@@ -2021,7 +2032,7 @@ xi_2008<-compute_xi_func(V_obj_2008,L)$xi
 # Plot MA inversions
 
 file = "./Figures/up_dated_ma_inv_multi_ip.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 colo<-rainbow(ncol(x_mat))
 # Select BIP component
 i<-1
@@ -2033,9 +2044,10 @@ for (j in 2:n)
 {
   mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
 }
-ts.plot(mplot,col=colo_i,main=paste("2008: MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
+ts.plot(mplot,col=colo_i,main="MA inversion GDP: 2008",xlab="")
 for (k in 1:length(select_vec_i))
   mtext(select_vec_i[k],line=-k,col=colo_i[k])
+
 
 # full data set
 xi<-xi_full
@@ -2044,9 +2056,9 @@ for (j in 2:n)
 {
   mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
 }
-ts.plot(mplot,col=colo_i,main=paste("Full data: MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
-for (k in 1:length(select_vec_i))
-  mtext(select_vec_i[k],line=-k,col=colo_i[k])
+ts.plot(mplot,col=colo_i,main="Full data set",xlab="")
+#for (k in 1:length(select_vec_i))
+#  mtext(select_vec_i[k],line=-k,col=colo_i[k])
 
 dev.off()
 
@@ -2060,19 +2072,19 @@ bk_2008<-matrix(mssa_indicator_obj$bk_x_array[select,select,,"h=4"],nrow=L)
 colnames(bk_2008)<-colnames(bk_all)<-select_vec_multi
 
 file = "./Figures/bk_2008_all.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 
 par(mfrow=c(1,2))
 mplot<-bk_2008
 colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main=paste("M-SSA 2008: h=",h,sep=""))
+ts.plot(mplot,col=colo,main=paste("M-SSA data up to 2008: h=",h,sep=""),xlab="")
 for (i in 1:ncol(mplot))
   mtext(colnames(mplot)[i],col=colo[i],line=-i)
 mplot<-bk_all
 colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main=paste("M-SSA full data: h=",h,sep=""))
-for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+ts.plot(mplot,col=colo,main="Full data set",xlab="")
+#for (i in 1:ncol(mplot))
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 
 dev.off()
 
@@ -2087,7 +2099,7 @@ dev.off()
 file = "./Figures/up_dated_ma_inv_multi_ip.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
 cat("\\caption{MA-inversion (impulse response) of VAR: data up to Jan-2008 (left) vs. entire data set (right).", sep = "")
 cat("\\label{up_dated_ma_inv_multi_ip}}", sep = "")
 cat("\\end{center}")
@@ -2098,8 +2110,8 @@ cat("\\end{figure}")
 file = "./Figures/bk_2008_all.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{M-SSA filter tracking HP-BIP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set (right).", sep = "")
+cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
+cat("\\caption{M-SSA filter tracking HP-GDP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set (right).", sep = "")
 cat("\\label{bk_2008_all}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -2110,8 +2122,8 @@ cat("\\end{figure}")
 file = "./Figures/revisions3.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Revisions resulting from updates to the VAR model in M-SSA. To isolate the effect of the regression revision, all series are standardized. The up-dated M-SSA (blue) is left-shifted at the zero-crossings and appears slightly faster. For consistency, the entire pandemic episode has been removed.", sep = "")
+cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
+cat("\\caption{Revisions resulting from updates to the VAR model in M-SSA optimized for $h=shift=4$. To isolate the effect of the regression revision, all series are standardized. The up-dated M-SSA (blue) is left-shifted at the zero-crossings and appears slightly faster. For consistency, the entire pandemic episode has been removed.", sep = "")
 cat("\\label{revisions3}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
