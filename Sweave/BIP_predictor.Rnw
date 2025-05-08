@@ -453,7 +453,7 @@ dev.off()
 
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 
-mat1<-as.matrix(tail(data_table))
+mat1<-as.matrix(tail(data_table,7))
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
 xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
@@ -1840,6 +1840,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 par(mfrow=c(1,1))
 mplot<-track_weights_array[shift,h,,]
 mplot<-mplot[(L:nrow(mplot)),]
+colnames(mplot)[2]<-"GDP"
 #mplot<-t(t(mplot)/mplot[nrow(mplot),])
 #colnames(mplot)[2:ncol(track_weights)]<-paste("Weight of M-SSA component ",colnames(track_weights)[2:ncol(track_weights)])
 colo<-c("black","blue","red")
@@ -1945,7 +1946,7 @@ if (length(sel_vec_pred)>1)
 #   Standardize predictors to isolate VAR-revision from total revision (including regression revission)
 mssa_final_vs_prem_wc<-cbind(final_mssa_predictor,final_components_preditor_array[shift,h,c(which(rownames(x_mat)<2020),which(rownames(x_mat)>2021))])
 rownames(mssa_final_vs_prem_wc)<-rownames(x_mat_wc)
-colnames(mssa_final_vs_prem_wc)<-c("Predictor based on final M-SSA","Predictor based on 2007-M-SSA")
+colnames(mssa_final_vs_prem_wc)<-c("Predictor based on final M-SSA","Predictor based on 2008-M-SSA")
 
 
 file = "./Figures/revisions3.pdf"
@@ -1956,7 +1957,7 @@ colo<-c("blue","red")
 mplot<-scale(mssa_final_vs_prem_wc)
 mplot<-mplot[L:nrow(mplot),]
 colnames(mplot)<-colnames(mssa_final_vs_prem_wc)
-main_title<-paste("GDP component predictors: final and 2007-MSSA (h=",h,", shift=",shift,")",sep="")
+main_title<-paste("GDP component predictors: final and 2008-MSSA (h=",h,", shift=",shift,")",sep="")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (jj in 1:ncol(mplot))
