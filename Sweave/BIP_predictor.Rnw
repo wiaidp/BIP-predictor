@@ -250,8 +250,23 @@ acf_mat<-x_mat
 # Plot Cross correlation: with Pandemic
 file = "./Figures/CCF.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
-acf(x_mat)
+#acf(x_mat)
+acf_result <- acf(x_mat, plot = FALSE)
+
+# Extract the ACF values and lags
+acf_values <- acf_result$acf
+lags <- acf_result$lag
+
+par(mfrow=c(1,2))
+k<-3
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+abline(h = 0, col = "red")
+k<-4
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+abline(h = 0, col = "red")
+
 dev.off()
+
 
 
 # Data without pandemic
@@ -261,8 +276,23 @@ x_mat_wc<-x_mat[which(rownames(x_mat)<2020|rownames(x_mat)>2021),]
 # CCF without Pandemic
 file = "./Figures/CCF_wc.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
-acf(x_mat[which(rownames(acf_mat)<2020),])
+#acf(x_mat[which(rownames(acf_mat)<2020),])
+acf_result <- acf(x_mat_wc, plot = FALSE)
+
+# Extract the ACF values and lags
+acf_values <- acf_result$acf
+lags <- acf_result$lag
+
+par(mfrow=c(1,2))
+k<-3
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+abline(h = 0, col = "red")
+k<-4
+plot(lags[,1,length(select_vec_multi)],acf_values[,1,k], type = "h", main = paste("GDP vs. ",select_vec_multi[k],sep=""), xlab = "Lag", ylab = "ACF")
+abline(h = 0, col = "red")
+
 dev.off()
+
 
 
 
@@ -279,7 +309,7 @@ if (recompute_results)
   V_obj<-refVARMA(V_obj, thres = threshold)
   save(V_obj,file=paste(path.result,"/VAR",sep=""))
 # Without Pandemic  
-  data_fit<-x_mat[which(rownames(x_mat)<date_to_fit),]
+  data_fit<-x_mat_wc
   set.seed(12)
   V_obj_wc<-VARMA(data_fit,p=p,q=q)
   threshold<-1.5
@@ -322,8 +352,9 @@ for (i in 1:n)
 file = "./Figures/ma_inv_multi_ip.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 colo<-rainbow(ncol(x_mat))
-par(mfrow=c(1,n))
-for (i in 1:n)#i<-1
+k<-1
+par(mfrow=c(1,k))
+for (i in 1:k)#i<-1
 {
   select_vec_i<-select_vec_multi
   colo_i<-colo
@@ -334,6 +365,7 @@ for (i in 1:n)#i<-1
     mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
       
   }
+  mplot_with_pandemic<-mplot
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
     mtext(select_vec_i[k],line=-k,col=colo_i[k])
@@ -359,8 +391,9 @@ for (i in 1:n)
 file = "./Figures/ma_inv_multi_ip_wc.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 colo<-rainbow(ncol(x_mat))
-par(mfrow=c(1,n))
-for (i in 1:n)#i<-1
+k<-1
+par(mfrow=c(1,k))
+for (i in 1:k)#i<-1
 {
   select_vec_i<-select_vec_multi
   colo_i<-colo
@@ -371,12 +404,31 @@ for (i in 1:n)#i<-1
     mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
       
   }
+    mplot_without_pandemic<-mplot
+
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
     mtext(select_vec_i[k],line=-k,col=colo_i[k])
 }
 
 dev.off()
+
+
+
+
+file = "./Figures/ma_inv_BIP.pdf"
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 9, height = 6)
+par(mfrow=c(1,2))
+  ts.plot(mplot_with_pandemic,col=colo_i,main=paste("MA inversion GDP: with pandemic",sep=""),xlab="lag")
+  for (k in 1:length(select_vec_i))
+    mtext(select_vec_i[k],line=-k,col=colo_i[k])
+    ts.plot(mplot_without_pandemic,col=colo_i,main="Without pandemic",xlab="lag")
+#  for (k in 1:length(select_vec_i))
+#    mtext(select_vec_i[k],line=-k,col=colo_i[k])
+
+
+dev.off()
+
 
 
 
@@ -457,7 +509,7 @@ file = "./Figures/CCF.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sample cross-correlation function (CCF): full data set.", sep = "")
+cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): full data set, including the pandemic. Correlations at positive lags mean that real-time GDP is lagging in relative terms.", sep = "")
 cat("\\label{CCF}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -467,7 +519,7 @@ file = "./Figures/CCF_wc.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sample cross-correlation function (CCF): without Pandemic.", sep = "")
+cat("\\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): without Pandemic. Correlations at positive lags mean that real-time GDP is lagging in relative terms.", sep = "")
 cat("\\label{CCF_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -493,6 +545,19 @@ cat("\\label{impulse_wc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
+<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
+file = "./Figures/ma_inv_BIP.pdf"
+cat("\\begin{figure}[H]")
+cat("\\begin{center}")
+cat("\\includegraphics[height=3in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{MA inversion of VAR(1) for GDP: with pandemic (left) and without pandemic (right).", sep = "")
+cat("\\label{ma_inv_BIP}}", sep = "")
+cat("\\end{center}")
+cat("\\end{figure}")
+@
+
+
+
 The model summarizes key features of the data, where lagging series (GDP and industrial production, when accounting for publication lags) depend on  indicators leading in relative terms. In particular, the impulse response of the spread (rightmost panel in the figure) suggests the relevance of a univariate model for this specific leading indicator.
 
 
@@ -511,7 +576,7 @@ select_direct_indicator<-select_vec_multi
 
 # Plot of direct forecasts without Pandemic
 file = "./Figures/direct_wc_all.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
 
@@ -559,7 +624,7 @@ dev.off()
 
 # Plot of direct forecasts without Pandemic, only financial crisis
 file = "./Figures/direct_wc_financial_crisis.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
 for (h in 0:3)
@@ -604,7 +669,7 @@ dev.off()
 file = "./Figures/direct_wc_all.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
 cat("\\caption{Direct forecasts (red lines) based on all indicators and full sample information, without the pandemic: BIP (black line) shifted by zero one, two and three quarters.", sep = "")
 cat("\\label{direct_wc}}", sep = "")
 cat("\\end{center}")
@@ -614,7 +679,7 @@ cat("\\end{figure}")
 file = "./Figures/direct_wc_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
 cat("\\caption{Direct forecast  across the financial crisis:  regression based on all indicators and full sample information.", sep = "")
 cat("\\label{direct_wc_financial_crisis}}", sep = "")
 cat("\\end{center}")
@@ -764,7 +829,7 @@ dimnames(hp_c_array)[[3]]<-paste("h=",h_vec,sep="")
 
 # Compute and plot direct HP forecasts: full sample without pandemic
 file = "./Figures/direct_hp_forecasts.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
 f_vec_hp<-t_mat_hp<-NULL
@@ -815,14 +880,14 @@ dev.off()
 
 # Financial crisis
 file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
 
 for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
-  forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
+  forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
   # Regress selected indicators on forward-shifted BIP
   length(forward_shifted_BIP)
   lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
@@ -838,19 +903,38 @@ for (h in 0:3)
   direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
   # Note that this is a full-sample predictor (no out-of-sample span)
   
+  
+    # Shift BIP forward by publication lag+forecast horizon
+  forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
+  # Regress selected indicators on forward-shifted BIP
+  lm_obj<-lm(forward_shifted_BIP~x_mat_wc[,select_direct_indicator])
+  # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
+  sum_obj<-summary(lm_obj)
+  sum_obj$fstatistic  
+  # Technical note: 
+  # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
+  # -Therefore classic OLS tests for statistical significance are biased
+  # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
+  
+  # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
+  direct_forecast<-lm_obj$coef[1]+x_mat_wc[,select_direct_indicator]%*%lm_obj$coef[2:(length(select_direct_indicator)+1)]
+
+  
+  
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
-  mplot<-cbind(forward_shifted_BIP,direct_hp_forecast)
+  mplot<-cbind(forward_shifted_BIP,direct_hp_forecast,direct_forecast)
     rownames(mplot)<-rownames(x_mat_wc)
 
-  mplot<-mplot[which(rownames(mplot)>2008&rownames(mplot)<2011),]
-  colnames(mplot)<-c("BIP","Direct HP forecast")
+  mplot<-mplot[which(rownames(mplot)>2007&rownames(mplot)<2010),]
+  colnames(mplot)<-c("GDP","Direct HP forecast","Direct forecast")
   
-  colo<-c("black","red")
-  main_title<-paste("BIP shifted forward by ",h," quarters",sep="")
+  colo<-c("black","red","blue")
+  main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
+    if (h==0)
     mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
@@ -865,7 +949,7 @@ dev.off()
 file = "./Figures/direct_hp_forecasts.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
+cat("\\includegraphics[height=4in, width=5in]{", file, "}\n",sep = "")
 cat("\\caption{Direct HP forecasts: entire data set with exclusion of the pandemic.", sep = "")
 cat("\\label{direct_hp_forecasts}}", sep = "")
 cat("\\end{center}")
@@ -875,8 +959,8 @@ cat("\\end{figure}")
 file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
-cat("\\includegraphics[height=3in, width=4.5in]{", file, "}\n",sep = "")
-cat("\\caption{Direct HP forecasts over the curse of the financial crisis:  regression based on all indicators and full sample information.", sep = "")
+cat("\\includegraphics[height=5in, width=6in]{", file, "}\n",sep = "")
+cat("\\caption{Shifted GDP (black), direct HP forecast (red) and classic direct forecast (blue) over the curse of the financial crisis:  regression based on all indicators and full sample information (without pandemic).", sep = "")
 cat("\\label{direct_hp_forecasts_financial_crisis}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
