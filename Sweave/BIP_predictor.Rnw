@@ -609,7 +609,7 @@ par(mfrow=c(2,2))
 
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
-f_vec_unfiltered<-NULL
+f_vec_unfiltered<-p_val_unfiltered<-NULL
 for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
@@ -620,6 +620,7 @@ for (h in 0:3)
   summary(lm_obj)
   sum_obj<-summary(lm_obj)
   f_vec_unfiltered<-c(f_vec_unfiltered,sum_obj$fstatistic["value"])  
+  p_val_unfiltered<-c(p_val_unfiltered,pf(sum_obj$fstatistic["value"], sum_obj$df[1],sum_obj$df[2], lower.tail = FALSE))
 
   # Technical note: 
   # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
@@ -861,7 +862,7 @@ file = "./Figures/direct_hp_forecasts.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
-f_vec_hp<-t_mat_hp<-NULL
+f_vec_hp<-t_mat_hp<-p_val_hp<-NULL
 for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
@@ -872,6 +873,8 @@ for (h in 0:3)
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
   sum_obj<-summary(lm_obj)
   sum_obj<-summary(lm_obj)
+  
+  p_val_hp<-c(p_val_hp,pf(sum_obj$fstatistic["value"], sum_obj$df[1],sum_obj$df[2], lower.tail = FALSE))
   f_vec_hp<-c(f_vec_hp,sum_obj$fstatistic["value"])
   t_mat_hp<-rbind(t_mat_hp,sum_obj$coef[-1,4])
   # Technical note: 
@@ -999,13 +1002,14 @@ Moreover, the F-statistics are larger than for the direct forecasts, see Table \
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 
 mat_re<-rbind(f_vec_unfiltered,f_vec_hp)
+mat_re<-rbind(p_val_unfiltered,p_val_hp)
 rownames(mat_re)<-c("Direct forecast","Direct HP forecast")
 colnames(mat_re)<-paste("h=",0:3,sep="")
-mat1<-round(mat_re,3)
+mat1<-round(mat_re,5)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
 xtable(mat1, dec = 1,digits=rep(3,dim(mat_re)[2]+1),
-paste("F-statistics of direct forecasts and direct HP forecasts for forecast horizons $h=0,1,2,3$: fully in-sample.  "),
+paste("P-values of of F-statistics of direct forecasts and direct HP forecasts for forecast horizons $h=0,1,2,3$: fully in-sample.  "),
 label=paste("f_stat",sep=""),
 center = "centering", file = "", floating = FALSE)
 @
