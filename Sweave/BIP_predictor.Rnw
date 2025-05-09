@@ -609,16 +609,18 @@ par(mfrow=c(2,2))
 
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
-f_vec_unfiltered<-p_val_unfiltered<-NULL
-for (h in 0:3)
+f_vec_unfiltered<-p_val_unfiltered<-MSE_unfiltered_vec<-NULL
+for (h in 0:6)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
-  # Regress selected indicators on forward-shifted BIP
-  lm_obj<-lm(forward_shifted_BIP~x_mat_wc[,select_direct_indicator])
+  # Regress selected indicators on forward-shifted BIP: start at t=L (same sample as HP-C)
+  lm_obj<-lm(forward_shifted_BIP[L:length(forward_shifted_BIP)]~x_mat_wc[L:nrow(x_mat_wc),select_direct_indicator])
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
   summary(lm_obj)
-  sum_obj<-summary(lm_obj)
+  sum_obj<-sum_obj_unfiltered<-summary(lm_obj)
+  MSE_unfiltered_vec<-c(MSE_unfiltered_vec,sum_obj$sigma^2)
+
   f_vec_unfiltered<-c(f_vec_unfiltered,sum_obj$fstatistic["value"])  
   p_val_unfiltered<-c(p_val_unfiltered,pf(sum_obj$fstatistic["value"], sum_obj$df[1],sum_obj$df[2], lower.tail = FALSE))
 
@@ -660,8 +662,8 @@ for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
-  # Regress selected indicators on forward-shifted BIP
-  lm_obj<-lm(forward_shifted_BIP~x_mat_wc[,select_direct_indicator])
+  # Regress selected indicators on forward-shifted BIP: start at t=L (same sample as HP-C)
+  lm_obj<-lm(forward_shifted_BIP[L:length(forward_shifted_BIP)]~x_mat_wc[L:nrow(x_mat_wc),select_direct_indicator])
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
   sum_obj<-summary(lm_obj)
   sum_obj$fstatistic  
@@ -694,6 +696,8 @@ for (h in 0:3)
   box()
 }
 dev.off()
+
+
 @
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
 file = "./Figures/direct_wc_all.pdf"
@@ -862,8 +866,8 @@ file = "./Figures/direct_hp_forecasts.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
 par(mfrow=c(2,2))
-f_vec_hp<-t_mat_hp<-p_val_hp<-NULL
-for (h in 0:3)
+f_vec_hp<-t_mat_hp<-p_val_hp<-MSE_hp_vec<-NULL
+for (h in 0:6)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
@@ -871,9 +875,9 @@ for (h in 0:3)
   length(forward_shifted_BIP)
   lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,1]))
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
+  sum_obj_hp<-summary(lm_obj)
   sum_obj<-summary(lm_obj)
-  sum_obj<-summary(lm_obj)
-  
+  MSE_hp_vec<-c(MSE_hp_vec,sum_obj$sigma^2)
   p_val_hp<-c(p_val_hp,pf(sum_obj$fstatistic["value"], sum_obj$df[1],sum_obj$df[2], lower.tail = FALSE))
   f_vec_hp<-c(f_vec_hp,sum_obj$fstatistic["value"])
   t_mat_hp<-rbind(t_mat_hp,sum_obj$coef[-1,4])
@@ -908,6 +912,13 @@ for (h in 0:3)
 colnames(t_mat_hp)<-select_vec_multi
 rownames(t_mat_hp)<-paste("h=",0:3)
 dev.off()
+
+# Compare MSEs and p-values
+sqrt(MSE_hp_vec/MSE_unfiltered_vec)
+
+p_val_unfiltered
+p_val_hp
+
 
 
 
