@@ -866,9 +866,9 @@ for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
-  # Regress selected indicators on forward-shifted BIP
+  # Regress selected filtered indicators on forward-shifted BIP
   length(forward_shifted_BIP)
-  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
+  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,1]))
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
   sum_obj<-summary(lm_obj)
   sum_obj<-summary(lm_obj)
