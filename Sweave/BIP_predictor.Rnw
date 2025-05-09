@@ -371,7 +371,15 @@ for (i in 1:k)#i<-1
   mplot_with_pandemic<-mplot
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
-    mtext(select_vec_i[k],line=-k,col=colo_i[k])
+  { 
+    if (k==1)
+    {
+      mtext("GDP",line=-k,col=colo_i[k])
+    } else
+    {
+      mtext(select_vec_i[k],line=-k,col=colo_i[k])
+    }
+  }
 }
 
 dev.off()
@@ -411,7 +419,15 @@ for (i in 1:k)#i<-1
 
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
-    mtext(select_vec_i[k],line=-k,col=colo_i[k])
+  { 
+    if (k==1)
+    {
+      mtext("GDP",line=-k,col=colo_i[k])
+    } else
+    {
+      mtext(select_vec_i[k],line=-k,col=colo_i[k])
+    }
+  }
 }
 
 dev.off()
@@ -422,10 +438,18 @@ dev.off()
 file = "./Figures/ma_inv_BIP.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 9, height = 6)
 par(mfrow=c(1,2))
-  ts.plot(mplot_with_pandemic,col=colo_i,main=paste("MA inversion GDP: with pandemic",sep=""),xlab="")
+ts.plot(mplot_with_pandemic,col=colo_i,main=paste("MA inversion GDP: with pandemic",sep=""),xlab="")
   for (k in 1:length(select_vec_i))
-    mtext(select_vec_i[k],line=-k,col=colo_i[k])
-    ts.plot(mplot_without_pandemic,col=colo_i,main="Without pandemic",xlab="")
+  { 
+    if (k==1)
+    {
+      mtext("GDP",line=-k,col=colo_i[k])
+    } else
+    {
+      mtext(select_vec_i[k],line=-k,col=colo_i[k])
+    }
+  }
+ts.plot(mplot_without_pandemic,col=colo_i,main="Without pandemic",xlab="")
 #  for (k in 1:length(select_vec_i))
 #    mtext(select_vec_i[k],line=-k,col=colo_i[k])
 
@@ -841,7 +865,7 @@ f_vec_hp<-t_mat_hp<-NULL
 for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
-  forward_shifted_BIP<-c(x_mat_wc[(lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]-1))
+  forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
   # Regress selected indicators on forward-shifted BIP
   length(forward_shifted_BIP)
   lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
