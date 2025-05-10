@@ -178,25 +178,29 @@ lag_vec<-c(1,rep(0,ncol(x_mat)-1))
 file = "./Figures/data.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
 par(mfrow=c(1,1))
-
-# Plot the data
-# The real-time BIP (red) is lagging the target (black) by lag_vec[1] quarters (publication lag)
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 mplot<-x_mat
 colnames(mplot)[1]<-"GDP"
-colo<-c("black",rainbow(ncol(data)-1))
 main_title<-"Data: standardized diff-log, Pandemic outliers trimmed"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
 box()
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
+
 dev.off()
+
+
+
+
+
+
 
 
 
@@ -209,34 +213,28 @@ par(mfrow=c(1,2))
 # The real-time BIP (red) is lagging the target (black) by lag_vec[1] quarters (publication lag)
 mplot<-x_mat[which(rownames(x_mat)>=2007&rownames(x_mat)<=2011),]
 colnames(mplot)[1]<-"GDP"
-colo<-c("black",rainbow(ncol(data)-1))
-main_title<-"Financial Crisis"
-plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+plot(mplot[,1],main="Financial crisis",axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
 box()
+#legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
 mplot<-x_mat[which(rownames(x_mat)>=2019&rownames(x_mat)<=2022),]
 colnames(mplot)[1]<-"GDP"
-colo<-c("black",rainbow(ncol(data)-1))
-main_title<-"Pandemic"
-plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+plot(mplot[,1],main="Pandemic",axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
 box()
+#legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
 
 dev.off()
 
@@ -369,6 +367,7 @@ for (i in 1:k)#i<-1
       
   }
   mplot_with_pandemic<-mplot
+  colnames(mplot_with_pandemic)<-c("GDP",select_vec_i[2:length(select_vec_i)])
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
   { 
@@ -416,6 +415,7 @@ for (i in 1:k)#i<-1
       
   }
     mplot_without_pandemic<-mplot
+  colnames(mplot_without_pandemic)<-c("GDP",select_vec_i[2:length(select_vec_i)])
 
   ts.plot(mplot,col=colo_i,main=paste("MA inversion ",colnames(data_fit)[i],sep=""),xlab="lag")
   for (k in 1:length(select_vec_i))
@@ -437,24 +437,34 @@ dev.off()
 
 file = "./Figures/ma_inv_BIP.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 9, height = 6)
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 par(mfrow=c(1,2))
-ts.plot(mplot_with_pandemic,col=colo_i,main=paste("MA inversion GDP: with pandemic",sep=""),xlab="")
-  for (k in 1:length(select_vec_i))
-  { 
-    if (k==1)
-    {
-      mtext("GDP",line=-k,col=colo_i[k])
-    } else
-    {
-      mtext(select_vec_i[k],line=-k,col=colo_i[k])
-    }
-  }
-ts.plot(mplot_without_pandemic,col=colo_i,main="Without pandemic",xlab="")
-#  for (k in 1:length(select_vec_i))
-#    mtext(select_vec_i[k],line=-k,col=colo_i[k])
+plot(mplot_with_pandemic[,1],main=paste("MA inversion GDP: with pandemic",sep=""),axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot_with_pandemic)),max(na.exclude(mplot_with_pandemic))))
+
+for (i in 1:ncol(mplot_with_pandemic))
+{
+  lines(mplot_with_pandemic[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=1:nrow(mplot),labels=1:nrow(mplot)-1)
+axis(2)
+legend("topright", legend = colnames(mplot_with_pandemic), col = colo, lty = 1, lwd = 1, bty = "n")
+box()
+
+plot(mplot_without_pandemic[,1],main=paste("Without pandemic",sep=""),axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot_without_pandemic)),max(na.exclude(mplot_without_pandemic))))
+
+for (i in 1:ncol(mplot_without_pandemic))
+{
+  lines(mplot_without_pandemic[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=1:nrow(mplot),labels=1:nrow(mplot)-1)
+axis(2)
+box()
 
 
 dev.off()
+
 
 
 
@@ -610,7 +620,7 @@ select_direct_indicator<-select_vec_multi
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
 f_vec_unfiltered<-p_val_unfiltered<-MSE_unfiltered_vec<-NULL
-for (h in 0:6)
+for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
@@ -643,12 +653,13 @@ for (h in 0:6)
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
-    if (h==0)
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
   axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
   axis(2)
+      if (h==0)
+    legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
   box()
 }
 dev.off()
@@ -687,12 +698,15 @@ for (h in 0:3)
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
-    if (h==0)
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#    if (h==0)
+#    mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
   axis(1,at=1:nrow(mplot),labels=rownames(mplot))
   axis(2)
+    if (h==0)
+    legend("bottomright", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
   box()
 }
 dev.off()
@@ -878,16 +892,13 @@ for (h in 0:3)
   sum_obj_hp<-summary(lm_obj)
   sum_obj<-summary(lm_obj)
   MSE_hp_vec<-c(MSE_hp_vec,sum_obj$sigma^2)
-  p_val_hp<-c(p_val_hp,pf(sum_obj$fstatistic["value"], sum_obj$df[1],sum_obj$df[2], lower.tail = FALSE))
-  f_vec_hp<-c(f_vec_hp,sum_obj$fstatistic["value"])
-  t_mat_hp<-rbind(t_mat_hp,sum_obj$coef[-1,4])
   # Technical note: 
   # -Residuals are subject to heteroscedasticity (crises) and autocorrelation
   # -Therefore classic OLS tests for statistical significance are biased
   # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
   
   # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
+  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,1]))+1)]
   # Note that this is a full-sample predictor (no out-of-sample span)
   
   # We can now plot target and direct forecast: for h>2 the predictor comes close to a flat line centered at zero
@@ -901,41 +912,26 @@ for (h in 0:3)
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
-    if (h==0)
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#    if (h==0)
+#    mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
   axis(1,at=1:nrow(mplot),labels=rownames(mplot))
   axis(2)
+  if (h==0)
+    legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
   box()
 }
-colnames(t_mat_hp)<-select_vec_multi
-rownames(t_mat_hp)<-paste("h=",0:3)
+#colnames(t_mat_hp)<-select_vec_multi
+#rownames(t_mat_hp)<-paste("h=",0:3)
 dev.off()
 
-if (F)
-{
-# rRMSEs are computed for h=0:6 (just increase h in the above lopp to recompute)
-# Compare MSEs and p-values
-  rrmse_hp_direct<-sqrt(MSE_hp_vec/MSE_unfiltered_vec)
-  names(rrmse_hp_direct)<-names(p_val_hp)<-names(p_val_unfiltered)<-paste("h=",0:6,sep="")
-  
-  save(rrmse_hp_direct,file=paste(path.result,"/rrmse_hp_direct",sep=""))
-  save(p_val_unfiltered,file=paste(path.result,"/p_val_unfiltered",sep=""))
-  save(p_val_hp,file=paste(path.result,"/p_val_hp",sep=""))
-} else
-{
-  load(file=paste(path.result,"/rrmse_hp_direct",sep=""))
-  load(file=paste(path.result,"/p_val_unfiltered",sep=""))
-  load(file=paste(path.result,"/p_val_hp",sep=""))
-
-}
-rrmse_hp_direct
 
 
 
 
-# Financial crisis
+# Same but financial crisis only
 file = "./Figures/direct_hp_forecasts_financial_crisis.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 
@@ -947,7 +943,7 @@ for (h in 0:3)
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
   # Regress selected indicators on forward-shifted BIP
   length(forward_shifted_BIP)
-  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,h+1]))
+  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,1]))
   # You will probably not find statistically significant regressors for h>2: BIP is a noisy series
   sum_obj<-summary(lm_obj)
   sum_obj$fstatistic  
@@ -957,11 +953,11 @@ for (h in 0:3)
   # -We shall rely on HAC-adjusted p-values further down (R-package sandwich)
   
   # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,h+1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,h+1]))+1)]
+  direct_hp_forecast<-lm_obj$coef[1]+t(hp_c_array_wc[,,1])%*%lm_obj$coef[2:(ncol(t(hp_c_array_wc[,,1]))+1)]
   # Note that this is a full-sample predictor (no out-of-sample span)
   
   
-    # Shift BIP forward by publication lag+forecast horizon
+# Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
   # Regress selected indicators on forward-shifted BIP
   lm_obj<-lm(forward_shifted_BIP~x_mat_wc[,select_direct_indicator])
@@ -991,16 +987,61 @@ for (h in 0:3)
   for (i in 1:ncol(mplot))
   {
     lines(mplot[,i],col=colo[i])
-    if (h==0)
-    mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#    if (h==0)
+#    mtext(colnames(mplot)[i],col=colo[i],line=-i)
   }
   abline(h=0)
   axis(1,at=1:nrow(mplot),labels=rownames(mplot))
   axis(2)
+  if (h==0)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
   box()
 }
 
 dev.off()
+
+#-------------------
+# Compute p-values of direct and HP-c forecasts: rely on HAC adjusted Wald-statistic
+# -There is no HAC-adjustment for F-statistic
+# -Use Wald-test with HAC-adjusted variance of estimators
+
+ws_vec_unfiltered<-f_vec_unfiltered<-p_val_unfiltered<-MSE_unfiltered_vec<-NULL
+for (h in 0:6)#h<-0
+{
+  # Shift BIP forward by publication lag+forecast horizon
+  forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
+  # Regress selected indicators on forward-shifted BIP: start at t=L (same sample as HP-C)
+  lm_obj<-lm(forward_shifted_BIP[L:length(forward_shifted_BIP)]~x_mat_wc[L:nrow(x_mat_wc),])
+# HAC adjustment
+  var_HAC<-vcovHAC(lm_obj)
+  coef<-lm_obj$coef
+# Wald statistic  
+  chisq<-t(coef)%*%solve(var_HAC)%*%coef
+# P-Value  
+  ws_vec_unfiltered<-c(ws_vec_unfiltered,pchisq(chisq,ncol(x_mat_wc)+1,lower.tail = F))
+}
+
+
+
+ws_vec_hp<-f_vec_hp<-t_mat_hp<-p_val_hp<-MSE_hp_vec<-NULL
+for (h in 0:6)#h<-3
+{
+  # Shift BIP forward by publication lag+forecast horizon
+  forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
+  # Regress selected filtered indicators on forward-shifted BIP
+  length(forward_shifted_BIP)
+  lm_obj<-lm(forward_shifted_BIP~t(hp_c_array_wc[,,1]))
+# HAC adjustment  
+  var_HAC<-vcovHAC(lm_obj)
+  coef<-lm_obj$coef
+# Wald statistic  
+  chisq<-t(coef)%*%solve(var_HAC)%*%coef
+# P-value  
+  ws_vec_hp<-c(ws_vec_hp,pchisq(chisq,ncol(x_mat_wc)+1,lower.tail = F))
+  
+}
+
+
 @
 <<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
 file = "./Figures/direct_hp_forecasts.pdf"
@@ -1025,29 +1066,19 @@ cat("\\end{figure}")
 Moreover, the F-statistics are larger than for the direct forecasts, see Table \eqref{f_stat}, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
 
 
-<<label=ats_mba_2,echo=FALSE,results=tex>>=
 
-mat1<-matrix(round(rrmse_hp_direct[4:7],5),nrow=1)
-colnames(mat1)<-names(rrmse_hp_direct)[4:7]
-rownames(mat1)<-"rRMSE"
-#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
-#center = "centering", file = "", floating = FALSE)
-xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
-paste("Relative root mean-square error of HP-C against classic direct forecast: numbers smaller one signify an outperformance by the direct HP-C forecast.  "),
-label=paste("f_stat",sep=""),
-center = "centering", file = "", floating = FALSE)
-@
+
 
 
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 
-mat1<-matrix(round(p_val_unfiltered,5),nrow=1)
-colnames(mat1)<-names(p_val_unfiltered)
-rownames(mat1)<-"P-values"
+mat1<-rbind(round(ws_vec_hp,5),round(ws_vec_unfiltered,5))
+colnames(mat1)<-paste("h=",0:(length(ws_vec_unfiltered)-1))
+rownames(mat1)<-c("HP-C filtered","Unfiltered")
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
 xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
-paste("Statistical significance of direct forecasts.  "),
+paste("Statistical significance of unfiltered and HP-C filtered forecasts based on HAC-adjusted Wald test: all indicators and full sample (without pandemic).  "),
 label=paste("f_stat",sep=""),
 center = "centering", file = "", floating = FALSE)
 @
@@ -1166,26 +1197,36 @@ file = "./Figures/bk_gammak.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 
 par(mfrow=c(1,2))
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 mplot<-gammak
-colnames(mplot)[1]<-"GDP"
-colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-MSE",xlab="")
+plot(mplot[,1],main="M-MSE",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+
 for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=c(1,1+5*1:(nrow(mplot)/5)),labels=c(0,5*1:(nrow(mplot)/5)))
+axis(2)
+legend("topright", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+box()
+
 mplot<-bk
-colnames(mplot)[1]<-"GDP"
+plot(mplot[,1],main="M-SSA",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 
-colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-SSA",xlab="")
-#for (i in 1:ncol(mplot))
-#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
-#mplot<-bk_HP_HP_C
-#colo<-rainbow(ncol(mplot))
-#ts.plot(mplot,col=colo,main="M-SSA larger HT")
-#for (i in 1:ncol(mplot))
-#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
-
+for (i in 1:ncol(mplot))
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=c(1,1+5*1:(nrow(mplot)/5)),labels=c(0,5*1:(nrow(mplot)/5)))
+axis(2)
+box()
 dev.off()
+
+
+
+
 
 
 mssa<-t(mssa_array[,,1])
@@ -1330,23 +1371,40 @@ file = "./Figures/bk_h.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 8, height = 6)
 
 par(mfrow=c(1,2))
-# h=0, see above
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 mplot<-bk
-colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-SSA: h=0",xlab="")
-for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+plot(mplot[,1],main="M-SSA: h=0",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 
-# h=4
+for (i in 1:ncol(mplot))
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=c(1,1+5*1:(nrow(mplot)/5)),labels=c(0,5*1:(nrow(mplot)/5)))
+axis(2)
+legend("topright", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+box()
+
 bk<-matrix(mssa_indicator_obj$bk_x_array[select,select,,"h=4"],nrow=L)
 colnames(bk)<-colnames(gammak)<-select_vec_multi
 mplot<-bk
-colo<-rainbow(ncol(mplot))
-ts.plot(mplot,col=colo,main="M-SSA: h=4",xlab="")
-#for (i in 1:ncol(mplot))
-#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+plot(mplot[,1],main="M-SSA: h=4",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+
+for (i in 1:ncol(mplot))
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=c(1,1+5*1:(nrow(mplot)/5)),labels=c(0,5*1:(nrow(mplot)/5)))
+axis(2)
+box()
 
 dev.off()
+
+
+
+
+
 
 
 
@@ -1365,16 +1423,18 @@ mplot<-mplot[which(rownames(mplot)>2007&rownames(mplot)<2011),]
 main_title<-paste("HP-C targeting HP-",colnames(x_mat)[i],sep="")
 main_title<-"HP-C: financial crisis"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
 {
   lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+#  mtext(colnames(mplot)[j],col=colo[j],line=-j)
 }
 abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
 box()
+
 
 
 # HP-C Pandemic
@@ -1468,6 +1528,9 @@ for (h in 3:6)#h<-1
   abline(h=0)
   axis(1,at=1:nrow(mplot),labels=rownames(mplot))
   axis(2)
+  if (h==3)
+    legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
   box()
 }
 dev.off()
@@ -1483,19 +1546,22 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6
 par(mfrow=c(1,1))
 mplot<-cbind(x_mat[,"BIP"],predictor_mssa_mat)
 rownames(mplot)<-rownames(x_mat)
+mplot<-mplot[L:nrow(mplot),]
 colo<-c("black",rainbow(ncol(mplot)-1))
 colnames(mplot)[1]<-"BIP"
 main_title<-"Equally-weighted average of M-SSA outputs"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (j in 1:ncol(mplot))
 {
   lines(mplot[,j],col=colo[j],lwd=1,lty=1)
-  mtext(colnames(mplot)[j],col=colo[j],line=-j)
+#  mtext(colnames(mplot)[j],col=colo[j],line=-j)
 }
 abline(h=0)
 axis(1,at=1:nrow(mplot),labels=rownames(mplot))
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
 box()
 
 dev.off()
@@ -1503,6 +1569,8 @@ dev.off()
 
 file = "./Figures/mssa_predictor_interpretability.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 6, height = 6)
+
+
 j_now<-1
 # Plot M-SSA nowcast and components
 par(mfrow=c(1,1))
@@ -1511,19 +1579,23 @@ mplot<-scale(cbind(predictor_mssa_mat[,j_now],scale(t(mssa_array[,,j_now]))))
 rownames(mplot)<-rownames(x_mat)
 colnames(mplot)<-c(paste("M-SSA predictor optimized for h=",h_vec[j_now],sep=""),
                    paste("Subseries ",select_vec_multi,sep=""))
-colo<-c("blue",rainbow(length(select_vec_multi)))
+mplot<-mplot[L:nrow(mplot),]
+colo<-c("blue","black", "red", "green", "blue", "orange", "dimgray")
+
 main_title<-c(paste("M-SSA predictor for h=",h_vec[j_now]," (solid blue) and sub-series (dashed lines)",sep=""),"In-sample span up to black vertical (dashed) line")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=2,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=2)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 abline(v=which(rownames(mplot)<=date_to_fit)[length(which(rownames(mplot)<=date_to_fit))],lwd=2,lty=2)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
 box()
 dev.off()
 
@@ -1885,16 +1957,18 @@ colo<-c("blue",rainbow(length(select_vec_multi)))
 main_title<-paste("Final vs. real-time predictor: h=",h,", shift=",shift,sep=""
 )
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 #abline(v=which(rownames(mplot)<=date_to_fit)[length(which(rownames(mplot)<=date_to_fit))],lwd=2,lty=2)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
 box()
 
 dev.off()
@@ -1913,17 +1987,19 @@ colnames(mplot)[2]<-"GDP"
 colo<-c("black","blue","red")
 main_title<-paste("Intercept and regression weight over time: h=",h,", shift=",shift,sep="")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))
 {
   lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
 }
 abline(h=0)
 #abline(v=which(rownames(mplot)<=date_to_fit)[length(which(rownames(mplot)<=date_to_fit))],lwd=2,lty=2)
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
 box()
+
 dev.off()
 @
 Revisions refer to changes in the historical values of a time series resulting from updates with new information. Revisions of the M-SSA component predictor can arise from data updates, which we do not analyze further here\footnote{Except for BIP, the other indicators are not or only slightly revised. Moreover, the smoothing effect of filters mitigates the effect of revisions when compared to direct forecasts.}, or from updates to predictor parameters. The latter can be further separated into changes in VAR parameters and regression weights. 
@@ -2026,15 +2102,17 @@ mplot<-mplot[L:nrow(mplot),]
 colnames(mplot)<-colnames(mssa_final_vs_prem_wc)
 main_title<-paste("GDP component predictors: final and 2008-MSSA (h=",h,", shift=",shift,")",sep="")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
+#mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (jj in 1:ncol(mplot))
 {
   lines(mplot[,jj],col=colo[jj],lwd=1,lty=1)
-  mtext(colnames(mplot)[jj],col=colo[jj],line=-jj)
+#  mtext(colnames(mplot)[jj],col=colo[jj],line=-jj)
 }
 abline(h=0)
 axis(1,at=c(1,12*1:(nrow(mplot)/12)),labels=rownames(mplot)[c(1,12*1:(nrow(mplot)/12))])
 axis(2)
+legend("bottomleft", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+
 box()
 dev.off()
 
@@ -2101,37 +2179,56 @@ xi_2008<-compute_xi_func(V_obj_2008,L)$xi
 
 
 # Plot MA inversions
-
 file = "./Figures/up_dated_ma_inv_multi_ip.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
-colo<-rainbow(ncol(x_mat))
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 # Select BIP component
-i<-1
+ih<-1
 par(mfrow=c(1,2))
 # 2008
-xi<-xi_2008
-mplot<-xi[i,1:min(10,L)]
+xi<-compute_xi_func(V_obj_2008,L)$xi
+mplot<-xi[ih,1:min(10,L)]
 for (j in 2:n)
 {
-  mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
+  mplot<-cbind(mplot,xi[ih,(j-1)*L+1:min(10,L)])
 }
-ts.plot(mplot,col=colo_i,main="MA inversion GDP: 2008",xlab="")
-for (k in 1:length(select_vec_i))
-  mtext(select_vec_i[k],line=-k,col=colo_i[k])
+colnames(mplot)<-select_vec_multi
+plot(mplot[,1],main=paste("MA inversion GDP: 2008",sep=""),axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+
+for (i in 1:ncol(mplot))
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=1:nrow(mplot),labels=1:nrow(mplot)-1)
+axis(2)
+legend("topright", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
+box()
+
 
 
 # full data set
-xi<-xi_full
-mplot<-xi[i,1:min(10,L)]
+xi<-compute_xi_func(V_obj_full,L)$xi
+
+mplot<-xi[ih,1:min(10,L)]
 for (j in 2:n)
 {
-  mplot<-cbind(mplot,xi[i,(j-1)*L+1:min(10,L)])
+  mplot<-cbind(mplot,xi[ih,(j-1)*L+1:min(10,L)])
 }
-ts.plot(mplot,col=colo_i,main="Full data set",xlab="")
-#for (k in 1:length(select_vec_i))
-#  mtext(select_vec_i[k],line=-k,col=colo_i[k])
+
+plot(mplot[,1],main=paste("Full data set",sep=""),axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
+
+for (i in 1:ncol(mplot))
+{
+  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
+}
+abline(h=0)
+axis(1,at=1:nrow(mplot),labels=1:nrow(mplot)-1)
+axis(2)
+box()
 
 dev.off()
+
 
 
 #---------------------------------------------
@@ -2144,15 +2241,15 @@ colnames(bk_2008)<-colnames(bk_all)<-select_vec_multi
 
 file = "./Figures/bk_2008_all.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
+colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 
 par(mfrow=c(1,2))
 mplot<-bk_2008
-colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main=paste("M-SSA data up to 2008: h=",h,sep=""),xlab="")
-for (i in 1:ncol(mplot))
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+#for (i in 1:ncol(mplot))
+#  mtext(colnames(mplot)[i],col=colo[i],line=-i)
+legend("topright", legend = colnames(mplot), col = colo, lty = 1, lwd = 1, bty = "n")
 mplot<-bk_all
-colo<-rainbow(ncol(mplot))
 ts.plot(mplot,col=colo,main="Full data set",xlab="")
 #for (i in 1:ncol(mplot))
 #  mtext(colnames(mplot)[i],col=colo[i],line=-i)
@@ -2171,7 +2268,7 @@ file = "./Figures/up_dated_ma_inv_multi_ip.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
-cat("\\caption{MA-inversion (impulse response) of VAR: data up to Jan-2008 (left) vs. entire data set (right).", sep = "")
+cat("\\caption{MA-inversion (impulse response) of VAR: data up to Jan-2008 (left) vs. entire data set  without pandemic (right).", sep = "")
 cat("\\label{up_dated_ma_inv_multi_ip}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
@@ -2182,7 +2279,7 @@ file = "./Figures/bk_2008_all.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
-cat("\\caption{M-SSA filter tracking HP-GDP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set (right).", sep = "")
+cat("\\caption{M-SSA filter tracking HP-GDP at forecast horizon $h=4$: data up to Jan-2008 (left) vs. entire data set without pandemic (right).", sep = "")
 cat("\\label{bk_2008_all}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
