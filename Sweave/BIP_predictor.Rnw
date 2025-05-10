@@ -1199,6 +1199,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7
 par(mfrow=c(1,2))
 colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 mplot<-gammak
+colnames(mplot)[1]<-"GDP"
 plot(mplot[,1],main="M-MSE",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 
 for (i in 1:ncol(mplot))
@@ -1373,6 +1374,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 8, height = 6
 par(mfrow=c(1,2))
 colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 mplot<-bk
+colnames(mplot)[1]<-"GDP"
 plot(mplot[,1],main="M-SSA: h=0",axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 
 for (i in 1:ncol(mplot))
@@ -1516,7 +1518,7 @@ for (h in 3:6)#h<-1
   rownames(mplot)<-rownames(x_mat)
 
   mplot<-mplot[which(rownames(mplot)>2006&rownames(mplot)<2011),]
-  colnames(mplot)<-c("BIP","M-SSA","HP-C")
+  colnames(mplot)<-c("GDP","M-SSA","HP-C")
   colo<-c("black","blue","red")
   main_title<-paste("GDP shifted forward by ",h," quarters",sep="")
   plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
@@ -1548,7 +1550,7 @@ mplot<-cbind(x_mat[,"BIP"],predictor_mssa_mat)
 rownames(mplot)<-rownames(x_mat)
 mplot<-mplot[L:nrow(mplot),]
 colo<-c("black",rainbow(ncol(mplot)-1))
-colnames(mplot)[1]<-"BIP"
+colnames(mplot)[1]<-"GDP"
 main_title<-"Equally-weighted average of M-SSA outputs"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 #mtext(colnames(mplot)[1],col=colo[1],line=-1)
@@ -1581,6 +1583,7 @@ colnames(mplot)<-c(paste("M-SSA predictor optimized for h=",h_vec[j_now],sep="")
                    paste("Subseries ",select_vec_multi,sep=""))
 mplot<-mplot[L:nrow(mplot),]
 colo<-c("blue","black", "red", "green", "blue", "orange", "dimgray")
+colnames(mplot)[2]<-"Subseries GDP"
 
 main_title<-c(paste("M-SSA predictor for h=",h_vec[j_now]," (solid blue) and sub-series (dashed lines)",sep=""),"In-sample span up to black vertical (dashed) line")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=2,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
@@ -2193,6 +2196,7 @@ for (j in 2:n)
   mplot<-cbind(mplot,xi[ih,(j-1)*L+1:min(10,L)])
 }
 colnames(mplot)<-select_vec_multi
+colnames(mplot)[1]<-"GDP"
 plot(mplot[,1],main=paste("MA inversion GDP: 2008",sep=""),axes=F,type="l",xlab="",ylab="",col=colo[1],ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 
 for (i in 1:ncol(mplot))
@@ -2245,6 +2249,7 @@ colo<-c("black", "red", "green", "blue", "orange", "dimgray")
 
 par(mfrow=c(1,2))
 mplot<-bk_2008
+colnames(mplot)[1]<-"GDP"
 ts.plot(mplot,col=colo,main=paste("M-SSA data up to 2008: h=",h,sep=""),xlab="")
 #for (i in 1:ncol(mplot))
 #  mtext(colnames(mplot)[i],col=colo[i],line=-i)
