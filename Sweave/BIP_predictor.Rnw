@@ -1733,9 +1733,22 @@ This setup allows us to evaluate the out-of-sample performance of various predic
 \subsection{Out-of-Sample Forecast Performances}\label{oosp}
 
 
-%Out-of-sample performance metrics include p-values derived from regressions of the out-of-sample predictors on forward-shifted BIP, adjusted for heteroscedasticity and autocorrelation using HAC estimators. Additionally, we report relative root-mean-square forecast errors (rRMSE) benchmarked against various reference models.\\ 
+Tables \ref{p_val_wc} and \ref{rRMSE_mSSA_comp_mean_wc} present HAC-adjusted p-values and rRMSEs for the GDP component predictor. They are obtained from the simple regressions 
 
-Tables \eqref{p_val_wc} and \eqref{rRMSE_mSSA_comp_mean_wc} present HAC-adjusted p-values and rRMSEs for the BIP component predictor. The p-values are obtained from a regression of the out-of-sample predictor on forward-shifted BIP (in contrast to Table \eqref{p_val_hpbip_wc}, which emphasized HP-BIP); hence, they do not account for potential bias or mis-scaling of the predictor. In contrast, the rRMSEs, evaluated against the mean benchmark, do incorporate eventual bias and mis-scaling effects. Additional results involving other predictor benchmarks are provided in the appendix, based on data sets with and without the pandemic. The results can be summarized as follows: targeting future HP-BIP (see Table \eqref{p_val_hpbip_wc}) is less challenging than predicting BIP (see Table \eqref{p_val_wc}), due to smoothness (autocorrelation) of the target when compared to BIP. The pandemic period generally obscures the relationships between predictors and BIP. When excluding the pandemic, the direct forecasts outperform the mean forecast up to two quarters ahead. The M-SSA component predictor, optimized for longer forecast horizons, outperforms the mean benchmark up to one year ahead. Additionally, the BIP component predictor also surpasses the direct forecasts for larger forecast horizons ($h>2$ quarters).Statistical significance of the BIP component predictor, optimized for larger forecast horizons, can be established for at least up to one year ahead. Predictors optimized for $h\geq 4$ generally outperform the other designs, irrespective of the forward-shift of BIP.  
+\begin{equation}
+    \textrm{GDP}_{t+shift}=\beta_0(shift,h)+\beta_1(shift,h) \cdot \textrm{M-SSA}^{\textrm{GDP}}_t(h) + \epsilon_t^{shift,h}
+    \label{eq:GDP_M-SSA}
+\end{equation}
+
+where $\textrm{M-SSA}^{\textrm{GDP}}_t(h)$ is the out-of-sample M-SSA predictor for GDP (not HP-GDP.)
+%(in contrast to Table \ref{p_val_hpbip_wc}, which emphasized HP-GDP.) 
+The p-values test $H_0 : 0 = \beta_1(shift,h)$ and do not account for potential bias or mis-scaling of the GDP predictor. In contrast, the rRMSEs, evaluated against the mean benchmark, incorporate eventual bias and mis-scaling effects. Additional results involving other predictor benchmarks are provided in the appendix, based on data sets with and without the pandemic. \\
+
+
+The purposes of Equation \ref{eq:GDP_M-SSA} are twofold: first, the regression parameters enable affine transformations of the left-hand side variable, so that the standardized target $\textrm{GDP}_{t+shift}$ can be replaced by the original log-returns without affecting the p-values or rRMSEs reported in Tables \ref{p_val_wc} and \ref{rRMSE_mSSA_comp_mean_wc} (noting that the benchmark predictors, i.e., the direct forecasts and the arithmetic mean, similarly adjust to affine transformations); second, the static scale adjustment by $\beta_1(shift,h)$ compensates for the increasing zero-shrinkage of $\textrm{M-SSA}^{\textrm{GDP}}_t(h)$, reflecting greater uncertainty  as the forecast horizon $h$ increases. This simple transformation allows $\textrm{M-SSA}^{\textrm{GDP}}_t(h)$ to be used as a predictor for $\textrm{GDP}_{t+shift}$ even when $h\neq shift$. Such flexibility enables assessment of the dynamic left-shift of $\textrm{M-SSA}^{\textrm{GDP}}_t(h)$, as illustrated in Figure \ref{{multivar_vs_univar}}, at various forward-shifts of $\textrm{GDP}_{t+shift}$.\\  
+
+
+When excluding the pandemic, the direct forecasts outperform the mean forecast up to two quarters ahead, see Table \ref{rRMSE_mSSA_direct_mean_without_covid8}.\footnote{However, the pandemic period generally obscures the relationships between predictors and GDP.} However, the M-SSA component predictor, optimized for longer forecast horizons, outperforms the mean benchmark up to 6Q ahead. Additionally, the GDP component predictor optimized for large forecast horizons $h\geq 4$ surpass the direct forecasts for $shift>2$, see Table \ref{rRMSE_mSSA_comp_direct_without_covid7}. Statistical significance of the GDP component predictor, optimized for larger forecast horizons, can be established for at least up to one year ahead.
 
 
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
@@ -1769,7 +1782,7 @@ if (recompute_results)
   {
 # Progress bar: see R-console
     setTxtProgressBar(pb, shift)
-    for (j in h_vec)#j<-0
+    for (j in h_vec)#j<-1
     {
 # Horizon j corresponds to k=j+1-th entry of array    
       k<-j+1
@@ -1784,6 +1797,8 @@ if (recompute_results)
       }
       rownames(dat)<-rownames(x_mat)
       colnames(dat)<-c(colnames(x_mat)[1],sel_vec_pred)
+      nrow(na.exclude(dat))
+
 # Apply the previous function: compute GARCH, WLS regression, out-of-sample MSEs and p-values    
       perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec)
 # Retrieve out-of-sample performances 
@@ -1817,8 +1832,17 @@ if (recompute_results)
 #   -Note that the data matrix here does not depend on j, in contrast  to the M-SSA components above    
       dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),x_mat)
       rownames(dat)<-rownames(x_mat)
-      dat<-dat
-      
+# Two variants for data set:  
+      if (F)
+      {
+# 1. Same sample as M-SSA (due to filter initialization the first L observations are lost) 
+        dat<-dat[L:nrow(dat),]
+# Same length as M-SSA      
+        nrow(na.exclude(dat))
+      }
+# 2. Full data, including the first L observations (makes sense since the data is available) 
+      dat<-dat[1:nrow(dat),]
+
       perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec)
 # Retrieve out-of-sample performances: p-values and forecast MSE, with/without Pandemic 
       p_mat_direct[shift+1,k]<-perf_obj$p_value 

@@ -598,7 +598,7 @@ optimal_weight_predictor_func<-function(dat,in_out_separator,use_garch,shift,lag
   cal_oos_pred<-cal_oos_mean_pred<-rep(NA,len)
   track_weights<-NULL
   start_non_na<-which(!is.na(dat[,2]))[1]
-  for (i in (n+start_non_na):(len-shift-lag_vec[1])) #i<-n+2
+  for (i in (n+start_non_na):(len-shift-lag_vec[1])) #i<-n+start_non_na+2
   {
 # If use_garch==T then the regression relies on weighted least-squares, whereby the weights are based 
 #   on volatility obtained from a GARCH(1,1) model fitted to target (first column of dat)
@@ -630,6 +630,10 @@ optimal_weight_predictor_func<-function(dat,in_out_separator,use_garch,shift,lag
       cal_oos_pred[i+shift+lag_vec[1]]<-(lm_obj$coef[1]+lm_obj$coef[2:(n+1)]%*%dat[i+shift+lag_vec[1],2:(n+1)]) 
     }
 # 2. Use mean as predictor (simplest benchmark)
+# Two variants: 
+# 1. Same data span as filter (due to initialization the filter losts L values at start)    
+    cal_oos_mean_pred[i+shift+lag_vec[1]]<-mean(dat[start_non_na:i,1])
+# 2. Full sample, including first L observations (makes sense since the data is available)    
     cal_oos_mean_pred[i+shift+lag_vec[1]]<-mean(dat[1:i,1])
   }
   colnames(track_weights)<-c("intercept",colnames(dat)[2:ncol(dat)])
