@@ -1771,6 +1771,10 @@ sel_vec_direct_forecast<-c("ifo_c","ESI")
 # If align_sample==T then the first L observations of mean and direct forecasts are removed to align with M-SSA
 #   -Avoid random differences due to unequal samples.
 align_sample<-T
+reg_type<-"OLS"
+reg_type<-"LASSO"
+reg_type<-"Ridge"
+lambda_reg<-10
 # Shift BIP forward by shift_vec + publication lag
 shift_vec<-0:5
 if (recompute_results)
@@ -1816,7 +1820,7 @@ if (recompute_results)
       nrow(na.exclude(dat))
 
 # Apply the previous function: compute GARCH, WLS regression, out-of-sample MSEs and p-values    
-      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample)
+      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample,reg_type,lambda_reg)
 # Retrieve out-of-sample performances 
 # a. p-values with/without Pandemic    
       p_mat_mssa_components[shift+1,k]<-perf_obj$p_value
@@ -1861,7 +1865,7 @@ if (recompute_results)
 # 2. Full data, including the first L observations (makes sense since the data is available) 
         dat<-dat[1:nrow(dat),]
       }
-      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample)
+      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample,reg_type,lambda_reg)
 # Retrieve out-of-sample performances: p-values and forecast MSE, with/without Pandemic 
       p_mat_direct[shift+1,k]<-perf_obj$p_value 
       p_mat_direct_without_covid[shift+1,k]<-perf_obj$p_value_without_covid 
