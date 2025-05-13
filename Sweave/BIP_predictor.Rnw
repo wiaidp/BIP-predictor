@@ -1759,23 +1759,35 @@ When excluding the pandemic, the direct forecasts outperform the mean forecast u
 <<label=init,results=hide>>=
 # Section 5.3
 
-sel_vec_pred<-c("BIP")
-
+# Select M-SSA components: use M-SSA output tracking BIP
+sel_vec_mssa_comp<-select_vec_multi
+sel_vec_mssa_comp<-c("BIP")
+# Select indicators for direct forecast: all indicators lead to overfitting (worse out-of-sample performances)
+# Best design out-of-sample is based on ifo_c and ESI
+sel_vec_direct_forecast<-select_vec_multi
+sel_vec_direct_forecast<-c("ifo_c","ESI")
+# M-SSA looses L observations at start when compared to direct forecast or mean benchmarks: 
+#   -therefore the samples are slightly different
+# If align_sample==T then the first L observations of mean and direct forecasts are removed to align with M-SSA
+#   -Avoid random differences due to unequal samples.
+align_sample<-T
+# Shift BIP forward by shift_vec + publication lag
 shift_vec<-0:5
 if (recompute_results)
 {
 # Select indicators for direct forecast: use all indicators
   sel_indicator_out_sample<-select_vec_multi
 # Initialize performance matrices
-  MSE_oos_mssa_comp_without_covid_mat<-MSE_oos_mssa_comp_mat<-p_mat_mssa<-p_mat_mssa_components<-p_mat_mssa_components_without_covid<-p_mat_direct<-rRMSE_mSSA_comp_direct<-rRMSE_mSSA_comp_mean<-rRMSE_mSSA_comp_direct_without_covid<-rRMSE_mSSA_comp_mean_without_covid<-rRMSE_mSSA_direct_mean_without_covid<-rRMSE_mSSA_direct_mean<-p_mat_direct_without_covid<-matrix(ncol=length(h_vec),nrow=length(h_vec)-1)
+  MSE_oos_mssa_comp_without_covid_mat<-MSE_oos_mssa_comp_mat<-p_mat_mssa<-p_mat_mssa_components<-p_mat_mssa_components_without_covid<-p_mat_direct<-rRMSE_mSSA_comp_direct<-rRMSE_mSSA_comp_mean<-rRMSE_mSSA_comp_direct_without_covid<-rRMSE_mSSA_comp_mean_without_covid<-rRMSE_mSSA_direct_mean_without_covid<-rRMSE_mSSA_direct_mean<-p_mat_direct_without_covid<-matrix(nrow=length(shift_vec),ncol=length(h_vec))
   final_components_preditor_array<-oos_components_preditor_array<-array(dim=c(length(shift_vec),length(h_vec),nrow(x_mat)))
-  dimnames(final_components_preditor_array)<-dimnames(oos_components_preditor_array)<-list(paste("shift=",shift_vec,sep=""),
-                                                                                           paste("h=",h_vec,sep=""),rownames(x_mat))
+  dimnames(final_components_preditor_array)<-dimnames(oos_components_preditor_array)<-list(paste("shift=",shift_vec,sep=""), paste("h=",h_vec,sep=""),rownames(x_mat))
+  
+  dim(p_mat_mssa_components)
 # Initialize arrays collecting final predictors, real-time predictors and regression weights
 #   -These will be used when analyzing revisions
-  track_weights_array<-array(dim=c(length(shift_vec),length(h_vec),nrow(x_mat),length(sel_vec_pred)+1))
+  track_weights_array<-array(dim=c(length(shift_vec),length(h_vec),nrow(x_mat),length(sel_vec_mssa_comp)+1))
   dimnames(track_weights_array)<-list(paste("shift=",shift_vec,sep=""),
-                                      paste("h=",h_vec,sep=""),rownames(x_mat),c("Intercept",sel_vec_pred))
+                                      paste("h=",h_vec,sep=""),rownames(x_mat),c("Intercept",sel_vec_mssa_comp))
 
 # Use OLS
 # Set-up progress bar: indicates progress in R-console
@@ -1792,19 +1804,19 @@ if (recompute_results)
       k<-j+1
 # A. M-SSA component predictor
 # Specify data matrix for WLS regression
-      if (length(sel_vec_pred)>1)
+      if (length(sel_vec_mssa_comp)>1)
       {
-        dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),t(mssa_array[sel_vec_pred,,k]))
+        dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),t(mssa_array[sel_vec_mssa_comp,,k]))
       } else
       {
-        dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),(mssa_array[sel_vec_pred,,k]))
+        dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),(mssa_array[sel_vec_mssa_comp,,k]))
       }
       rownames(dat)<-rownames(x_mat)
-      colnames(dat)<-c(colnames(x_mat)[1],sel_vec_pred)
+      colnames(dat)<-c(colnames(x_mat)[1],sel_vec_mssa_comp)
       nrow(na.exclude(dat))
 
 # Apply the previous function: compute GARCH, WLS regression, out-of-sample MSEs and p-values    
-      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec)
+      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample)
 # Retrieve out-of-sample performances 
 # a. p-values with/without Pandemic    
       p_mat_mssa_components[shift+1,k]<-perf_obj$p_value
@@ -1835,7 +1847,7 @@ if (recompute_results)
 #     matrix dat: we here use x_mat instead of mssa_array. 
 #   -We select all indicators (one could easily change this setting but results are only marginally effected as long as ifo and ESi are included)
 #   -Note that the data matrix here does not depend on j, in contrast  to the M-SSA components above    
-      dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),x_mat[,sel_indicator_out_sample])
+      dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),x_mat[,sel_vec_direct_forecast])
       rownames(dat)<-rownames(x_mat)
 # Two variants for data set:  
       if (T)
@@ -1849,7 +1861,7 @@ if (recompute_results)
 # 2. Full data, including the first L observations (makes sense since the data is available) 
         dat<-dat[1:nrow(dat),]
       }
-      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec)
+      perf_obj<-optimal_weight_predictor_func(dat,in_out_separator,use_garch,shift,lag_vec,align_sample)
 # Retrieve out-of-sample performances: p-values and forecast MSE, with/without Pandemic 
       p_mat_direct[shift+1,k]<-perf_obj$p_value 
       p_mat_direct_without_covid[shift+1,k]<-perf_obj$p_value_without_covid 
@@ -1930,6 +1942,7 @@ p_mat_mssa_components_without_covid
 
 # Same but for direct forecast
 p_mat_direct_without_covid[,1]
+
 
 
 # -Out of sample rRMSEs
@@ -2099,18 +2112,18 @@ final_mssa_array<-final_mssa_indicator_obj$mssa_array
 #----------------------
 # Compute up-dated M-SSA component predictors 
 
-if (length(sel_vec_pred)>1)
+if (length(sel_vec_mssa_comp)>1)
 {
-  dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),t(final_mssa_array[sel_vec_pred,,h+1]))
+  dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),t(final_mssa_array[sel_vec_mssa_comp,,h+1]))
 } else
 {
-  dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),(final_mssa_array[sel_vec_pred,,h+1]))
+  dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),(final_mssa_array[sel_vec_mssa_comp,,h+1]))
 }
 lm_obj<-lm(dat[,1]~dat[,2:ncol(dat)])
 
 optimal_weights<-lm_obj$coef
 # Compute predictor for each forward-shift  
-if (length(sel_vec_pred)>1)
+if (length(sel_vec_mssa_comp)>1)
 {
   final_mssa_predictor<-optimal_weights[1]+dat[,2:ncol(dat)]%*%optimal_weights[2:length(optimal_weights)]
 } else

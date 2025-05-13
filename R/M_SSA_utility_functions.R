@@ -588,7 +588,7 @@ HAC_ajusted_p_value_func<-function(da)
 # MSE_mean_oos_without_covid: same but without Pandemic
 # MSE_oos_without_covid: without Pandemic
 # p_value_without_covid: without Pandemic
-optimal_weight_predictor_func<-function(dat,in_out_separator,use_garch,shift,lag_vec)
+optimal_weight_predictor_func<-function(dat,in_out_separator,use_garch,shift,lag_vec,align_sample)
 {
   
   len<-dim(dat)[1]
@@ -631,7 +631,7 @@ optimal_weight_predictor_func<-function(dat,in_out_separator,use_garch,shift,lag
     }
 # 2. Use mean as predictor (simplest benchmark)
 # Two variants: 
-    if (T)
+    if (align_sample)
     {
 # 1. Same data span as filter (due to initialization the filter losts L values at start)    
       cal_oos_mean_pred[i+shift+lag_vec[1]]<-mean(dat[start_non_na:i,1])
