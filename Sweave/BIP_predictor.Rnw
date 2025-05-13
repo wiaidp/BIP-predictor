@@ -71,6 +71,10 @@ if (!"fGarch"%in%inst_pack)
   install.packages("fGarch")
 if (!"xtable"%in%inst_pack)
   install.packages("xtable")
+if (!"MASS"%in%inst_pack)
+  install.packages("MASS")
+if (!"glmnet"%in%inst_pack)
+  install.packages("glmnet")
 
 
 
@@ -83,14 +87,17 @@ library(mFilter)
 library(MTS)
 # HAC estimate of standard deviations in the presence of autocorrelation and heteroscedasticity
 library(sandwich)
-# Extended time series
-library(xts)
 # Library for Diebold-Mariano test of equal forecast performance
 library(multDM)
 # GARCH model: for improving regression estimates
 library(fGarch)
 # Library for tables
 library(xtable)
+library(MASS)
+library(glmnet) 
+# Extended time series
+library(xts)
+
 
 
 
@@ -1771,9 +1778,11 @@ sel_vec_direct_forecast<-c("ifo_c","ESI")
 # If align_sample==T then the first L observations of mean and direct forecasts are removed to align with M-SSA
 #   -Avoid random differences due to unequal samples.
 align_sample<-T
+# Can define type of regression
 reg_type<-"OLS"
 reg_type<-"LASSO"
 reg_type<-"Ridge"
+# Penalty weight in regularization
 lambda_reg<-10
 # Shift BIP forward by shift_vec + publication lag
 shift_vec<-0:5
