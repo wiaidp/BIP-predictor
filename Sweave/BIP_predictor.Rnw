@@ -93,6 +93,7 @@ library(multDM)
 library(fGarch)
 # Library for tables
 library(xtable)
+# Packages for Ridge and LASSO
 library(MASS)
 library(glmnet) 
 # Extended time series
