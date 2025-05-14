@@ -1864,7 +1864,7 @@ if (recompute_results)
       dat<-cbind(c(x_mat[(shift+lag_vec[1]+1):nrow(x_mat),1],rep(NA,shift+lag_vec[1])),x_mat[,sel_vec_direct_forecast])
       rownames(dat)<-rownames(x_mat)
 # Two variants for data set:  
-      if (T)
+      if (align_sample)
       {
 # 1. Same sample as M-SSA (due to filter initialization the first L observations are lost) 
         dat<-dat[L:nrow(dat),]
