@@ -116,7 +116,7 @@ for (h in 0:max(h_vec))
   colnames(hp_mat)<-select_vec_multi
   lm_obj<-lm(forward_shifted_GDP~hp_mat[,select_direct_indicator])
   # Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
-  direct_hp_forecast_mat<-cbind(direct_hp_forecast_mat,lm_obj$coef[1]+hp_mat[,select_direct_indicator]%*%lm_obj$coef[2:(ncol(hp_mat[,select_direct_indicator])+1)])
+  direct_hp_forecast_mat<-cbind(direct_hp_forecast_mat,lm_obj$coef[1]+hp_mat[,select_direct_indicator]%*%lm_obj$coef[2:(length(select_direct_indicator)+1)])
 }
 colnames(direct_hp_forecast_mat)<-colnames(forward_shifted_GDP_mat)<-paste("h=",h_vec,sep="")
 
@@ -126,6 +126,21 @@ final_mssa_array<-final_mssa_indicator_obj$mssa_array
 mssa<-final_mssa_array["BIP",,]
 final_mmse_array<-final_mssa_indicator_obj$mmse_array
 mmse<-final_mmse_array["BIP",,]
+
+mssa_mat<-mmse_mat<-NULL
+for (h in 0:max(h_vec))
+{
+  # Shift GDP forward by publication lag+forecast horizon
+  forward_shifted_GDP<-c(data_roc[(1+lag_vec[1]+h):nrow(data_roc),"BIP"],rep(NA,h+lag_vec[1]))
+  forward_shifted_GDP_mat<-cbind(forward_shifted_GDP_mat,forward_shifted_GDP)
+  lm_obj<-lm(forward_shifted_GDP~t(final_mssa_array[select_direct_indicator,,h+1]))
+# Compute the predictor: one can rely on the generic R-function predict or compute the predictor manually
+  mssa_mat<-cbind(mssa_mat,lm_obj$coef[1]+t(final_mssa_array[select_direct_indicator,,h+1])%*%lm_obj$coef[2:(length(select_direct_indicator)+1)])
+  lm_obj<-lm(forward_shifted_GDP~t(final_mmse_array[select_direct_indicator,,h+1]))
+  mmse_mat<-cbind(mmse_mat,lm_obj$coef[1]+t(final_mmse_array[select_direct_indicator,,h+1])%*%lm_obj$coef[2:(length(select_direct_indicator)+1)])
+}
+colnames(mssa_mat)<-colnames(mmse_mat)<-paste("h=",h_vec,sep="")
+
 
 #-------------
 # 1.4. Targets: forward-shifted GDP and HP-GDP
@@ -142,28 +157,39 @@ colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 #-------------------------
 # Apply ROC
 
-shift_vec<-3:5
-hh_vec<-4:6
+shift_vec<-0:5
+hh_vec<-0:6
+AUC_array<-array(dim=c(length(shift_vec),length(hh_vec),4))
+dimnames(AUC_array)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
 par(mfrow=c(length(shift_vec),length(hh_vec)))
-for (shift in shift_vec)
+for (i in 1:length(shift_vec))
 { 
-  for (h in hh_vec)
+  for (j in 1:length(hh_vec))
   {
+    shift<-shift_vec[i]
+    h<-hh_vec[j]
     
 # Select target
     target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
     target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
     
-    ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse[,h+1],mssa[,h+1])
+    ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
     rownames(ROC_data)<-rownames(data_roc)
     colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
     ROC_data<-as.data.frame(na.exclude(ROC_data))
-    
-    ROCplots(ROC_data, smoothROC = T)
+    AUC<-ROCplots(ROC_data, smoothROC = T)
+    AUC_array[i,j,]<-unlist(AUC)
   }
 }
 
-ts.plot(scale(ROC_data),col=c("grey","black","red","green","blue"))
+AUC_array["shift=0",,]
+AUC_array["shift=1",,]
+AUC_array["shift=2",,]
+AUC_array["shift=3",,]
+AUC_array["shift=4",,]
+AUC_array["shift=5",,]
+
+#ts.plot(scale(ROC_data),col=c("grey","black","red","green","blue"))
 
 
 
