@@ -138,6 +138,71 @@ for (h in 0:max(h_vec))
 }
 colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 
+#-------------------------
+# Apply ROC
+ROCplots <- function(df, showROC = T, smoothROC = FALSE, showLegend = TRUE) {
+  df_names <- names(df) # series names
+  k <- length(df_names) # 1 + number of predictors to compare
+  print(paste("Target variable is", df_names[1]))
+  # Create table to hold AUCs
+  aurocs <- as.data.frame(matrix(NA, nrow = k-1))
+  row.names(aurocs) <- df_names[-1]
+  names(aurocs) <- "AUC"
+  
+  # make the first plot and store the first AUC
+  ROC_OBJ <- roc_(df, response = df_names[1], 
+                  predictor = df_names[2],
+                  quiet = T, plot = showROC,
+                  smooth = smoothROC)
+  aurocs[1,1] <- ROC_OBJ$auc
+  
+  if (k>2) {
+    # Calculate and plot for the rest of the series
+    for (j in 3:k) {
+      ROC_OBJ <- roc_(df, response = df_names[1], 
+                      predictor = df_names[j], 
+                      quiet = T, plot = F,
+                      smooth = smoothROC)
+      aurocs[j-1,1] <- ROC_OBJ$auc
+      # Plot the ROC?
+      if (showROC) lines(ROC_OBJ$specificities, 
+                         ROC_OBJ$sensitivities, 
+                         col = j-2, lwd = 2)
+    }
+  }
+  
+  if (showROC){
+    if (k > 5) {
+      roc_cex = 0.75
+      roc_ncol = 2
+    } else {
+      roc_cex = 1
+      roc_ncol = 1
+    }
+    if (showLegend) legend("bottomright", 
+                           legend = df_names[-1], 
+                           col = 1:(k-1), 
+                           lwd = 3,
+                           cex = roc_cex,
+                           ncol = roc_ncol)
+  }
+  return(aurocs)
+}
+
+ROCplots(Mydata, smoothROC = T)
+
+# Select shift and h
+shift<-4
+h<-6
+# Select target
+target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
+
+ROC_data<-cbind(target,mssa[,h+1],mmse[,h+1],direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1])
+rownames(ROC_data)<-rownames(data_roc)
+ROC_data<-na.exclude(ROC_data)
+
+
+
 
 
 
