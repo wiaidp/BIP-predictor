@@ -23,11 +23,6 @@
 # - an arbitrary number of additional numeric series in the remaining columns
 # All series should be the same length and contain no NAs
 
-inst_pack<-rownames(installed.packages())
-if (!"pROC"%in%inst_pack)
-install.packages("pROC")
-
-library(pROC)
 
 ROCplots <- function(df, showROC = T, smoothROC = FALSE, showLegend = TRUE) {
   df_names <- names(df) # series names
@@ -56,7 +51,7 @@ ROCplots <- function(df, showROC = T, smoothROC = FALSE, showLegend = TRUE) {
       # Plot the ROC?
       if (showROC) lines(ROC_OBJ$specificities, 
                          ROC_OBJ$sensitivities, 
-                         col = j-2, lwd = 2)
+                         col = j-1, lwd = 2)
     }
   }
   
@@ -77,3 +72,7 @@ ROCplots <- function(df, showROC = T, smoothROC = FALSE, showLegend = TRUE) {
   }
   return(aurocs)
 }
+
+
+
+
