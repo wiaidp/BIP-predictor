@@ -157,8 +157,8 @@ colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 #-------------------------
 # Apply ROC
 
-shift_vec<-0:5
-hh_vec<-0:6
+shift_vec<-3:5
+hh_vec<-3:6
 AUC_array<-array(dim=c(length(shift_vec),length(hh_vec),4))
 dimnames(AUC_array)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
 par(mfrow=c(length(shift_vec),length(hh_vec)))
@@ -171,14 +171,17 @@ for (i in 1:length(shift_vec))
     
 # Select target
     target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
-    target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
+#    target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
     
     ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
     rownames(ROC_data)<-rownames(data_roc)
     colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
     ROC_data<-as.data.frame(na.exclude(ROC_data))
-    AUC<-ROCplots(ROC_data, smoothROC = T)
-    AUC_array[i,j,]<-unlist(AUC)
+    showLegend<-ifelse(i==1&j==1,T,F)
+    ROCplots(ROC_data, smoothROC = T,showLegend=showLegend)
+#    AUC_array[i,j,]<-unlist(AUC)
+#    AUC<-ROCplots(ROC_data, smoothROC = T)
+#    AUC_array[i,j,]<-unlist(AUC)
   }
 }
 
