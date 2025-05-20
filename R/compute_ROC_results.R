@@ -79,8 +79,8 @@ for (j in names(IRF_BIP_VAR1)) {
 
 # 1.1. Compute direct forecasts for h in h_vec
 
-select_direct_indicator<-select_vec_multi
 select_direct_indicator<-c("ifo_c","ESI")
+select_direct_indicator<-select_vec_multi
 # Select data matrix
 data_roc<-x_mat_wc
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
@@ -123,9 +123,7 @@ colnames(direct_hp_forecast_mat)<-colnames(forward_shifted_GDP_mat)<-paste("h=",
 #--------------
 # 1.3. M-SSA and M-MSE
 final_mssa_array<-final_mssa_indicator_obj$mssa_array
-mssa<-final_mssa_array["BIP",,]
 final_mmse_array<-final_mssa_indicator_obj$mmse_array
-mmse<-final_mmse_array["BIP",,]
 
 mssa_mat<-mmse_mat<-NULL
 for (h in 0:max(h_vec))
@@ -155,33 +153,41 @@ for (h in 0:max(h_vec))
 colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 
 #-------------------------
-# Apply ROC
+# Apply ROC: generate curves and compute AUCs
 
-shift_vec<-3:5
-hh_vec<-3:6
+shift_vec<-0:5
+hh_vec<-0:6
 AUC_array<-array(dim=c(length(shift_vec),length(hh_vec),4))
 dimnames(AUC_array)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
-par(mfrow=c(length(shift_vec),length(hh_vec)))
-for (i in 1:length(shift_vec))
+par(mfrow=c(length(which(shift_vec>2)),length(which(hh_vec>2))))
+showl<-T
+for (i in 1:length(shift_vec))#i<-1
 { 
-  for (j in 1:length(hh_vec))
+  for (j in 1:length(hh_vec))#j<-1
   {
     shift<-shift_vec[i]
     h<-hh_vec[j]
     
 # Select target
     target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
-#    target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
+    target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
     
     ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
     rownames(ROC_data)<-rownames(data_roc)
     colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
     ROC_data<-as.data.frame(na.exclude(ROC_data))
-    showLegend<-ifelse(i==1&j==1,T,F)
-    ROCplots(ROC_data, smoothROC = T,showLegend=showLegend)
-#    AUC_array[i,j,]<-unlist(AUC)
-#    AUC<-ROCplots(ROC_data, smoothROC = T)
-#    AUC_array[i,j,]<-unlist(AUC)
+    showROC = ifelse(i>=4&j>=4,T,F)
+    if (showROC&showl)
+    {
+      showLegend<-T
+      showl<-F
+    } else
+    {
+      showLegend<-F
+    }
+    smoothROC<-T
+    AUC<-ROCplots(ROC_data,showROC, smoothROC ,showLegend)
+    AUC_array[i,j,]<-unlist(AUC)
   }
 }
 
