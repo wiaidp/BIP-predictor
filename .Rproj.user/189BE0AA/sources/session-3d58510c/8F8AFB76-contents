@@ -2392,6 +2392,7 @@ cat("\\end{figure}")
 %SA(y_t)=0.5+\frac{\arcsin(\rho(y,z,h))}{\pi}.
 %\end{eqnarray}
 %Due to the strict monotonicity of the arcsin function, maximizing the target correlation also maximizes the sign accuracy of the predictor.\footnote{Equation \ref{sig_acc} holds exactly for Gaussian processes. Due to the central limit theorem, the relationship holds approximately for low-pass filtered non-Gaussian series, see Wildi (2025).} 
+\textbf{Remarks:}
 \begin{itemize}
 \item Alternative to MSE, target correlation, holding-time: hit-rate, false alarm. 
 \item We can link objective function (target correlation) with sign accuracy, see Wildi (2025). BUT: risk that reviewer asks for comparison with logit or whatever sign-forecast tool.
@@ -2403,8 +2404,15 @@ GDP_{t+shift}=\beta_0^{shift}+\sum_{i=1}^5\beta_i^{shift}x_{ti}+\epsilon_{t}^{sh
 \]
 where $x_{ti}$ designates the original indicators. 
 For the filtered indicators, we consider similar regression equations:
-\[GDP_{t+shift}=\beta_0^{shift,h,filt}+\sum_{i=1}^5\beta_i^{shift,h,filt}y_{ti}^{h,filt}+\epsilon_{t}^{h,shift,filt}=\hat{GDP}_{t+shift}^{filt}+\epsilon_{t}^{shift,filt},\]
-where $y_{ti}^{h,filt}$ represents the $i$-th filtered indicator, based on either HP-C, M-MSE, or M-SSA. For simplicity of exposition, we present results based on the full sample, excluding the pandemic period. Fig. 
+\[GDP_{t+shift}=\beta_0^{shift,h,filt}+\sum_{i=1}^5\beta_i^{shift,h,filt}y_{ti}^{h,filt}+\epsilon_{t}^{h,shift,filt}=\hat{GDP}_{t+shift}^{h,filt}+\epsilon_{t}^{h,shift,filt},\]
+where $y_{ti}^{h,filt}$ represents the $i$-th filtered indicator optimized at forecast horizon $h$, based on either HP-C, M-MSE, or M-SSA. \\
+\textbf{Remarks:}
+\begin{itemize}
+\item I'm computing all combinations of shift and h. 
+\item But we could emphasize the diagonal only (h=shift): simplifies notation/explanation.
+\item The table of AUCs (below) is based on diagonal only
+\end{itemize}
+For simplicity of exposition, we present results based on the full sample, excluding the pandemic period. Fig.\ref{ROC_GDP_shift_1_4} compares ROCs of the predictors for small and mid-term forecast horizons and Table \ref{auc} presents AUCs (area under the curve) for forecast horizons 1-5 quarters ahead.
 <<label=init,results=hide>>=
 
 #########################################################################################################
@@ -2642,7 +2650,7 @@ colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M
 ROC_data<-as.data.frame(na.exclude(ROC_data))
 # Select plots that will be shown    
 showLegend<-T
-AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,sep=""), lbls = lbls,
+AUC<-ROCplots(ROC_data, showROC , main = "One quarter ahead", lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
                   showLegend , lg_cex = 1, lg_ncol = 1)
 shift<-4
@@ -2663,7 +2671,7 @@ colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M
 ROC_data<-as.data.frame(na.exclude(ROC_data))
 # Select plots that will be shown    
 showLegend<-F
-AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,sep=""), lbls = lbls,
+AUC<-ROCplots(ROC_data, showROC , main = "One year ahead", lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
                   showLegend , lg_cex = 1, lg_ncol = 1)
 
@@ -2769,10 +2777,11 @@ mat1<-round(auc_GDP_mat,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
 xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
-paste("AUCs of different predictors against GDP at various forecast horizons.."),
+paste("AUCs of predictors against GDP at various forecast horizons."),
 label=paste("p_val_wc5",sep=""),
 center = "centering", file = "", floating = FALSE)
 @
+At forecast horizons less than or equal to two quarters, the direct forecast challenges the filters. However, for horizons $h>2$, the filters outperform the direct approach: the univariate HP-C design is surpassed by the classic multivariate MSE filter, which is in turn dominated by the M-SSA. These results confirm that controlling the rate of sign changes of the predictor, while maximizing its target correlation through M-SSA can enhance predictor performance in terms of sign accuracy and false alarm rate.
 
 
 \section{Summary and Conclusion}
