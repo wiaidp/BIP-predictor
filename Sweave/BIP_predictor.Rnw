@@ -2508,10 +2508,10 @@ AUC_array_GDP<-AUC_array_HP_GDP<-array(dim=c(length(shift_vec),length(hh_vec),4)
 dimnames(AUC_array_GDP)<-dimnames(AUC_array_HP_GDP)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
 # Select shifts>k (otherwise too many plots in single window)
 k<-2
-# Show plot
-showl<-T
 # Labels: hit rate vs. false alarm rate
 lbls = "Hit"
+# Size of legend box in plot
+lg_cex<-0.5
 
 #----------------------
 # Target GDP
@@ -2520,6 +2520,8 @@ select_target<-"GDP"
 #file = "./Figures/ROC_GDP_many.pdf"
 #pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 par(mfrow=c(length(which(shift_vec>k)),length(which(hh_vec>k))))
+# Show legend
+showl<-T
 
 for (i in 1:length(shift_vec))#i<-1
 { 
@@ -2557,7 +2559,7 @@ for (i in 1:length(shift_vec))#i<-1
 
     AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,", h=",h,sep=""), lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
-                  showLegend , lg_cex = 1, lg_ncol = 1)
+                  showLegend , lg_cex = lg_cex, lg_ncol = 1)
     AUC_array_GDP[i,j,]<-unlist(AUC)
   }
 }
@@ -2574,7 +2576,7 @@ select_target<-"HP-GDP"
 #file = "./Figures/ROC_HP_GDP_many.pdf"
 #pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
 par(mfrow=c(length(which(shift_vec>k)),length(which(hh_vec>k))))
-
+showl<-T
 for (i in 1:length(shift_vec))#i<-1
 { 
   for (j in 1:length(hh_vec))#j<-1
@@ -2611,7 +2613,7 @@ for (i in 1:length(shift_vec))#i<-1
 
     AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,", h=",h,sep=""), lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
-                  showLegend , lg_cex = 1, lg_ncol = 1)
+                  showLegend , lg_cex = lg_cex, lg_ncol = 1)
     AUC_array_HP_GDP[i,j,]<-unlist(AUC)
   }
 }
