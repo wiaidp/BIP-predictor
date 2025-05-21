@@ -1,5 +1,99 @@
 # ROC curve sample code with artificial data
 
+
+ROCplots <- function(df, showROC = TRUE, main = NULL, lbls = "roc",
+                     smoothROC = FALSE, colours = NULL, lwd = 2,
+                     showLegend = TRUE, lg_cex = 1, lg_ncol = 1) {
+  df_names <- names(df) # series names
+  k <- length(df_names) # 1 + number of predictors to compare
+  print(paste("Target variable is", df_names[1]))
+  # Create table to hold AUCs
+  aurocs <- as.data.frame(matrix(NA, nrow = k-1))
+  row.names(aurocs) <- df_names[-1]
+  names(aurocs) <- "AUC"
+  
+  # make the first plot and store the first AUC
+  # ROC_OBJ <- roc_(df, response = df_names[1],
+  #                 predictor = df_names[2],
+  #                 quiet = T, plot = showROC,
+  #                 smooth = smoothROC)
+  # aurocs[1,1] <- ROC_OBJ$auc
+  
+  ROC_OBJ <- roc_(df, response = df_names[1],
+                  predictor = df_names[2],
+                  quiet = T, plot = F,
+                  smooth = smoothROC)
+  # Store the AUC
+  aurocs[1,1] <- ROC_OBJ$auc
+  
+  if (showROC) {
+    # preliminaries for all plots
+    xlim = c(1,0)
+    a_line = 1
+    b_line = -1
+    xlbl = "Specificity"
+    ylbl = "Sensitivity"
+    # User-defined colours
+    if (is.null(colours)) colours = 1:(k-1)
+    
+    # reset axes and their labels if needed
+    if (lbls == 'Hit') {
+      xlbl <- 'False Alarm Rate'
+      ylbl <- "Hit Rate"
+      xlim = c(0,1)
+      a_line = 0
+      b_line = 1
+    } else if (lbls == ""){
+      xlbl <- ""
+      ylbl <- ""
+    }
+    
+    # plot the 1st ROC
+    # plotting specificity or False Alarms?
+    specifty <- ROC_OBJ$specificities
+    if(lbls == "Hit") specifty <- 1 - specifty
+    
+    plot(specifty, 
+         ROC_OBJ$sensitivities,
+         xlim = xlim, ylim = c(0,1), 
+         type = "l", lwd = lwd, 
+         col = colours[1],
+         xlab = xlbl, ylab = ylbl,
+         main = main, cex = lg_cex)
+    abline(a = a_line, b = b_line, lty = 3)
+  }
+  if (k>2) {
+    # Calculate and plot for the rest of the series
+    for (j in 3:k) {
+      ROC_OBJ <- roc_(df, response = df_names[1], 
+                      predictor = df_names[j], 
+                      quiet = T, plot = F,
+                      smooth = smoothROC)
+      aurocs[j-1,1] <- ROC_OBJ$auc
+      # Plot the ROC?
+      if (showROC) {
+        # plotting specificity or False Alarms?
+        specifty <- ROC_OBJ$specificities
+        if(lbls == "Hit") specifty <- 1 - specifty
+        
+        lines(specifty,
+              ROC_OBJ$sensitivities,
+              col = colours[j - 1],
+              lwd = lwd)
+      }
+    }
+  }
+  
+  if (showROC & showLegend) legend("bottomright", 
+                                   legend = df_names[-1], 
+                                   col = colours, 
+                                   lwd = lwd,
+                                   cex = lg_cex,
+                                   ncol = lg_ncol)
+  
+  return(aurocs)
+}
+
 sd <- seq(from = 1, to = 0.1, by = -0.1) # Std Dev's of Errors
 k <- length(sd) # No. of Series
 n <- 100 # No. of Observations
@@ -155,11 +249,12 @@ colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 #-------------------------
 # Apply ROC: generate curves and compute AUCs
 
-shift_vec<-0:5
-hh_vec<-0:6
+shift_vec<-1:5
+hh_vec<-1:5
 AUC_array<-array(dim=c(length(shift_vec),length(hh_vec),4))
 dimnames(AUC_array)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
-par(mfrow=c(length(which(shift_vec>2)),length(which(hh_vec>2))))
+k<-2
+par(mfrow=c(length(which(shift_vec>k)),length(which(hh_vec>k))))
 showl<-T
 for (i in 1:length(shift_vec))#i<-1
 { 
@@ -168,7 +263,7 @@ for (i in 1:length(shift_vec))#i<-1
     shift<-shift_vec[i]
     h<-hh_vec[j]
     
-# Select target
+# Select target: shifted GDP or HP-GDP
     target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
     target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
     
@@ -176,7 +271,7 @@ for (i in 1:length(shift_vec))#i<-1
     rownames(ROC_data)<-rownames(data_roc)
     colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
     ROC_data<-as.data.frame(na.exclude(ROC_data))
-    showROC = ifelse(i>=4&j>=4,T,F)
+    showROC = ifelse(i>k&j>k,T,F)
     if (showROC&showl)
     {
       showLegend<-T
@@ -186,12 +281,15 @@ for (i in 1:length(shift_vec))#i<-1
       showLegend<-F
     }
     smoothROC<-T
-    AUC<-ROCplots(ROC_data,showROC, smoothROC ,showLegend)
+    
+    
+    AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,", h=",h,sep=""), lbls = "roc",
+                  smoothROC , colours =NULL, lwd = 2,
+                  showLegend , lg_cex = 1, lg_ncol = 1)
     AUC_array[i,j,]<-unlist(AUC)
   }
 }
 
-AUC_array["shift=0",,]
 AUC_array["shift=1",,]
 AUC_array["shift=2",,]
 AUC_array["shift=3",,]
