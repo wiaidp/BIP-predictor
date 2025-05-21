@@ -2384,7 +2384,7 @@ cat("\\end{figure}")
 
 
 
-\Section{Hit Rate vs. False Alarm Rate}
+\section{Hit Rate vs. False Alarm Rate}
 
 
 %As shown in Wildi (2025), the SSA criterion's objective function—the target correlation $\rho(y,z,h)$—can be linked to the sign accuracy of the predictor $SA(y_t):=\text{P}\left(\text{sign}(z_{t+h}) = \text{sign}(y_t)\right)$, i.e., the probability that the signs of the predictor $y_t$ and the target $z_{t+h}$ agree:
@@ -2756,13 +2756,23 @@ file = "./Figures/ROC_GDP_shift_1_4.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=3in, width=5in]{", file, "}\n",sep = "")
-cat("\\caption{Revisions resulting from updates to the VAR model in M-SSA optimized for $h=shift=4$. To isolate the effect of the regression revision, all series are standardized. The up-dated M-SSA (blue) is left-shifted at the zero-crossings and appears slightly faster. For consistency, the entire pandemic episode has been removed.", sep = "")
+cat("\\caption{Hit rate vs. false alarm rate of the predictors at small (one quarter ahead:left panel) and yearly forecast horizons (right panel).", sep = "")
 cat("\\label{ROC_GDP_shift_1_4}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
 
+<<label=ats_mba_2,echo=FALSE,results=tex>>=
 
+
+mat1<-round(auc_GDP_mat,3)
+#latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
+#center = "centering", file = "", floating = FALSE)
+xtable(mat1, dec = 1,digits=rep(3,dim(mat1)[2]+1),
+paste("AUCs of different predictors against GDP at various forecast horizons.."),
+label=paste("p_val_wc5",sep=""),
+center = "centering", file = "", floating = FALSE)
+@
 
 
 \section{Summary and Conclusion}
