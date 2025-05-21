@@ -249,13 +249,21 @@ colnames(forward_shifted_HP_GDP_mat)<-paste("shift",h_vec,sep="")
 #-------------------------
 # Apply ROC: generate curves and compute AUCs
 
+# Combination of forward-shift (of target) and forecast horizon (underlying optimization)
 shift_vec<-1:5
-hh_vec<-1:5
+hh_vec<-1:6
 AUC_array<-array(dim=c(length(shift_vec),length(hh_vec),4))
 dimnames(AUC_array)<-list(paste("shift=",shift_vec,sep=""),paste("h=",hh_vec,sep=""),c("Direct forecast","Direct HP forecast","M-MSE","M-SSA"))
+# Select shifts>k (otherwise too many plots in single window)
 k<-2
 par(mfrow=c(length(which(shift_vec>k)),length(which(hh_vec>k))))
+# Show plot
 showl<-T
+# Labels: hit rate vs. false alarm rate
+lbls = "Hit"
+# Select target: GDP or HP-GDP
+select_target<-"HP-GDP"
+select_target<-"GDP"
 for (i in 1:length(shift_vec))#i<-1
 { 
   for (j in 1:length(hh_vec))#j<-1
@@ -264,13 +272,20 @@ for (i in 1:length(shift_vec))#i<-1
     h<-hh_vec[j]
     
 # Select target: shifted GDP or HP-GDP
-    target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
-    target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
+    if (select_target=="GDP")
+    {
+      target<-as.integer(forward_shifted_GDP_mat[,shift+1]>0)
+    } else
     
+    {
+      target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
+    }
+# Set up data matrix for ROC calculation    
     ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
     rownames(ROC_data)<-rownames(data_roc)
     colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
     ROC_data<-as.data.frame(na.exclude(ROC_data))
+# Select plots that will be shown    
     showROC = ifelse(i>k&j>k,T,F)
     if (showROC&showl)
     {
@@ -280,10 +295,10 @@ for (i in 1:length(shift_vec))#i<-1
     {
       showLegend<-F
     }
+# Apply smoothing    
     smoothROC<-T
-    
-    
-    AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,", h=",h,sep=""), lbls = "roc",
+
+    AUC<-ROCplots(ROC_data, showROC , main = paste("shift=",shift,", h=",h,sep=""), lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
                   showLegend , lg_cex = 1, lg_ncol = 1)
     AUC_array[i,j,]<-unlist(AUC)
@@ -296,7 +311,15 @@ AUC_array["shift=3",,]
 AUC_array["shift=4",,]
 AUC_array["shift=5",,]
 
-#ts.plot(scale(ROC_data),col=c("grey","black","red","green","blue"))
+# Compute table with diagonal (shift=h)
+auc_mat<-NULL
+for (i in 1:length(shift_vec))
+{
+  auc_mat<-rbind(auc_mat,AUC_array[i,i,])
+}
+rownames(auc_mat)<-paste("Forecast horizon ",shift_vec,sep="")
+auc_mat
+
 
 
 
