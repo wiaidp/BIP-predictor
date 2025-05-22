@@ -176,15 +176,30 @@ ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
 f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 # In-smaple span for VAR
 date_to_fit<-"2008"
-# Model orders
-p<-1
-q<-0
+# We can select type of VAR model
+VAR_type="BVAR"
+VAR_type="VAR"
+if (VAR_type=="BVAR")
+{
+# Simon's settings for BVAR(4)  
+  lambda_BVAR <- 0.001
+  p<-3
+  q<-0
+}
+if (VAR_type=="VAR")
+{
+# Marc's settings for VAR  
+  p<-1
+  q<-0
+}
+
 # Filter length
 L<-31
 # Publication lag: one quarter for BIP
 lag_vec<-c(1,rep(0,ncol(x_mat)-1))
 
-# Use OLS or WLS in regression of shifted BIP on M-SSA component predictor 
+# Use OLS or WLS in regression of shifted BIP on M-SSA component predictor
+# Default (better): use_garch<-F
 use_garch<-F
 
 #------------------------------------------------------
@@ -314,31 +329,64 @@ dev.off()
 
 
 
-# Without Covid
-# Full sample
-
+# Full sample estimation with/without pandemic
 if (recompute_results)
 {
+# With pandemic  
   data_fit<-x_mat
-
-  set.seed(12)
-  V_obj<-VARMA(data_fit,p=p,q=q)
-  threshold<-1.5
-  V_obj<-refVARMA(V_obj, thres = threshold)
-  save(V_obj,file=paste(path.result,"/VAR",sep=""))
+  if (VAR_type=="VAR")
+  {
+  
+    set.seed(12)
+    V_obj<-VARMA(data_fit,p=p,q=q)
+# Apply regularization: see vignette MTS package
+    threshold<-1.5
+    V_obj<-refVARMA(V_obj, thres = threshold)
+    save(V_obj,file=paste(path.result,"/VAR",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    V0_BVAR <- diag(rep(1,n))  # prior for Sigma_a matrix - K x K
+    # precision matrix of size (kp+1) x (kp+1)  if there's a constant
+    #   low values <=> low precision
+    
+    C_BVAR <- lambda_BVAR*diag(rep(1,n*p+1))
+    V_obj <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
+    save(V_obj,file=paste(path.result,"/BVAR",sep=""))
+  }
 # Without Pandemic  
   data_fit<-x_mat_wc
-  set.seed(12)
-  V_obj_wc<-VARMA(data_fit,p=p,q=q)
-  threshold<-1.5
-  V_obj_wc<-refVARMA(V_obj_wc, thres = threshold)
-  save(V_obj_wc,file=paste(path.result,"/VAR_wc",sep=""))
+  if (VAR_type=="VAR")
+  {
+  
+    set.seed(12)
+    V_obj<-VARMA(data_fit,p=p,q=q)
+# Apply regularization: see vignette MTS package
+    threshold<-1.5
+    V_obj<-refVARMA(V_obj, thres = threshold)
+    save(V_obj_wc,file=paste(path.result,"/VAR_wc",sep=""))  
+  }
+  if (VAR_type=="BVAR")
+  {
+    V0_BVAR <- diag(rep(1,n))  # prior for Sigma_a matrix - K x K
+    # precision matrix of size (kp+1) x (kp+1)  if there's a constant
+    #   low values <=> low precision
+    C_BVAR <- lambda_BVAR*diag(rep(1,n*p+1))
+    V_obj_wc <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
+    save(V_obj_wc,file=paste(path.result,"/BVAR_wc",sep=""))
+  }  
 
 } else
 {
+  if (VAR_type=="VAR")
+  {
     load(file=paste(path.result,"/VAR",sep=""))
     load(file=paste(path.result,"/VAR_wc",sep=""))
-
+  } else
+  {
+    load(file=paste(path.result,"/BVAR",sep=""))
+    load(file=paste(path.result,"/BVAR_wc",sep=""))
+  }
 }
 
 # Diagnostics are OK
@@ -1152,7 +1200,7 @@ if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
 #   -The function computes M-SSA for each forecast horizon h in h_vec
-  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
 
 # Replicate HT of HP-C
 # Theoretical HT  
@@ -1163,14 +1211,31 @@ if (recompute_results)
 
   ht_mssa_vec_HP_C<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
 
-  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi)
-
-  save(mssa_indicator_obj,file=paste(path.result,"/nowcast_obj",sep=""))
-  save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
+  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  if (VAR_type=="VAR")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/nowcast_obj",sep=""))
+    save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/BV_nowcast_obj",sep=""))
+    save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/BV_nowcast_HT_HP_obj",sep=""))
+  }
 } else
 {
-  load(file=paste(path.result,"/nowcast_obj",sep=""))
-  load(file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
+  if (VAR_type=="VAR")
+  {
+    load(file=paste(path.result,"/nowcast_obj",sep=""))
+    load(file=paste(path.result,"/nowcast_HT_HP_obj",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    load(file=paste(path.result,"/BV_nowcast_obj",sep=""))
+    load(file=paste(path.result,"/BV_nowcast_HT_HP_obj",sep=""))
+  }
+
+  
 }
 
 # Select M-SSA output for BIP: tracks HP-BIP
@@ -1344,16 +1409,32 @@ if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
 #   -The function computes M-SSA for each forecast horizon h in h_vec
-  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
 # Without pandemic  
-  mssa_indicator_obj_wc<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi)
+  mssa_indicator_obj_wc<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  if (VAR_type=="VAR")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/mssa_indicator_obj",sep=""))
+    save(mssa_indicator_obj_wc,file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/BV_mssa_indicator_obj",sep=""))
+    save(mssa_indicator_obj_wc,file=paste(path.result,"/BV_mssa_indicator_obj_wc",sep=""))
+  }
 
-  save(mssa_indicator_obj,file=paste(path.result,"/mssa_indicator_obj",sep=""))
-  save(mssa_indicator_obj_wc,file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
 } else
 {
-  load(file=paste(path.result,"/mssa_indicator_obj",sep=""))
-  load(file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
+  if (VAR_type=="VAR")
+  {
+    load(file=paste(path.result,"/mssa_indicator_obj",sep=""))
+    load(file=paste(path.result,"/mssa_indicator_obj_wc",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    load(file=paste(path.result,"/BV_mssa_indicator_obj",sep=""))
+    load(file=paste(path.result,"/BV_mssa_indicator_obj_wc",sep=""))
+  }
 }
 # Target series: output of two-sided HP applied to BIP: 
 #   -This is the target for which the original M-SSA predictor (tutorial 7.3) has been designed
@@ -1927,14 +2008,25 @@ if (recompute_results)
     final_components_preditor_array=final_components_preditor_array,oos_components_preditor_array=oos_components_preditor_array,track_weights_array=track_weights_array,MSE_oos_mssa_comp_mat=MSE_oos_mssa_comp_mat,
     MSE_oos_mssa_comp_without_covid_mat=MSE_oos_mssa_comp_without_covid_mat)
 # The results can be saved (overwritten)    
-    if (F)
-    {
-      save(list_perf,file=paste(path.result,"list_perf",sep=""))
-    }
+  if (VAR_type=="VAR")
+  {
+    save(list_perf,file=paste(path.result,"list_perf",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    save(list_perf,file=paste(path.result,"BV_list_perf",sep=""))
+  }
 } else
 {
-# Load all results  
-  load(file=paste(path.result,"list_perf",sep=""))
+# Load all results
+  if (VAR_type=="VAR")
+  {
+    load(file=paste(path.result,"list_perf",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    load(file=paste(path.result,"BV_list_perf",sep=""))
+  }
   p_mat_mssa_components=list_perf$p_mat_mssa_components
   p_mat_direct=list_perf$p_mat_direct
   p_mat_mssa_components_without_covid=list_perf$p_mat_mssa_components_without_covid
@@ -2115,32 +2207,35 @@ x_mat_wc<-x_mat[c(which(rownames(x_mat)<2020),which(rownames(x_mat)>2021)),]
 par(mfrow=c(1,1))
 ts.plot(x_mat_wc)
 
-# We can select type of VAR model
-VAR_type="BVAR"
-VAR_type="VAR"
-if (VAR_type=="BVAR")
-{
-# Simon's settings for BVAR(4)  
-  lambda_BVAR <- 10 
-  p_full<-4
-  q_full<-0
-}
-if (VAR_type=="VAR")
-{
-# Marc's settings for VAR  
-  p_full<-p
-  q_full<-q
-}
+# Model orders
+p_full<-p
+q_full<-q
+
 
 # Run the M-SSA wrapper, see tutorial 7.2
 #   -The function computes M-SSA and M-MSE for each forecast horizon h in h_vec
 if (recompute_results)
 {
   final_mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit_all,p_full,q_full,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
-  save(final_mssa_indicator_obj,file=paste(path.result,"/final_mssa_indicator_obj",sep=""))
+  
+  if (VAR_type=="VAR")
+  {
+    save(final_mssa_indicator_obj,file=paste(path.result,"/final_mssa_indicator_obj",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    save(final_mssa_indicator_obj,file=paste(path.result,"/BV_final_mssa_indicator_obj",sep=""))
+  }
 } else
 {
-  load(file=paste(path.result,"/final_mssa_indicator_obj",sep=""))
+  if (VAR_type=="VAR")
+  {
+    load(file=paste(path.result,"/final_mssa_indicator_obj",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    load(file=paste(path.result,"/BV_final_mssa_indicator_obj",sep=""))
+  }
 }
 # Final M-SSA components
 final_mssa_array<-final_mssa_indicator_obj$mssa_array
@@ -2206,27 +2301,60 @@ if (recompute_results)
 {
 # VAR based on full data set without pandemic  
   data_fit<-x_mat_wc
+  
+  if (VAR_type=="VAR")
+  {
+    set.seed(12)
+    V_obj_full<-VARMA(data_fit,p=p,q=q)
+    threshold<-1.5
+    V_obj_full<-refVARMA(V_obj_full, thres = threshold)
+    save(V_obj_full,file=paste(path.result,"/VAR_full",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    V0_BVAR <- diag(rep(1,n))  # prior for Sigma_a matrix - K x K
+    # precision matrix of size (kp+1) x (kp+1)  if there's a constant
+    #   low values <=> low precision
+    C_BVAR <- lambda_BVAR*diag(rep(1,n*p+1))
+    V_obj_full <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
+    save(V_obj_full,file=paste(path.result,"/BVAR_full",sep=""))
+  }
 
-  set.seed(12)
-  V_obj_full<-VARMA(data_fit,p=p,q=q)
-  threshold<-1.5
-  V_obj_full<-refVARMA(V_obj_full, thres = threshold)
-  save(V_obj_full,file=paste(path.result,"/VAR_full",sep=""))
+
   
 # VAR based on data pre 2008  
   data_fit<-x_mat_wc[which(rownames(x_mat_wc)<date_to_fit),]
+  if (VAR_type=="VAR")
+  {
+    set.seed(12)
+    V_obj_2008<-VARMA(data_fit,p=p,q=q)
+    threshold<-1.5
+    V_obj_2008<-refVARMA(V_obj_2008, thres = threshold)
+    save(V_obj_2008,file=paste(path.result,"/VAR_2008",sep=""))
+  }
+  if (VAR_type=="BVAR")
+  {
+    V0_BVAR <- diag(rep(1,n))  # prior for Sigma_a matrix - K x K
+    # precision matrix of size (kp+1) x (kp+1)  if there's a constant
+    #   low values <=> low precision
+    C_BVAR <- lambda_BVAR*diag(rep(1,n*p+1))
+    V_obj_2008 <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
+    save(V_obj_2008,file=paste(path.result,"/BVAR_2008",sep=""))
+  }
 
-  set.seed(12)
-  V_obj_2008<-VARMA(data_fit,p=p,q=q)
-  threshold<-1.5
-  V_obj_2008<-refVARMA(V_obj_2008, thres = threshold)
-  save(V_obj_2008,file=paste(path.result,"/VAR_2008",sep=""))
 
 } else
 {
+  if (VAR_type=="VAR")
+  {
     load(file=paste(path.result,"/VAR_full",sep=""))
     load(file=paste(path.result,"/VAR_2008",sep=""))
-
+  }
+  if (VAR_type=="BVAR")
+  {
+    load(file=paste(path.result,"/BVAR_full",sep=""))
+    load(file=paste(path.result,"/BVAR_2008",sep=""))
+  }
 }
 
 # Diagnostics are OK
