@@ -177,7 +177,7 @@ f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 date_to_fit<-"2008"
 # We can select type of VAR model
 VAR_type="BVAR"
-#VAR_type="VAR"
+VAR_type="VAR"
 if (VAR_type=="BVAR")
 {
 # Simon's settings for BVAR(4)  
