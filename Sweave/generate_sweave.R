@@ -11,7 +11,6 @@ path.out<-paste(path.main,"/Latex/",sep="")
 path.sweave<-paste(path.main,"/Sweave/",sep="")
 #------------------------------
 
-recompute_results<-
 
 paper<-"BIP_predictor"
 

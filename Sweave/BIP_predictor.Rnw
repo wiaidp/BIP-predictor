@@ -134,8 +134,7 @@ fig_size<-4
 
 #------------------------------
 # Section 2.1: data
-recompute_results<-F
-
+recompute_results<-T
 
 
 
@@ -178,11 +177,11 @@ f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 date_to_fit<-"2008"
 # We can select type of VAR model
 VAR_type="BVAR"
-VAR_type="VAR"
+#VAR_type="VAR"
 if (VAR_type=="BVAR")
 {
 # Simon's settings for BVAR(4)  
-  lambda_BVAR <- 0.001
+  lambda_BVAR <- 1.001
   p<-3
   q<-0
 }
@@ -363,7 +362,7 @@ if (recompute_results)
     V_obj<-VARMA(data_fit,p=p,q=q)
 # Apply regularization: see vignette MTS package
     threshold<-1.5
-    V_obj<-refVARMA(V_obj, thres = threshold)
+    V_obj_wc<-refVARMA(V_obj, thres = threshold)
     save(V_obj_wc,file=paste(path.result,"/VAR_wc",sep=""))  
   }
   if (VAR_type=="BVAR")
@@ -1895,11 +1894,11 @@ if (recompute_results)
   pb <- txtProgressBar(min=min(h_vec),max=max(h_vec)-1,style=3)
   
 # The following double loop computes all combinations of forward-shifts (of BIP) and forecast horizons (of M-SSA)
-  for (shift in shift_vec)#shift<-1
+  for (shift in shift_vec)#shift<-4
   {
 # Progress bar: see R-console
     setTxtProgressBar(pb, shift)
-    for (j in h_vec)#j<-1
+    for (j in h_vec)#j<-4
     {
 # Horizon j corresponds to k=j+1-th entry of array    
       k<-j+1
@@ -2251,8 +2250,18 @@ if (length(sel_vec_mssa_comp)>1)
 {
   dat<-cbind(c(x_mat_wc[(shift+lag_vec[1]+1):nrow(x_mat_wc),1],rep(NA,shift+lag_vec[1])),(final_mssa_array[sel_vec_mssa_comp,,h+1]))
 }
-lm_obj<-lm(dat[,1]~dat[,2:ncol(dat)])
-
+if (reg_type=="OLS")
+{
+  lm_obj<-lm(dat[,1]~dat[,2:ncol(dat)])
+}  
+if (reg_type=="Ridge")
+{
+  lm_obj<-lm.ridge(dat[,1]~matrix(cbind(rep(1,ncol(dat)-1),dat[,2:ncol(dat)]),ncol=ncol(dat))-1, lambda = lambda_reg)
+}
+if (reg_type=="Lasso")
+{
+  lm_obj<-glmnet(x=dat[,2:ncol(dat)],y=dat[,1],alpha=0,lambda = lambda_reg)
+}
 optimal_weights<-lm_obj$coef
 # Compute predictor for each forward-shift  
 if (length(sel_vec_mssa_comp)>1)
