@@ -134,7 +134,7 @@ fig_size<-4
 
 #------------------------------
 # Section 2.1: data
-recompute_results<-F
+recompute_results<-T
 
 
 
@@ -148,8 +148,7 @@ BIP_original<-data_quarterly[,"BIP"]
 load(file=paste(getwd(),"\\Data\\macro",sep=""))
 
 select_vec_multi<-c("BIP","ip","ifo_c","ESI","spr_10y_3m")
-x_mat<-data[,select_vec_multi]
-tail(x_mat)
+x_mat<-data[,select_vec_multi] 
 rownames(x_mat)<-rownames(data)
 n<-dim(x_mat)[2]
 # Number of observations
@@ -167,7 +166,9 @@ diff_lag<-3
 read_obj<-read_data_func_monthly(path.data,select_vec,h0,trim_threshold,na_rw_lin,data_file_name,diff_lag)
 data_table<-read_obj$data_select_unshifted_xts
 colnames(data_table)[1]<-"GDP"
-tail(data_table,20)
+
+tail(data_table)
+
 
 # Settings for M-SSA
 ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
@@ -197,7 +198,7 @@ L<-31
 lag_vec<-c(1,rep(0,ncol(x_mat)-1))
 
 # Use OLS or WLS in regression of shifted BIP on M-SSA component predictor
-# Default (better): use_garch<-F (otherwise important crises are underweighted)
+# Default (better): use_garch<-F
 use_garch<-F
 
 #------------------------------------------------------
@@ -277,7 +278,6 @@ dev.off()
 
 
 acf_mat<-x_mat
-tail(x_mat)
 
 # Plot Cross correlation: with Pandemic
 file = "./Figures/CCF.pdf"
@@ -562,7 +562,6 @@ center = "centering", file = "", floating = FALSE)
 math<-as.matrix(tail(data_table,10))
 mat2<-cbind(math[2:7,1],math[3:8,2],math[5:10,3:5])
 colnames(mat2)<-colnames(mat1)
-rownames(mat2)<-as.character(index(data_table))[(nrow(data_table)-nrow(mat2)+1):nrow(data_table)]
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
 #center = "centering", file = "", floating = FALSE)
 xtable(mat2, dec = 1,digits=rep(3,dim(mat1)[2]+1),
@@ -685,7 +684,7 @@ select_direct_indicator<-select_vec_multi
 # Note: too complex designs (too many indicators) lead to overfitting and thus worse out-of-sample performances
 # To illustrate the direct predictor consider the following example of a h-step ahead direct forecast:
 f_vec_unfiltered<-p_val_unfiltered<-MSE_unfiltered_vec<-NULL
-for (h in 0:3)#h<-0
+for (h in 0:3)
 {
   # Shift BIP forward by publication lag+forecast horizon
   forward_shifted_BIP<-c(x_mat_wc[(1+lag_vec[1]+h):nrow(x_mat_wc),"BIP"],rep(NA,h+lag_vec[1]))
@@ -822,19 +821,9 @@ file = "./Figures/hp_160.pdf"
 pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7.5, height = 6)
 par(mfrow=c(2,2))
 hp_two<-c(HP_obj$hp_mse[L:2],HP_obj$hp_mse)
-plot(hp_two,main=paste("Two-sided HP(",lambda_HP,")",sep=""),axes=F,type="l",xlab="Lags",ylab="")
-abline(h=0)
-axis(1,at=c(1,11,21,L,L-1+10,L-1+20,length(hp_two)),labels=c(1,11,21,L,L+10,L+20,length(hp_two))-L)
-axis(2)
-box()
-
+ts.plot(hp_two,main=paste("Two-sided HP(",lambda_HP,")",sep=""),xlab="",ylab="")
 hp_c<-HP_obj$hp_trend
-plot(hp_c,main=paste("Two-sided HP(",lambda_HP,")",sep=""),axes=F,type="l",xlab="Lags",ylab="")
-abline(h=0)
-axis(1,at=c(1,11,21,L),labels=-1+c(1,11,21,L))
-axis(2)
-box()
-
+ts.plot(hp_c,main="One-sided (concurrent) HP-C",xlab="",ylab="")
 
 # Analyze filter in frequency-domain (amplitude function)
 # Specify the number of equidistant frequency ordinates in [0,pi]
@@ -1352,15 +1341,13 @@ for (i in 1:ncol(mplot))
 }
 abline(h=0)
 abline(v=which(rownames(mplot)>date_to_fit)[1],lty=2,lwd=2)
-#abline(v=1+which(sign(mplot[2:nrow(mplot),3])!=sign(mplot[1:(nrow(mplot)-1),3])),col=colo[3])
-#abline(v=1+which(sign(mplot[2:nrow(mplot),2])!=sign(mplot[1:(nrow(mplot)-1),2])),col=colo[2])
 axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
 axis(2)
 box()
 
 dev.off()
 
-# Table with empirical HT and target correlations
+
 mat_cor_ht<-rbind(c(cor(na.exclude(mplot[,c("Target: HP-GDP","M-SSA")]))[1,2],
 cor(na.exclude(mplot[,c("Target: HP-GDP","M-MSE")]))[1,2]),
 c(compute_empirical_ht_func(na.exclude(mssa[,select]))$empirical_ht,
@@ -1369,48 +1356,6 @@ compute_empirical_ht_func(na.exclude(mmse[,select]))$empirical_ht))
 colnames(mat_cor_ht)<-c("M-SSA","M-MSE")
 rownames(mat_cor_ht)<-c("Target correlation","HT")
 # Keep M-MSE and M-SSA only
-
-
-
-# Plot emphasizing zero-crossings towaards financial crisis
-file = "./Figures/mssa_msse_zc.pdf"
-pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7)
-
-hp_c_out<-filter(x_mat[,select],hp_c,side=1)
-par(mfrow=c(1,1))
-#mplot<-scale(cbind(target_shifted_mat,hp_c_out,mssa[,select],mssa_HT_HP_C[,select],mmse[,select]))
-#dim(mplot)
-#colnames(mplot)<-c("Target: HP-BIP","HP-C","M-SSA smaller HT","M-SSA larger HT","M-MSE")
-mplot<-scale(cbind(mssa[,select],mmse[,select]))
-dim(mplot)
-colnames(mplot)<-c("M-SSA","M-MSE")
-
-rownames(mplot)<-rownames(x_mat)
-
-mplot<-mplot[L:nrow(mplot),]
-mplot<-mplot[which(rownames(mplot)>2006&rownames(mplot)<2013),]
-
-colo<-c("black","violet","blue","orange","green")
-colo<-c("blue","green")
-main_title<-"Zero-Crossings of M-SSA and M-MSE towards the financial crisis"
-plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
-mtext(colnames(mplot)[1],col=colo[1],line=-1)
-for (i in 1:ncol(mplot))
-{
-  lines(mplot[,i],col=colo[i],lwd=1,lty=1)
-  mtext(colnames(mplot)[i],col=colo[i],line=-i)
-}
-abline(h=0)
-abline(v=1+which(sign(mplot[2:nrow(mplot),1])!=sign(mplot[1:(nrow(mplot)-1),1])),col=colo[1],lty=2)
-abline(v=1+which(sign(mplot[2:nrow(mplot),2])!=sign(mplot[1:(nrow(mplot)-1),2])),col=colo[2],lty=2)
-axis(1,at=c(1,4*1:(nrow(mplot)/4)),labels=rownames(mplot)[c(1,4*1:(nrow(mplot)/4))])
-axis(2)
-box()
-
-dev.off()
-
-
-
 
 
 @
@@ -1436,20 +1381,6 @@ cat("\\label{mssa_msse_now}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")
 @
-<<label=z_box_plot_pure_mba_2.pdf,echo=FALSE,results=tex>>=
-file = "./Figures/mssa_msse_zc.pdf"
-cat("\\begin{figure}[H]")
-cat("\\begin{center}")
-cat("\\includegraphics[height=4in, width=5.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sign changes of the M-MSE (green) and M-SSA (blue) nowcasts are examined in relation to the financial crisis, with sign changes of the M-MSE marked by green vertical lines. The sample holding time (HT) of each filter corresponds to the average duration between its consecutive zero-crossings. For each filter, its sample HT converges to the respective expected HT asymptotically, given sufficiently long samples. In this analysis, we impose a $50\\%$ larger expected HT for M-SSA $HT_{MSSA}:=1.5×HT_{MSE}$. Consequently, in the long run, we expect the M-MSE to exhibit approximately $50\\%$ more sign changes than the M-SSA.", sep = "")
-cat("\\label{mssa_msse_zc}}", sep = "")
-cat("\\end{center}")
-cat("\\end{figure}")
-@
-
-
-
-
 <<label=ats_mba_2,echo=FALSE,results=tex>>=
 mat1<-round(mat_cor_ht,3)
 #latex(cor_vec, dec = 1, , caption = "Example of using latex to create table",
@@ -1935,9 +1866,9 @@ sel_vec_direct_forecast<-c("ifo_c","ESI")
 #   -Avoid random differences due to unequal samples.
 align_sample<-T
 # Can define type of regression
+reg_type<-"OLS"
 reg_type<-"LASSO"
 reg_type<-"Ridge"
-reg_type<-"OLS"
 # Penalty weight in regularization
 lambda_reg<-10
 # Shift BIP forward by shift_vec + publication lag
@@ -2210,7 +2141,7 @@ mplot<-mplot[(L:nrow(mplot)),]
 colnames(mplot)[2]<-"GDP"
 #mplot<-t(t(mplot)/mplot[nrow(mplot),])
 #colnames(mplot)[2:ncol(track_weights)]<-paste("Weight of M-SSA component ",colnames(track_weights)[2:ncol(track_weights)])
-colo<-c("orange","blue","red")
+colo<-c("black","blue","red")
 main_title<-paste("Intercept and regression weight over time: h=",h,", shift=",shift,sep="")
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 #mtext(colnames(mplot)[1],col=colo[1],line=-1)
