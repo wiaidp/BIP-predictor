@@ -1441,7 +1441,7 @@ file = "./Figures/mssa_msse_zc.pdf"
 cat("\\begin{figure}[H]")
 cat("\\begin{center}")
 cat("\\includegraphics[height=4in, width=5.5in]{", file, "}\n",sep = "")
-cat("\\caption{Sign changes of the M-MSE (green) and M-SSA (blue) nowcasts are examined in relation to the financial crisis, with sign changes of the M-MSE marked by green vertical lines. The sample holding time (HT) of each filter corresponds to the average duration between its consecutive zero-crossings. For each filter, its sample HT converges to the respective expected HT asymptotically, given sufficiently long samples. In this analysis, we impose a $50\\%$ larger expected HT for M-SSA $HT_{MSSA}:=1.5×HT_{MSE}$. Consequently, in the long run, we expect the M-MSE to exhibit approximately $50\\%$ more sign changes than the M-SSA.", sep = "")
+cat("\\caption{Sign changes of the M-MSE (green) and M-SSA (blue) nowcasts are examined in relation to the financial crisis, with sign changes of the M-MSE marked by green vertical lines. The sample holding time (HT) of each filter corresponds to the average duration between its consecutive zero-crossings. For each filter, its sample HT converges to the respective expected HT asymptotically, given sufficiently long samples.  Here, we impose  $HT_{MSSA}=1.5\times HT_{MSE}$: in the long run, we expect the M-MSE to exhibit approximately $50\%$ more sign changes than the M-SSA.", sep = "")
 cat("\\label{mssa_msse_zc}}", sep = "")
 cat("\\end{center}")
 cat("\\end{figure}")

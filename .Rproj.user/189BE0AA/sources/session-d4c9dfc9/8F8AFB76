@@ -3,7 +3,7 @@
     "path": "C:/Users/marca/OneDrive/2025/BIP-predictor/Sweave/BIP_predictor.Rnw",
     "project_path": "Sweave/BIP_predictor.Rnw",
     "type": "sweave",
-    "hash": "3501340530",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1747112155793.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "2229,0",
-        "scrollLine": "2195"
+        "cursorPosition": "1461,471",
+        "scrollLine": "1444"
     },
     "folds": "",
-    "lastKnownWriteTime": 1748258240,
+    "lastKnownWriteTime": 1748328163,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1748258240605,
+    "last_content_update": 1748328163186,
     "read_only": false,
     "read_only_alternatives": []
 }
