@@ -139,7 +139,7 @@ fig_size<-4
 
 #------------------------------
 # Section 2.1: data
-recompute_results<-T
+recompute_results<-F
 
 
 
@@ -204,8 +204,6 @@ if (VAR_type=="elastic_net")
 # Marc's settings for VAR  
   p<-2
   q<-0
-# Length of MA inversion (impulse response function)  
-  nirf<-L
 # Number of non-zero coefficients in VAR for each dimension  
   nsteps<-5
 }
@@ -372,7 +370,7 @@ if (recompute_results)
   }
   if (VAR_type=="elastic_net")
   {
-    V_obj<-enetVAR(data_fit, p, nIRF, nsteps  )
+    V_obj<-enetVAR(data_fit, p, L, nsteps  )
 
     save(V_obj,file=paste(path.result,"/en_VAR",sep=""))
   }
@@ -400,7 +398,7 @@ if (recompute_results)
   } 
   if (VAR_type=="elastic_net")
   {
-    V_obj_wc<-enetVAR(data_fit, p, nIRF, nsteps  )
+    V_obj_wc<-enetVAR(data_fit, p, L, nsteps  )
 
     save(V_obj_wc,file=paste(path.result,"/en_VAR_wc",sep=""))
   }
@@ -1269,6 +1267,12 @@ if (recompute_results)
     save(mssa_indicator_obj,file=paste(path.result,"/BV_nowcast_obj",sep=""))
     save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/BV_nowcast_HT_HP_obj",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/en_nowcast_obj",sep=""))
+    save(mssa_indicator_HP_HT_obj,file=paste(path.result,"/en_nowcast_HT_HP_obj",sep=""))
+  }
+
 } else
 {
   if (VAR_type=="VAR")
@@ -1280,6 +1284,11 @@ if (recompute_results)
   {
     load(file=paste(path.result,"/BV_nowcast_obj",sep=""))
     load(file=paste(path.result,"/BV_nowcast_HT_HP_obj",sep=""))
+  }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"/en_nowcast_obj",sep=""))
+    load(file=paste(path.result,"/en_nowcast_HT_HP_obj",sep=""))
   }
 
   
@@ -1527,6 +1536,11 @@ if (recompute_results)
     save(mssa_indicator_obj,file=paste(path.result,"/BV_mssa_indicator_obj",sep=""))
     save(mssa_indicator_obj_wc,file=paste(path.result,"/BV_mssa_indicator_obj_wc",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    save(mssa_indicator_obj,file=paste(path.result,"/en_mssa_indicator_obj",sep=""))
+    save(mssa_indicator_obj_wc,file=paste(path.result,"/en_mssa_indicator_obj_wc",sep=""))
+  }
 
 } else
 {
@@ -1539,6 +1553,11 @@ if (recompute_results)
   {
     load(file=paste(path.result,"/BV_mssa_indicator_obj",sep=""))
     load(file=paste(path.result,"/BV_mssa_indicator_obj_wc",sep=""))
+  }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"/en_mssa_indicator_obj",sep=""))
+    load(file=paste(path.result,"/en_mssa_indicator_obj_wc",sep=""))
   }
 }
 # Target series: output of two-sided HP applied to BIP: 
@@ -2121,6 +2140,10 @@ if (recompute_results)
   {
     save(list_perf,file=paste(path.result,"BV_list_perf",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    save(list_perf,file=paste(path.result,"en_list_perf",sep=""))
+  }
 } else
 {
 # Load all results
@@ -2131,6 +2154,10 @@ if (recompute_results)
   if (VAR_type=="BVAR")
   {
     load(file=paste(path.result,"BV_list_perf",sep=""))
+  }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"en_list_perf",sep=""))
   }
   p_mat_mssa_components=list_perf$p_mat_mssa_components
   p_mat_direct=list_perf$p_mat_direct
@@ -2331,6 +2358,10 @@ if (recompute_results)
   {
     save(final_mssa_indicator_obj,file=paste(path.result,"/BV_final_mssa_indicator_obj",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    save(final_mssa_indicator_obj,file=paste(path.result,"/en_final_mssa_indicator_obj",sep=""))
+  }
 } else
 {
   if (VAR_type=="VAR")
@@ -2341,6 +2372,11 @@ if (recompute_results)
   {
     load(file=paste(path.result,"/BV_final_mssa_indicator_obj",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"/en_final_mssa_indicator_obj",sep=""))
+  }
+
 }
 # Final M-SSA components
 final_mssa_array<-final_mssa_indicator_obj$mssa_array
@@ -2434,6 +2470,13 @@ if (recompute_results)
     V_obj_full <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
     save(V_obj_full,file=paste(path.result,"/BVAR_full",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    V_obj_full<-enetVAR(data_fit, p, L, nsteps  )
+
+    save(V_obj_full,file=paste(path.result,"/enVAR_full",sep=""))
+  }
+
 
 
   
@@ -2456,7 +2499,12 @@ if (recompute_results)
     V_obj_2008 <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
     save(V_obj_2008,file=paste(path.result,"/BVAR_2008",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    V_obj_2008<-enetVAR(data_fit, p, L, nsteps  )
 
+    save(V_obj_2008,file=paste(path.result,"/enVAR_2008",sep=""))
+  }
 
 } else
 {
@@ -2470,6 +2518,12 @@ if (recompute_results)
     load(file=paste(path.result,"/BVAR_full",sep=""))
     load(file=paste(path.result,"/BVAR_2008",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"/enVAR_full",sep=""))
+    load(file=paste(path.result,"/enVAR_2008",sep=""))
+  }
+
 }
 
 # Diagnostics are OK
