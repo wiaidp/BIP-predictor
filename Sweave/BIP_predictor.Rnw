@@ -102,6 +102,9 @@ library(glmnet)
 library(xts)
 # Extended time series
 library(pROC)
+# Elastic net for estimating VAR
+library(elasticnet)
+
 
 
 
@@ -116,6 +119,8 @@ source(paste(getwd(),"/R/M_SSA_utility_functions.r",sep=""))
 source(paste(getwd(),"/R/M_SSA_paper_functions.r",sep=""))
 # ROC curve: plots, AUC
 source(paste(getwd(),"/R/ROCplots.r",sep=""))
+# Elastic net functions for VAR estimation
+source(paste(getwd(),"/R/elastic_net_functions.r",sep=""))
 
 
 
@@ -134,7 +139,7 @@ fig_size<-4
 
 #------------------------------
 # Section 2.1: data
-recompute_results<-F
+recompute_results<-T
 
 
 
@@ -174,9 +179,13 @@ ht_mssa_vec<-c(6.380160,  6.738270,   7.232453,   7.225927,   7.033768)
 f_excess<-c(5,rep(4,length(select_vec_multi)-1))
 # In-smaple span for VAR
 date_to_fit<-"2008"
+# Filter length
+L<-31
+
 # We can select type of VAR model
 VAR_type="BVAR"
 VAR_type="VAR"
+VAR_type="elastic_net"
 if (VAR_type=="BVAR")
 {
 # Simon's settings for BVAR(4)  
@@ -190,9 +199,17 @@ if (VAR_type=="VAR")
   p<-1
   q<-0
 }
+if (VAR_type=="elastic_net")
+{
+# Marc's settings for VAR  
+  p<-2
+  q<-0
+# Length of MA inversion (impulse response function)  
+  nirf<-L
+# Number of non-zero coefficients in VAR for each dimension  
+  nsteps<-5
+}
 
-# Filter length
-L<-31
 # Publication lag: one quarter for BIP
 lag_vec<-c(1,rep(0,ncol(x_mat)-1))
 
@@ -353,6 +370,13 @@ if (recompute_results)
     V_obj <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
     save(V_obj,file=paste(path.result,"/BVAR",sep=""))
   }
+  if (VAR_type=="elastic_net")
+  {
+    V_obj<-enetVAR(data_fit, p, nIRF, nsteps  )
+
+    save(V_obj,file=paste(path.result,"/en_VAR",sep=""))
+  }
+
 # Without Pandemic  
   data_fit<-x_mat_wc
   if (VAR_type=="VAR")
@@ -373,7 +397,14 @@ if (recompute_results)
     C_BVAR <- lambda_BVAR*diag(rep(1,n*p+1))
     V_obj_wc <- BVAR(data_fit,p = p,C = C_BVAR,V0 = V0_BVAR)
     save(V_obj_wc,file=paste(path.result,"/BVAR_wc",sep=""))
-  }  
+  } 
+  if (VAR_type=="elastic_net")
+  {
+    V_obj_wc<-enetVAR(data_fit, p, nIRF, nsteps  )
+
+    save(V_obj_wc,file=paste(path.result,"/en_VAR_wc",sep=""))
+  }
+
 
 } else
 {
@@ -381,10 +412,16 @@ if (recompute_results)
   {
     load(file=paste(path.result,"/VAR",sep=""))
     load(file=paste(path.result,"/VAR_wc",sep=""))
-  } else
+  } 
+  if (VAR_type=="BVAR")
   {
     load(file=paste(path.result,"/BVAR",sep=""))
     load(file=paste(path.result,"/BVAR_wc",sep=""))
+  }
+  if (VAR_type=="elastic_net")
+  {
+    load(file=paste(path.result,"/en_VAR",sep=""))
+    load(file=paste(path.result,"/en_VAR_wc",sep=""))
   }
 }
 
@@ -1210,7 +1247,7 @@ if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
 #   -The function computes M-SSA for each forecast horizon h in h_vec
-  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,nsteps,VAR_type,lambda_BVAR)
 
 # Replicate HT of HP-C
 # Theoretical HT  
@@ -1221,7 +1258,7 @@ if (recompute_results)
 
   ht_mssa_vec_HP_C<-c(ht_hp_c,  6.738270,   7.232453,   7.225927,   7.033768)
 
-  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  mssa_indicator_HP_HT_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec_HP_C,h_vec,f_excess,lag_vec,select_vec_multi,nsteps,VAR_type,lambda_BVAR)
   if (VAR_type=="VAR")
   {
     save(mssa_indicator_obj,file=paste(path.result,"/nowcast_obj",sep=""))
@@ -1477,9 +1514,9 @@ if (recompute_results)
 {
 # Run the wrapper, see tutorial 7.2
 #   -The function computes M-SSA for each forecast horizon h in h_vec
-  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,nsteps,VAR_type,lambda_BVAR)
 # Without pandemic  
-  mssa_indicator_obj_wc<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  mssa_indicator_obj_wc<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit,p,q,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,nsteps,VAR_type,lambda_BVAR)
   if (VAR_type=="VAR")
   {
     save(mssa_indicator_obj,file=paste(path.result,"/mssa_indicator_obj",sep=""))
@@ -2284,7 +2321,7 @@ q_full<-q
 #   -The function computes M-SSA and M-MSE for each forecast horizon h in h_vec
 if (recompute_results)
 {
-  final_mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit_all,p_full,q_full,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,VAR_type,lambda_BVAR)
+  final_mssa_indicator_obj<-compute_mssa_BIP_predictors_func(x_mat_wc,lambda_HP,L,date_to_fit_all,p_full,q_full,ht_mssa_vec,h_vec,f_excess,lag_vec,select_vec_multi,nsteps,VAR_type,lambda_BVAR)
   
   if (VAR_type=="VAR")
   {
