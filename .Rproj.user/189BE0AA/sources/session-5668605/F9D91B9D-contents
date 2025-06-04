@@ -1,0 +1,26 @@
+# Created 25-05-2025 by Simon van Norden
+# This code just loads the BIP data set.
+# It is based on snippets from BIP_predictor.Rnw Section 1 written by Marc Wildi
+#
+GetBIPdata <- function(main_path = NULL, DataFrame = F) {
+  # if main_path omitted, it defaults to ~/GitHub/BIP-predictor
+  path.data <- ifelse( is.null(main_path),
+                       "C:/Users/svn/Documents/GitHub/BIP-predictor/Data/",
+                       main_path)
+
+  #------------------------------
+
+  # Load data
+  # Transformed indicators: differences, trimmed, standardized
+  load(file=paste0(path.data,"macro"))
+  
+  select_vec_multi<-c("BIP","ip","ifo_c","ESI","spr_10y_3m")
+  x_mat<-data[,select_vec_multi] 
+  rownames(x_mat)<-rownames(data)
+  n<-dim(x_mat)[2]
+  # Number of observations
+  len<-dim(x_mat)[1]
+  
+  return(x_mat)
+}
+

@@ -67,7 +67,7 @@ marc.wildi@zhaw.ch}
 \end{itemize}
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:00:56 2025
+% Wed Jun  4 14:24:40 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -86,7 +86,7 @@ marc.wildi@zhaw.ch}
 \caption{Ragged end.  } 
 \label{f_stat}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:00:56 2025
+% Wed Jun  4 14:24:41 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -150,7 +150,7 @@ Extending the `classic' direct forecast design, we here consider filtered indica
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:00:58 2025
+% Wed Jun  4 14:24:43 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -211,15 +211,15 @@ Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, w
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:00:59 2025
+% Wed Jun  4 14:24:53 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrr}
   \hline
  & M-SSA & M-MSE \\ 
   \hline
-Target correlation & 0.69 & 0.73 \\ 
-  HT & 8.67 & 4.73 \\ 
+Target correlation & 0.71 & 0.73 \\ 
+  HT & 7.43 & 5.78 \\ 
    \hline
 \end{tabular}
 \caption{Sample target correlations and HTs of M-SSA and M-MSE nowcasts.  } 
@@ -261,19 +261,19 @@ We now utilize the M-SSA components as regressors on forward-shifted BIP, extend
 
 There are various combinations of M-SSA components for tracking BIP. For illustration, we here select the single BIP component resulting from the M-SSA filter tracking HP-BIP. Table \eqref{p_val_hpbip_wc} reports HAC-adjusted p-values from regressions of the out-of-sample predictor on HP-BIP, indicating a strong link between the predictor and the target, out-of-sample. 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:02 2025
+% Wed Jun  4 14:25:53 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.000 & 0.000 & 0.000 & 0.000 & 0.001 & 0.017 & 0.244 \\ 
-  Shift=1 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.003 & 0.026 \\ 
-  Shift=2 & 0.001 & 0.000 & 0.000 & 0.000 & 0.000 & 0.001 & 0.007 \\ 
-  Shift=3 & 0.052 & 0.023 & 0.005 & 0.001 & 0.002 & 0.001 & 0.002 \\ 
-  Shift=4 & 0.370 & 0.240 & 0.100 & 0.015 & 0.006 & 0.004 & 0.002 \\ 
-  Shift=5 & 0.792 & 0.673 & 0.450 & 0.157 & 0.016 & 0.013 & 0.007 \\ 
+Shift=0 & 0.000 & 0.000 & 0.000 & 0.000 & 0.002 & 0.031 & 0.469 \\ 
+  Shift=1 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.005 & 0.051 \\ 
+  Shift=2 & 0.001 & 0.000 & 0.000 & 0.000 & 0.000 & 0.001 & 0.010 \\ 
+  Shift=3 & 0.058 & 0.023 & 0.003 & 0.002 & 0.001 & 0.001 & 0.004 \\ 
+  Shift=4 & 0.398 & 0.244 & 0.079 & 0.006 & 0.006 & 0.002 & 0.003 \\ 
+  Shift=5 & 0.815 & 0.681 & 0.405 & 0.092 & 0.019 & 0.011 & 0.006 \\ 
    \hline
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of BIP (M-SSA) component optimized for forecast horizons $h=0,...,6$  (the columns) on HP-BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
@@ -312,37 +312,37 @@ When excluding the pandemic, the direct forecasts outperform the mean forecast u
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:02 2025
+% Wed Jun  4 14:26:07 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.090 & 0.060 & 0.025 & 0.006 & 0.002 & 0.001 & 0.031 \\ 
-  Shift=1 & 0.271 & 0.202 & 0.126 & 0.053 & 0.007 & 0.001 & 0.006 \\ 
-  Shift=2 & 0.820 & 0.723 & 0.502 & 0.225 & 0.050 & 0.005 & 0.005 \\ 
-  Shift=3 & 0.878 & 0.952 & 0.906 & 0.678 & 0.251 & 0.049 & 0.026 \\ 
-  Shift=4 & 0.641 & 0.916 & 0.986 & 0.938 & 0.549 & 0.147 & 0.020 \\ 
-  Shift=5 & 0.494 & 0.842 & 0.994 & 0.973 & 0.675 & 0.298 & 0.058 \\ 
+Shift=0 & 0.071 & 0.045 & 0.017 & 0.004 & 0.002 & 0.001 & 0.068 \\ 
+  Shift=1 & 0.235 & 0.177 & 0.107 & 0.039 & 0.004 & 0.001 & 0.008 \\ 
+  Shift=2 & 0.793 & 0.679 & 0.432 & 0.184 & 0.029 & 0.004 & 0.006 \\ 
+  Shift=3 & 0.918 & 0.949 & 0.877 & 0.584 & 0.187 & 0.032 & 0.022 \\ 
+  Shift=4 & 0.742 & 0.949 & 0.984 & 0.898 & 0.466 & 0.080 & 0.013 \\ 
+  Shift=5 & 0.609 & 0.893 & 0.995 & 0.960 & 0.595 & 0.235 & 0.035 \\ 
    \hline
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:02 2025
+% Wed Jun  4 14:26:07 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.997 & 0.966 & 0.911 & 0.856 & 0.847 & 0.890 & 0.953 \\ 
-  Shift=1 & 1.099 & 1.088 & 1.038 & 0.951 & 0.884 & 0.875 & 0.912 \\ 
-  Shift=2 & 1.082 & 1.099 & 1.092 & 1.032 & 0.952 & 0.906 & 0.904 \\ 
-  Shift=3 & 1.033 & 1.068 & 1.097 & 1.076 & 1.009 & 0.954 & 0.934 \\ 
-  Shift=4 & 1.005 & 1.051 & 1.101 & 1.108 & 1.054 & 0.982 & 0.935 \\ 
-  Shift=5 & 1.006 & 1.054 & 1.104 & 1.121 & 1.092 & 1.031 & 0.969 \\ 
+Shift=0 & 0.975 & 0.941 & 0.886 & 0.839 & 0.843 & 0.897 & 0.965 \\ 
+  Shift=1 & 1.085 & 1.068 & 1.011 & 0.927 & 0.871 & 0.875 & 0.919 \\ 
+  Shift=2 & 1.076 & 1.089 & 1.074 & 1.011 & 0.938 & 0.902 & 0.909 \\ 
+  Shift=3 & 1.037 & 1.069 & 1.090 & 1.059 & 0.992 & 0.943 & 0.930 \\ 
+  Shift=4 & 1.013 & 1.058 & 1.101 & 1.097 & 1.037 & 0.967 & 0.925 \\ 
+  Shift=5 & 1.016 & 1.062 & 1.106 & 1.115 & 1.078 & 1.015 & 0.955 \\ 
    \hline
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, without pandemic.} 
@@ -411,18 +411,18 @@ For simplicity of exposition, we present results based on the full sample, exclu
 
 \begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/ROC_GDP_shift_1_4.pdf}\caption{Hit rate vs. false alarm rate of the predictors at small (one quarter ahead:left panel) and yearly forecast horizons (right panel).\label{ROC_GDP_shift_1_4}}\end{center}\end{figure}
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
   \hline
  & Direct forecast & Direct HP forecast & M-MSE & M-SSA \\ 
   \hline
-Forecast horizon 1 & 0.752 & 0.715 & 0.749 & 0.752 \\ 
-  Forecast horizon 2 & 0.697 & 0.663 & 0.715 & 0.740 \\ 
-  Forecast horizon 3 & 0.554 & 0.622 & 0.669 & 0.706 \\ 
-  Forecast horizon 4 & 0.486 & 0.624 & 0.706 & 0.737 \\ 
-  Forecast horizon 5 & 0.593 & 0.636 & 0.660 & 0.714 \\ 
+Forecast horizon 1 & 0.752 & 0.715 & 0.750 & 0.756 \\ 
+  Forecast horizon 2 & 0.697 & 0.663 & 0.714 & 0.744 \\ 
+  Forecast horizon 3 & 0.554 & 0.622 & 0.666 & 0.716 \\ 
+  Forecast horizon 4 & 0.486 & 0.624 & 0.707 & 0.732 \\ 
+  Forecast horizon 5 & 0.593 & 0.636 & 0.660 & 0.713 \\ 
    \hline
 \end{tabular}
 \caption{AUCs of predictors against GDP at various forecast horizons.} 
@@ -449,61 +449,61 @@ In conclusion, the new predictor design integrates the traditional direct foreca
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.090 & 0.060 & 0.025 & 0.006 & 0.002 & 0.001 & 0.031 \\ 
-  Shift=1 & 0.271 & 0.202 & 0.126 & 0.053 & 0.007 & 0.001 & 0.006 \\ 
-  Shift=2 & 0.820 & 0.723 & 0.502 & 0.225 & 0.050 & 0.005 & 0.005 \\ 
-  Shift=3 & 0.878 & 0.952 & 0.906 & 0.678 & 0.251 & 0.049 & 0.026 \\ 
-  Shift=4 & 0.641 & 0.916 & 0.986 & 0.938 & 0.549 & 0.147 & 0.020 \\ 
-  Shift=5 & 0.494 & 0.842 & 0.994 & 0.973 & 0.675 & 0.298 & 0.058 \\ 
+Shift=0 & 0.071 & 0.045 & 0.017 & 0.004 & 0.002 & 0.001 & 0.068 \\ 
+  Shift=1 & 0.235 & 0.177 & 0.107 & 0.039 & 0.004 & 0.001 & 0.008 \\ 
+  Shift=2 & 0.793 & 0.679 & 0.432 & 0.184 & 0.029 & 0.004 & 0.006 \\ 
+  Shift=3 & 0.918 & 0.949 & 0.877 & 0.584 & 0.187 & 0.032 & 0.022 \\ 
+  Shift=4 & 0.742 & 0.949 & 0.984 & 0.898 & 0.466 & 0.080 & 0.013 \\ 
+  Shift=5 & 0.609 & 0.893 & 0.995 & 0.960 & 0.595 & 0.235 & 0.035 \\ 
    \hline
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc5}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.997 & 0.966 & 0.911 & 0.856 & 0.847 & 0.890 & 0.953 \\ 
-  Shift=1 & 1.099 & 1.088 & 1.038 & 0.951 & 0.884 & 0.875 & 0.912 \\ 
-  Shift=2 & 1.082 & 1.099 & 1.092 & 1.032 & 0.952 & 0.906 & 0.904 \\ 
-  Shift=3 & 1.033 & 1.068 & 1.097 & 1.076 & 1.009 & 0.954 & 0.934 \\ 
-  Shift=4 & 1.005 & 1.051 & 1.101 & 1.108 & 1.054 & 0.982 & 0.935 \\ 
-  Shift=5 & 1.006 & 1.054 & 1.104 & 1.121 & 1.092 & 1.031 & 0.969 \\ 
+Shift=0 & 0.975 & 0.941 & 0.886 & 0.839 & 0.843 & 0.897 & 0.965 \\ 
+  Shift=1 & 1.085 & 1.068 & 1.011 & 0.927 & 0.871 & 0.875 & 0.919 \\ 
+  Shift=2 & 1.076 & 1.089 & 1.074 & 1.011 & 0.938 & 0.902 & 0.909 \\ 
+  Shift=3 & 1.037 & 1.069 & 1.090 & 1.059 & 0.992 & 0.943 & 0.930 \\ 
+  Shift=4 & 1.013 & 1.058 & 1.101 & 1.097 & 1.037 & 0.967 & 0.925 \\ 
+  Shift=5 & 1.016 & 1.062 & 1.106 & 1.115 & 1.078 & 1.015 & 0.955 \\ 
    \hline
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_mean6}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 1.157 & 1.120 & 1.056 & 0.992 & 0.982 & 1.032 & 1.105 \\ 
-  Shift=1 & 1.312 & 1.298 & 1.238 & 1.135 & 1.055 & 1.044 & 1.089 \\ 
-  Shift=2 & 1.187 & 1.205 & 1.198 & 1.132 & 1.045 & 0.994 & 0.991 \\ 
-  Shift=3 & 1.025 & 1.060 & 1.089 & 1.067 & 1.001 & 0.946 & 0.927 \\ 
-  Shift=4 & 1.004 & 1.050 & 1.100 & 1.108 & 1.053 & 0.982 & 0.935 \\ 
-  Shift=5 & 0.978 & 1.025 & 1.073 & 1.090 & 1.062 & 1.003 & 0.942 \\ 
+Shift=0 & 1.131 & 1.092 & 1.028 & 0.973 & 0.977 & 1.040 & 1.119 \\ 
+  Shift=1 & 1.295 & 1.274 & 1.206 & 1.106 & 1.039 & 1.044 & 1.097 \\ 
+  Shift=2 & 1.180 & 1.194 & 1.178 & 1.109 & 1.029 & 0.990 & 0.997 \\ 
+  Shift=3 & 1.029 & 1.061 & 1.082 & 1.051 & 0.984 & 0.936 & 0.923 \\ 
+  Shift=4 & 1.012 & 1.057 & 1.100 & 1.096 & 1.036 & 0.967 & 0.924 \\ 
+  Shift=5 & 0.988 & 1.033 & 1.076 & 1.084 & 1.048 & 0.987 & 0.929 \\ 
    \hline
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_direct_without_covid7}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrr}
@@ -521,61 +521,61 @@ RRMSE & 0.862 & 0.838 & 0.912 & 1.008 & 1.001 & 1.028 \\
 \subsection{Performances: Including Singular Pandemic Data}
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 0.112 & 0.062 & 0.019 & 0.002 & 0.000 & 0.001 & 0.006 \\ 
-  Shift=1 & 0.451 & 0.327 & 0.206 & 0.108 & 0.042 & 0.031 & 0.073 \\ 
-  Shift=2 & 0.755 & 0.646 & 0.425 & 0.150 & 0.025 & 0.008 & 0.014 \\ 
-  Shift=3 & 0.936 & 0.952 & 0.901 & 0.664 & 0.229 & 0.046 & 0.017 \\ 
-  Shift=4 & 0.502 & 0.838 & 0.956 & 0.918 & 0.613 & 0.230 & 0.092 \\ 
-  Shift=5 & 0.414 & 0.820 & 0.967 & 0.944 & 0.684 & 0.303 & 0.057 \\ 
+Shift=0 & 0.080 & 0.042 & 0.011 & 0.001 & 0.000 & 0.002 & 0.011 \\ 
+  Shift=1 & 0.403 & 0.297 & 0.188 & 0.095 & 0.042 & 0.039 & 0.103 \\ 
+  Shift=2 & 0.718 & 0.594 & 0.359 & 0.114 & 0.019 & 0.009 & 0.022 \\ 
+  Shift=3 & 0.955 & 0.950 & 0.871 & 0.569 & 0.158 & 0.031 & 0.013 \\ 
+  Shift=4 & 0.593 & 0.879 & 0.957 & 0.893 & 0.541 & 0.183 & 0.080 \\ 
+  Shift=5 & 0.531 & 0.875 & 0.971 & 0.929 & 0.605 & 0.239 & 0.041 \\ 
    \hline
 \end{tabular}
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{p_val1}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 1.010 & 0.993 & 0.964 & 0.934 & 0.920 & 0.925 & 0.949 \\ 
-  Shift=1 & 1.061 & 1.057 & 1.037 & 1.003 & 0.979 & 0.975 & 0.981 \\ 
-  Shift=2 & 1.034 & 1.040 & 1.035 & 1.005 & 0.969 & 0.952 & 0.958 \\ 
-  Shift=3 & 1.021 & 1.035 & 1.046 & 1.034 & 1.000 & 0.971 & 0.956 \\ 
-  Shift=4 & 0.999 & 1.020 & 1.044 & 1.050 & 1.030 & 1.003 & 0.986 \\ 
-  Shift=5 & 1.005 & 1.027 & 1.052 & 1.063 & 1.050 & 1.021 & 0.989 \\ 
+Shift=0 & 0.999 & 0.980 & 0.951 & 0.925 & 0.915 & 0.926 & 0.955 \\ 
+  Shift=1 & 1.057 & 1.051 & 1.028 & 0.996 & 0.977 & 0.978 & 0.985 \\ 
+  Shift=2 & 1.031 & 1.035 & 1.026 & 0.996 & 0.964 & 0.952 & 0.964 \\ 
+  Shift=3 & 1.022 & 1.035 & 1.042 & 1.026 & 0.992 & 0.965 & 0.953 \\ 
+  Shift=4 & 1.002 & 1.023 & 1.044 & 1.046 & 1.024 & 0.999 & 0.984 \\ 
+  Shift=5 & 1.010 & 1.032 & 1.054 & 1.060 & 1.043 & 1.013 & 0.983 \\ 
    \hline
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_mean2}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
  & h=0 & h=1 & h=2 & h=3 & h=4 & h=5 & h=6 \\ 
   \hline
-Shift=0 & 1.244 & 1.223 & 1.187 & 1.150 & 1.133 & 1.140 & 1.169 \\ 
-  Shift=1 & 0.987 & 0.984 & 0.965 & 0.933 & 0.911 & 0.907 & 0.912 \\ 
-  Shift=2 & 1.043 & 1.049 & 1.043 & 1.013 & 0.977 & 0.960 & 0.966 \\ 
-  Shift=3 & 1.044 & 1.059 & 1.071 & 1.058 & 1.024 & 0.993 & 0.978 \\ 
-  Shift=4 & 0.978 & 0.999 & 1.023 & 1.029 & 1.009 & 0.983 & 0.966 \\ 
-  Shift=5 & 0.975 & 0.997 & 1.021 & 1.031 & 1.019 & 0.991 & 0.960 \\ 
+Shift=0 & 1.230 & 1.207 & 1.172 & 1.139 & 1.127 & 1.140 & 1.177 \\ 
+  Shift=1 & 0.984 & 0.977 & 0.956 & 0.927 & 0.909 & 0.910 & 0.916 \\ 
+  Shift=2 & 1.039 & 1.044 & 1.035 & 1.004 & 0.972 & 0.960 & 0.972 \\ 
+  Shift=3 & 1.046 & 1.059 & 1.067 & 1.050 & 1.015 & 0.987 & 0.975 \\ 
+  Shift=4 & 0.982 & 1.002 & 1.023 & 1.024 & 1.003 & 0.978 & 0.964 \\ 
+  Shift=5 & 0.979 & 1.001 & 1.022 & 1.028 & 1.012 & 0.983 & 0.953 \\ 
    \hline
 \end{tabular}
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_direct3}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Wed Jun  4 12:01:06 2025
+% Wed Jun  4 14:26:39 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrr}
