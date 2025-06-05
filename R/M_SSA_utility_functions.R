@@ -234,7 +234,6 @@ compute_mssa_BIP_predictors_func<-function(x_mat,lambda_HP,L,date_to_fit,p,q,ht_
     Sigma<-V_obj$Sigma
     Phi<-V_obj$Phi
     Theta<-NULL
-    
   }
     
 #---------------------------------------
