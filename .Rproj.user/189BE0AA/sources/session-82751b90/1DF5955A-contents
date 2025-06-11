@@ -1,0 +1,16 @@
+mat_lag <- function(X, p) {
+  n <- nrow(X)
+  k <- ncol(X)
+  vnames <- colnames(X, do.NULL = F)
+  # Initialize lagged matrix
+  lagged_matrix <- matrix(NA, nrow = n - p, ncol = k * p)
+  colnames(lagged_matrix) <- paste(rep(vnames,p), rep(1:p, each = k), sep = 'L')
+  rownames(lagged_matrix) <- rownames(X[-(1:p), ])
+  
+  for (j in 1:p) {
+    lagged_matrix[, ((j-1)*k + 1):(j*k)] <- X[(p-j+1):(n - j), ]
+  }
+  
+  return(lagged_matrix)
+  
+}

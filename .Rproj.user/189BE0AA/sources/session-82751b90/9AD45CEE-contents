@@ -1,0 +1,116 @@
+---
+title: "VARs with ElasticNet"
+author: "Simon van Norden"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Introduction
+
+This file shows how to use elasticnets to impose parsimony on VAR IRFs.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(MTS)
+library(elasticnet)
+
+path.main <- '~/GitHub/BIP-predictor'
+
+source(paste0(path.main,'/R/mat_lag.R')) # creates columns of AR lags from matrices
+source(paste0(path.main,"/R/GetBIPdata.R")) # loads the mSSA data set
+
+```
+
+# A Simple Elastic Net
+
+We'll load our data set and estimate a simple Elastic Net by regressing BIP on 1 to $p$ lags of our other variables.
+
+```{r 1st_enet}
+
+# Load the Data Set
+# MyData <-  GetBIPdata(path.main)
+MyData <-  GetBIPdata()
+tail(MyData)
+
+p <- 4  # number of lags to include
+MyX <- mat_lag(MyData[,-1], p)  # Include 1:p lags of all variables but the 1st
+MyY <- MyData[-(1:p),1]         # Drop the first p lags of the 1st variable
+
+# Estimate the enet for ALL POSSIBLE values
+# Includes intercept, all variables normalized before estimate
+enet_BIP <- enet(MyX, MyY)
+# plot the results
+plot(enet_BIP, use.color = T, lwd=3)
+# show the summary
+print(enet_BIP)
+# show the estimated coefficients at each step in the path.
+K <- ncol(MyX)
+predict(enet_BIP, type = "coefficients", s = 2:(K+1))
+```
+
+# From ElasticNet to VAR Coefficients
+
+To estimate a parsimonious VAR system, we need to
+
+1.  Choose the order of the VAR to estimate
+
+2.  Estimate the ElasticNet regression for each variable
+
+3.  Decide on the depth (\# of steps) of the ElasticNet to use in the VAR
+
+4.  Form the VAR's Phi matrix of coefficients using the corresponding ElasticNet coefficients.
+
+Note that the VAR coefficients will be for the VAR using _normalized_ variables.
+
+```{r ENet2VAR}
+
+# What's the order of the VAR we're modeling?
+p <- 4
+# What's the depth of the ENet we want to use?
+nsteps <- 7
+# How many variables in our VAR?
+nvar <- ncol(MyData) 
+
+# Clear space to hold the enet results
+MyENets <- vector("list", nvar)
+names(MyENets) <- colnames(MyData)
+
+# Clear space for the Phi matrix
+VARcoefs <- matrix(NA, nrow = nvar, ncol = p*nvar)
+
+MyX <- mat_lag(MyData, p)  # Include 1:p lags of all variables 
+MyY <- MyData[-(1:p),]         # Drop the first p lags of all variables
+for (j in 1:nvar) {
+
+  # Estimate the enet 
+  MyENets[[j]] <- enet(MyX, MyY[,j])
+  # Store the regularized coefficients 
+  VARcoefs[j,] <- predict.enet(MyENets[[j]], type = "coefficients", s = nsteps,
+                               mode = "step")$coefficients
+}
+
+print(t(VARcoefs))
+
+# What do the IRFs look like for BIP?
+IRFenet <- matrix(VARpsi(VARcoefs, lag = 20)$psi[1,], ncol = 5, byrow = T)
+colnames(IRFenet) <- colnames(MyData)   # labels source of shocks
+rownames(IRFenet) <- seq.int(from = 0, to = 20) # labels lags     
+
+MyColours <- c("blue", "darkgreen", "red3", "gray80", "lightgreen", "orange")
+plot(0:20, IRFenet[,1], type = "l",
+     main = paste0("Regularized VAR(", p, "): ElasticNet"),
+     ylab = "IRF for GDP",
+     xlab = "Lag",
+     lwd = 3, col = MyColours[1])
+lines(0:20, IRFenet[,2], lwd = 3, col = MyColours[2])
+lines(0:20, IRFenet[,3], lwd = 3, col = MyColours[3])
+lines(0:20, IRFenet[,4], lwd = 3, col = MyColours[4])
+lines(0:20, IRFenet[,5], lwd = 3, col = MyColours[5])
+legend("topright", 
+         legend = colnames(MyData), 
+         col = MyColours[1:5], 
+         lwd = 3,
+       title = "Shocks to:")
+
+```
