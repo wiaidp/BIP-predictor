@@ -1,0 +1,151 @@
+\ProvidesPackage{beamerthemeIWH} % this style was created by Thomas Deselaers
+%modified by Rolf Scheufele and Katja Drechsel (Heinisch)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\selectcolormodel{cmyk}
+\mode<presentation>
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\useinnertheme[shadow=true]{rounded}
+%\useoutertheme{shadow}
+%\usecolortheme{orchid}
+%\usecolortheme{whale}
+\usepackage{amsmath,amsthm,amssymb,latexsym,color,graphics,graphicx,epic,alltt,pgf}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{iwhdarkblue}{RGB}{36,43,132}
+\definecolor{iwhmidblue}{RGB}{82,134,210}
+\definecolor{iwhlightblue}{RGB}{246, 248, 253}
+\definecolor{iwhdarkgray}{RGB}{40, 49, 60}
+\definecolor{iwhmidgray}{RGB}{192, 199, 205}
+\definecolor{iwhlightgray}{RGB}{241, 243, 245}
+
+
+% headline colors and fonts
+\setbeamercolor{headline}{fg=white,bg=white}
+\setbeamercolor{title in headline}{fg=iwhdarkblue}
+\setbeamercolor{author in headline}{fg=iwhdarkblue}
+\setbeamercolor{institute in headline}{fg=iwhdarkblue}
+\setbeamercolor{logo in headline}{fg=black,bg=iwhlightblue}
+\setbeamercolor{separation line}{bg=white}
+
+% footline colors and fonts
+\setbeamercolor{footline}{fg=iwhdarkblue,bg=iwhlightblue}
+%\setbeamerfont{footline}{size=\normalsize}
+
+% body colors and fonts
+\setbeamercolor*{normal text}{fg=white,bg=white}
+
+% block environment
+\setbeamercolor*{block body}{bg=iwhlightblue,fg=black}
+\setbeamercolor*{block title}{fg=white,bg=iwhmidblue}
+\setbeamerfont{block title}{size=\large,series=\bf}
+
+% example environment
+\setbeamercolor*{example title}{fg=white,bg=iwhmidblue}
+\setbeamerfont{example title}{size=\Large,series=\bf}
+
+
+\setbeamertemplate{itemize items}[triangle]
+\setbeamertemplate{navigation symbols}{}  % no navigation on a poster
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{block begin}{
+  \vskip.75ex
+  \begin{beamercolorbox}[leftskip=0.5cm,colsep*=.75ex]{block title}%% [leftskip=1cm] r�ckt die �berschrift ein
+    \usebeamerfont*{block title}\insertblocktitle
+  \end{beamercolorbox}%
+  {\ifbeamercolorempty[bg]{block body}{}{\nointerlineskip\vskip-0.5pt}}%
+  \usebeamerfont{block body}%
+  \begin{beamercolorbox}[colsep*=.75ex,sep=.75ex,vmode]{block body}%
+    \ifbeamercolorempty[bg]{block body}{\vskip-.25ex}{\vskip-.75ex}\vbox{}%
+  }
+  \setbeamertemplate{block end}{
+  \end{beamercolorbox}
+}
+
+
+\newenvironment{posteritemize}
+{
+  \begin{itemize}
+    \setlength{\itemsep}{10pt}
+    \setlength{\parskip}{0pt}
+    \setlength{\parsep}{0pt}
+  }
+  {
+  \end{itemize}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{headline}{  
+  \leavevmode
+
+  \begin{beamercolorbox}[wd=\paperwidth]{headline}
+    \begin{columns}[T]
+      
+      \begin{column}{.75\paperwidth}
+        \vskip2cm %abstand vom oberen Rand
+       % \begin{center}
+        
+\raggedright %dann wird alles links/ rechtsbündig
+         	  \hskip2cm\usebeamercolor{title in headline}{\color{fg}\textbf{\Huge{\inserttitle}}\\[2ex]}
+ \usebeamercolor{subtitle in headline}{\color{fg}\textbf{\Huge{\insertsubtitle}}\\[2ex]}
+  \hskip2.5cm  \usebeamercolor{author in headline}{\color{fg}\Large{\textit{\insertauthor}}\\[1ex]}
+            \hskip2cm\usebeamercolor{institute in headline}{\color{fg}\Large{\insertinstitute}\\[1ex]}     
+     %   \end{center}
+      \end{column}
+
+      \begin{column}{.2 \paperwidth}
+    
+         
+\begin{flushright} %ausrichtung am linken Rand+naechste imaginaere Spalte
+\logo{
+%\pgfimage[width=1.2\linewidth]{Logo/IWH_Logo_RGB_EN_Variante.jpg}\\
+\pgfimage[height=3.3cm]{Logo/IWH.jpg}\\
+\pgfimage[height=3.3cm]{Logo/HEC.png}\\
+\pgfimage[height=3.3cm]{Logo/zhaw.png}
+	
+}
+       \insertlogo
+
+ \end{flushright}        
+ 
+      \end{column}
+      \begin{column}{.5\paperwidth} %Das ist der Rand neben dem Logo, oder?
+     		\end{column}
+    \end{columns}
+  \end{beamercolorbox}
+  
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line head}
+    \rule{2pt}{10pt} %Staerke der Linie
+  \end{beamercolorbox}
+	\vspace{-2cm}
+}
+  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setbeamertemplate{footline}{
+  \begin{beamercolorbox}[wd=\paperwidth]{upper separation line foot}
+    \rule{0pt}{10pt}
+   \end{beamercolorbox}
+  
+  \begin{beamercolorbox}[ht=4\baselineskip,leftskip=1cm]{footline}
+\flushright \large  marc.wildi@zhaw.ch  \hspace{1cm} 
+  %%%%% Alternativ Namen in schreibmaschinenschrift; \texttt{}
+%\flushright \large  katja.heinisch@iwh-halle.de  \hspace{2cm} matteo.neufing@gmail.com  \hspace{1cm} 
+  %\hspace{0.2cm} \large alexander.glas@fau.de  %\hfill http://www.iwh-halle.de \hspace{2cm} 
+  \vskip 1cm
+  \end{beamercolorbox}
+
+  \begin{beamercolorbox}[wd=\paperwidth]{lower separation line foot} %nochmalige Linie am unteren Rand --> nicht notwendig
+    \rule{10pt}{10pt}
+  \end{beamercolorbox}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mode<all>
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

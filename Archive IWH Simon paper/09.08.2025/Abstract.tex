@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{amsfonts} 
+\usepackage{amsthm}
+\usepackage{ amssymb }
+
+\title{Smooth and Persistent Forecasts of German GDP}
+\author{Katja Heinisch (IWH)\\Simon van Norden (HEC Montréal)\\Marc Wildi (ZHAW)}
+\date{February 2025}
+
+\begin{document}
+
+\maketitle
+
+Economic forecasters face a dilemma. Efficiency suggests that their forecasts make use of all available information. The resulting forecasts are often volatile, which may reflect greater information content or contamination by excessive ``noise''. Forecast users (including public and private decision makers) may be constrained by how rapidly they can adjust to changing forecasts.\footnote{For example, private or public spending decisions may be constrained by annual budgets. Similarly, central banks increasingly attempt to smooth interest rate changes to allow them to signal the future direction of policy to markets, while private firms attempt to smooth changes in dividends.}
+
+\cite{Wildi2024,Wildi2025} and \cite{McElroy2019,McElroy2020} propose novel methods that optimally smooth forecasts by controlling the expected frequency of sign changes. The resulting Smooth Sign Accuracy (SSA) framework encompasses efficient mean-square error (MSE) as a special case and produces increasingly smooth forecasts as changes in forecast direction are increasingly penalized. 
+
+In this study, we apply the SSA framework to document the ability of key German economic indicators (such as industrial production, ifo business surveys and the yield curve) to provide meaningful and accurate forecasts of GDP and GDP trends.
+\cite{Drechsel2012financial,Heinisch2018bottom} have shown that these indicators show a good forecast performance.
+We provide results on forecast performance using a variety of sample periods and performance metrics. Surprisingly, we find that smoothing indicator-based forecasts often provides useful leading information for GDP. We then show the degree to which smoother GDP forecasts lag efficient MSE forecasts slightly.\footnote{This reflects the trilemma highlighted by \cite{McElroy2019} in which forecasters choose between forecast accuracy, timeliness and volatility.} Finally, we document the degree to which this can be mitigated by adjustments in the forecast horizon.
+
+Among our results to date, we find that industrial production and economic outlook surveys provide much more valuable information than the yield curve. We also find that extreme events, such as the Great Financial Crisis or the COVID-19 pandemic, have an important impact on the forecasts. This reflects a common tradeoff facing forecasters: the choice between high accuracy in over the whole period and avoiding rare but large and costly forecast errors in extraordinary situations. 
+
+
+
+\end{document}
