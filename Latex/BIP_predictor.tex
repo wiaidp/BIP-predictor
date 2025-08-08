@@ -67,7 +67,7 @@ marc.wildi@zhaw.ch}
 \end{itemize}
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:05:56 2025
+% Fri Aug  8 09:40:14 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -86,7 +86,7 @@ marc.wildi@zhaw.ch}
 \caption{Ragged end.  } 
 \label{f_stat}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:05:56 2025
+% Fri Aug  8 09:40:14 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrr}
@@ -118,12 +118,7 @@ The transformed quarterly series are displayed in Fig. \ref{data}, while Fig. \r
 
 We analyze the dependence structure of the data and derive a simple VAR model to establish the multivariate filter. The sample cross-correlation function (CCF) is shown in Figs. \ref{CCF} (entire dataset) and \ref{CCF_wc} (data prior to the pandemic).  
 \begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/CCF.pdf}\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): full data set, including the pandemic. Correlations at positive lags signify that (real-time) GDP is lagging when referenced against the two (real-time) indicators.\label{CCF}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/CCF_wc.pdf}\caption{Sample cross-correlation function: GDP and ifo (left), GDP and ESI (right): without pandemic. Correlations at positive lags signify that (real-time) GDP is lagging when referenced against the two (real-time) indicators.\label{CCF_wc}}\end{center}\end{figure}The CCF confirms the leads and lags illustrated in Fig. \ref{data_lags}, although the strength of the dependence is influenced by the singular readings during the pandemic\footnote{We discard the corresponding data when finalizing the predictor.}. We can now fit a VARMA model, and according to standard diagnostic tests (not shown here), a simple VAR(1) specification aligns with the data. The resulting impulse responses of the model are presented in Figs. \ref{impulse} (full data set) and \eqref{impulse_wc} (prior the pandemic).
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/ma_inv_multi_ip.pdf}\caption{MA inversion of VAR(1): full data set.\label{impulse}}\end{center}\end{figure}
-
-
-\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/ma_inv_multi_ip_wc.pdf}\caption{MA inversion of VAR(1): without Pandemic.\label{impulse_wc}}\end{center}\end{figure}
-
-
+\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/ma_inv_multi_ip.pdf}\caption{MA inversion of VAR(1): full data set.\label{impulse}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/ma_inv_multi_ip_wc.pdf}\caption{MA inversion of VAR(1): without Pandemic.\label{impulse_wc}}\end{center}\end{figure}\begin{figure}[H]\begin{center}\includegraphics[height=3in, width=6in]{./Figures/ma_inv_BIP.pdf}\caption{MA inversion of VAR(1) for GDP: with pandemic (left) and without pandemic (right).\label{ma_inv_BIP}}\end{center}\end{figure}
 
 
 The model summarizes key features of the data, where lagging series (GDP and industrial production, when accounting for publication lags) depend on  indicators leading in relative terms. In particular, the impulse response of the spread (rightmost panel in the figure) suggests the relevance of a univariate model for this specific leading indicator.
@@ -155,7 +150,7 @@ Extending the `classic' direct forecast design, we here consider filtered indica
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:05:58 2025
+% Fri Aug  8 09:40:16 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -216,7 +211,7 @@ Figure \ref{bk_gammak} displays the coefficients of the multivariate nowcasts, w
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:06:08 2025
+% Fri Aug  8 09:40:24 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrr}
@@ -266,7 +261,7 @@ We now utilize the M-SSA components as regressors on forward-shifted BIP, extend
 
 There are various combinations of M-SSA components for tracking BIP. For illustration, we here select the single BIP component resulting from the M-SSA filter tracking HP-BIP. Table \eqref{p_val_hpbip_wc} reports HAC-adjusted p-values from regressions of the out-of-sample predictor on HP-BIP, indicating a strong link between the predictor and the target, out-of-sample. 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:06:51 2025
+% Fri Aug  8 09:41:11 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -317,7 +312,7 @@ When excluding the pandemic, the direct forecasts outperform the mean forecast u
 %???check whether rMSE is decreasing towards sample end (because initial estimate towards 2007 is unreliable)???
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:00 2025
+% Fri Aug  8 09:41:21 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -335,7 +330,7 @@ Shift=0 & 0.071 & 0.045 & 0.017 & 0.004 & 0.002 & 0.001 & 0.068 \\
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:00 2025
+% Fri Aug  8 09:41:21 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -416,7 +411,7 @@ For simplicity of exposition, we present results based on the full sample, exclu
 
 \begin{figure}[H]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/ROC_GDP_shift_1_4.pdf}\caption{Hit rate vs. false alarm rate of the predictors at small (one quarter ahead:left panel) and yearly forecast horizons (right panel).\label{ROC_GDP_shift_1_4}}\end{center}\end{figure}
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrr}
@@ -454,7 +449,7 @@ In conclusion, the new predictor design integrates the traditional direct foreca
 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -472,7 +467,7 @@ Shift=0 & 0.071 & 0.045 & 0.017 & 0.004 & 0.002 & 0.001 & 0.068 \\
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{p_val_wc5}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -490,7 +485,7 @@ Shift=0 & 0.975 & 0.941 & 0.886 & 0.839 & 0.843 & 0.897 & 0.965 \\
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_mean6}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -508,7 +503,7 @@ Shift=0 & 1.131 & 1.092 & 1.028 & 0.973 & 0.977 & 1.040 & 1.119 \\
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, without pandemic.} 
 \label{rRMSE_mSSA_comp_direct_without_covid7}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrr}
@@ -526,7 +521,7 @@ RRMSE & 0.862 & 0.838 & 0.912 & 1.008 & 1.001 & 1.028 \\
 \subsection{Performances: Including Singular Pandemic Data}
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -544,7 +539,7 @@ Shift=0 & 0.080 & 0.042 & 0.011 & 0.001 & 0.000 & 0.002 & 0.011 \\
 \caption{HAC adjusted p-values of regressions of M-SSA component predictors optimized for forecast horizons $h=0,...,6$  (the columns) on BIP shifted forward by shift=0,...,5 (the rows). Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{p_val1}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -562,7 +557,7 @@ Shift=0 & 0.999 & 0.980 & 0.951 & 0.925 & 0.915 & 0.926 & 0.955 \\
 \caption{rRMSEs of M-SSA components predictor benchmarked against the expanding mean of BIP. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_mean2}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrrr}
@@ -580,7 +575,7 @@ Shift=0 & 1.230 & 1.207 & 1.172 & 1.139 & 1.127 & 1.140 & 1.177 \\
 \caption{rRMSEs of M-SSA components predictor benchmarked against the direct forecasts. Out-of-sample span starting in Jan-2007, including the pandemic.} 
 \label{rRMSE_mSSA_comp_direct3}
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
-% Fri Jun 20 07:07:25 2025
+% Fri Aug  8 09:41:51 2025
 \begin{table}[ht]
 \centering
 \begin{tabular}{rrrrrrr}

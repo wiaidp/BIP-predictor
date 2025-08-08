@@ -870,7 +870,7 @@ axis(2)
 box()
 
 hp_c<-HP_obj$hp_trend
-plot(hp_c,main=paste("Two-sided HP(",lambda_HP,")",sep=""),axes=F,type="l",xlab="Lags",ylab="")
+plot(hp_c,main=paste("(One-sided) HP-C",sep=""),axes=F,type="l",xlab="Lags",ylab="")
 abline(h=0)
 axis(1,at=c(1,11,21,L),labels=-1+c(1,11,21,L))
 axis(2)
