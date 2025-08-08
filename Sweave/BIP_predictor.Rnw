@@ -183,9 +183,9 @@ date_to_fit<-"2008"
 L<-31
 
 # We can select type of VAR model
-VAR_type="BVAR"
+#VAR_type="BVAR"
 VAR_type="VAR"
-VAR_type="elastic_net"
+#VAR_type="elastic_net"
 if (VAR_type=="BVAR")
 {
 # Simon's settings for BVAR(4)  
@@ -1444,7 +1444,7 @@ mplot<-mplot[which(rownames(mplot)>2006&rownames(mplot)<2013),]
 
 colo<-c("black","violet","blue","orange","green")
 colo<-c("blue","green")
-main_title<-"Zero-Crossings of M-SSA and M-MSE towards the financial crisis"
+main_title<-"M-MSE & M-SSA Nowcasts: Financial Crisis"
 plot(mplot[,1],main=main_title,axes=F,type="l",xlab="",ylab="",col=colo[1],lwd=1,ylim=c(min(na.exclude(mplot)),max(na.exclude(mplot))))
 mtext(colnames(mplot)[1],col=colo[1],line=-1)
 for (i in 1:ncol(mplot))

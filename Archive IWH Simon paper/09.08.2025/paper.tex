@@ -422,14 +422,19 @@ The application of the one-sided HP-C filter to the indicators yields some measu
 %its univariate nature excludes additional information such as that provided by leading indicators. 
 the noise suppression capability of the one-sided filter is compromised, as explained by \cite{Wildi2025} and illustrated by the high-frequency leakage of the amplitude function in Figure \ref{hp_160}. To address these limitations, we turn to the Multivariate Smooth Sign Accuracy (M-SSA) framework proposed by \cite{Wildi2025}.
 
+
+
+
+
+
+
 \section{Multivariate Causal Filter: M-SSA}\label{sec:mSSA}
 
 To understand the smoothing properties of the M-SSA framework, we begin with the Smooth Sign Accuracy (SSA) case, which considers a univariate smoothing problem, before turning to M-SSA, its multivariate generalization.\footnote{See \cite{Wildi2024} for further details on the SSA framework and its applications.} In the remainder of the section, we demonstrate the properties of M-SSA nowcasts and forecasts for smoothed GDP.
 
-\subsection{MSSA Optimization Criterion}
+\subsection{SSA Optimization Criterion}
 
-Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{i1},...,x_{it})'$. Let $\mathbf{z}_t=(z_{1},...,z_t)$  denote a target series, which typically lies outside the linear space spanned by $\mathbf{X}_t$  (and is unknown at time $t$). For simplicity, we assume stationarity of all time series involved. In this framework, $\mathbf{X}_t$ corresponds to a matrix of selected economic indicators with $n=5$, and $z_{it}$, i=1,...,5,   is the output of a two-sided HP(160) filter applied to the four indicators as well as to GDP. Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y_{it}=\sum_{j=1}^ny_{ijt}$, where $y_{ijt}=\mathbf{b}_{ij}~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b_{ijk}x_{j,t-k}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}_i^f$, with columns $\mathbf{b}_{ij}$ of fixed length $L$, $j=1,...,5$, assigning weights to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
-For the sake of clarity, we now omit the index $i$ for all variables, assuming $z_t=z_{i_0t}$ for some fixed $i_0$.% Additionally, we assume a fixed filter length $L$, such that $\mathbf{B}^i_t=\mathbf{B}_t=\mathbf{B}$, which has dimension $L\times 5$. 
+Let $\mathbf{x}_t$ be a time series representing the data, with observations $(x_{1},...,x_{t})'$. Let $\mathbf{z}_t=(z_{1},...,z_t)$  denote a target series, which depends on $\mathbf{x}_t$ as well as on unknown future $x_{t+k}$, $k>0$. For simplicity, we assume stationarity of all time series involved. In this framework, we might think of ${z}_t$ as corresponding to the output of a two-sided HP(160) filter applied to the doubly-infinite sequence $\mathbf{x}_{\pm \infty}=(x_k)$, $|k|<\infty$, representing the (log differenced) GDP, for which $\mathbf{x}_t$ is effectively observed. Since $z_{t}$  depends on future observations $x_{t+1},x_{t+2},...$\footnote{We here ignore the dependence of $z_t$ on $x_0,x_{-1},...$ since in general the filter weights $\gamma_k$ of the target decay sufficiently fast to zero.}, the prediction task involves `tracking' $z_{t}$  using the (causal) predictor $y_{t}=\sum_{k=0}^{L-1} b_{jk}x_{t-k}$, where $L\leq t$.
 
 The task of `tracking' a target can be formalized in different ways; here, we focus on the correlation $\rho(z,y,h)$ between $y_t$ and target $z_{t+h}$, where $h\geq 0$ denotes the forecast horizon (backcasting with $h<0$ is ignored in this context). For simplicity, assume a fixed horizon, say $h=h_0$, so that we may drop the reference to $h$ in our notation. In the univariate case ($n=1$), \cite{Wildi2025} proposes the Smooth Sign Accuracy (SSA) as an optimization criterion:
 \begin{eqnarray}\label{critssa}
@@ -454,42 +459,58 @@ One implication of Eq. \eqref{critssaht} is that the objective function is indif
 Unfortunately, classic predictors often generate excessively many false (`noisy') sign changes due to high-frequency leakage, as discussed above (see Figure \ref{hp_160}.)
 %as illustrated by the amplitude function in Figure \eqref{hp_160} (bottom right panel) and further elaborated upon by \cite{Wildi2025}. 
  \cite{Wildi2025} shows that the SSA criterion helps control this phenomenon (see Fig.\ref{mssa_msse_zc} for illustration.) Using the dual formulation of the criterion \eqref{critssaht}, the author demonstrates that the SSA solution yields the lowest zero-crossing rate among all (linear) predictors with equivalent target correlation.
-The concept can be extended to a multivariate framework, denoted M-SSA, by generalizing the correlation functions as detailed hereafter. 
+The concept can be extended to a multivariate framework, denoted M-SSA, by generalizing the correlation functions as detailed in the next section.\\
 
 
-
-
-\subsection{Implementation}
-
-For a better understanding, we here briefly substantiate the optimization criterion \ref{critssa}. To start, assume a simple univariate framework with $x_t=\epsilon_t$ white noise, with variance $\sigma^2$, and $z_t=\sum_{k=-\infty}^\infty \gamma_k x_{t-k}=\sum_{k=-\infty}^\infty \gamma_k \epsilon_{t-k}$, where it is assumed that $\gamma_k\neq 0$ for some $k<0$ (acausal filter) and $\sum_{|k|<\infty}\gamma_k^2<\infty$, ensuring stationarity of $z_t$ (extensions to non-stationary integrated processes are discussed in Wildi (2025)). Assume we want to predict $z_{t+\delta}$, $\delta\geq 0$ and let $y_{\delta t}=\sum_{k=0}^{L-1} b_{\delta k}x_{t-k}$ designate a causal predictor of length $L$. For simplicity of exposition we may assume $\delta=0$ (nowcast) and we may drop $\delta$ from our notation. Then, $\rho(z,y)=\frac{\sum_{k=0}^{L-1}b_k\gamma_k}{\sqrt{\sum_{k=0}^{L-1}b_k^2}\sqrt{\sum_{|k|<\infty}\gamma_k^2}}$  and $\rho(y,1)=\frac{\mathbf{b}'\mathbf{Mb}}{\mathbf{b}'\mathbf{b}}$, where 
+We now briefly elucidate the SSA optimization criterion outlined in Equation \ref{critssa}. Consider a simplified univariate framework where $x_t=\epsilon_t$ represents white noise with variance $\sigma^2$. A generic target specification for $z_t$ is then defined as a linear filter of $x_t$:
+\[z_t=\sum_{k=-\infty}^\infty \gamma_k x_{t-k}=\sum_{k=-\infty}^\infty \gamma_k \epsilon_{t-k},\] 
+where it is assumed that $\gamma_k\neq 0$ for some $k<0$ (implying an acausal filter), and the summation of squared coefficients satisfies $\sum_{|k|<\infty}\gamma_k^2<\infty$, ensuring the stationarity of the target $z_t$. With these definitions, all processes are centered at zero and the Gaussian assumption additionally justifies the use of Equation \ref{critssaht}, linking first-order ACF and HT. Extensions to non-stationary integrated processes are discussed in Wildi (2025). Suppose the goal is to predict  $z_{t+\delta}$, $\delta\geq 0$. Let  $y_{\delta t}=\sum_{k=0}^{L-1} b_{\delta k}x_{t-k}$  denote a causal predictor of length $L$.  To simplify the exposition, we consider the case $\delta=0$ (nowcast), and thus omit $\delta$ from the notation. Then, under the postulated white assumption
+\begin{eqnarray*}
+\rho(z,y)&=&\frac{\sum_{k=0}^{L-1}b_k\gamma_k}{\sqrt{\sum_{k=0}^{L-1}b_k^2}\sqrt{\sum_{|k|<\infty}\gamma_k^2}},\\
+\rho(y,1)&=&\frac{\mathbf{b}'\mathbf{Mb}}{\mathbf{b}'\mathbf{b}},
+\end{eqnarray*} 
+where the so-called autocovariance generating matrix $\mathbf{M}$, of dimension $L\times L$, is defined as:
 \[
 \mathbf{M}=\left(\begin{array}{ccccccccc}0&0.5&0&0&0&...&0&0&0\\
 0.5&0&0.5&0&0&...&0&0&0\\
 ...&&&&&&&&\\
 0&0&0&0&0&...&0.5&0&0.5\\
 0&0&0&0&0&...&0&0.5&0
-\end{array}\right),
+\end{array}\right).
 \]
-of dimension $L\times L$, is such that $\mathbf{b}'\mathbf{Mb}=\sum_{k=1}^{L-1}b_{k-1}b_k$, the first-order autocovariance of $y_t$ (up to scaling by $\sigma^2$). We can now rewrite criterion \ref{critssa} as:
+The matrix $\mathbf{M}$ is such that $\mathbf{b}'\mathbf{Mb}=\sum_{k=1}^{L-1}b_{k-1}b_k$, representing the first-order autocovariance of $y_t$ (up to the scaling factor $\sigma^2$).  Using this, the optimization criterion \ref{critssa} can be reformulated as:
 \begin{eqnarray}\label{crit1}
 \left.\begin{array}{cc}
 &\max_{\mathbf{b}}\mathbf{b}'\boldsymbol{\gamma}_{\delta}\\
-&\mathbf{b}'\mathbf{Mb}=l\rho_1\\
+\textrm{subject~to~}&\mathbf{b}'\mathbf{Mb}=l\rho_1\\
 &\mathbf{b}'\mathbf{b}=l
 \end{array}\right\},
 \end{eqnarray}
-where the additional length constraint $\mathbf{b}'\mathbf{b}=l$ serves two purposes, namely to warrant uniqueness of the SSA solution and to ensure that the objective function $\mathbf{b}'\boldsymbol{\gamma}_{\delta}$ is identical to the target correlation, up to an arbitrary scaling term $\sqrt{\mathbf{b}'\mathbf{b}}\sqrt{\sum \gamma_k^2}=\sqrt{l}\sqrt{\sum \gamma_k^2}$. Criterion \ref{crit1} is easily amenable to optimization, since it involves affine and quadratic functions of $\mathbf{b}$, see Wildi (2025) for details. 
-By orthogonal projection, the MSE predictor is $y_{MSE,t}=\sum_{k=0}^{L-1}\gamma_kx_{t-k}$, i.e., $b_{MSE,k}=\gamma_k$, $k=0,...,L-1$ and in general we select $\rho_1>\rho_{MSE}$ in criterion l{crit1} to improve smoothness of the resulting SSA predictor $y_t$, where $\rho_{MSE}$ designates the first order ACF of the (benchmark) MSE predictor\footnote{Selecting $\rho_1<\rho_{MSE}$ would result in a SSA predictor with more frequent zero-crossings than the MSE benchmark, which is undesirable in typical applications.}. \\
+where the additional length constraint $\mathbf{b}'\mathbf{b}=l$ serves two purposes: firstly, to ensure the uniqueness of the SSA solution; secondly, to normalize the objective function $\mathbf{b}'\boldsymbol{\gamma}_{\delta}$, making it proportional to the target correlation, up to a fixed scaling factor $\sqrt{\mathbf{b}'\mathbf{b}}\sqrt{\sum \gamma_k^2}=\sqrt{l}\sqrt{\sum \gamma_k^2}$. Criterion \ref{crit1} is readily amenable to optimization, as it involves affine and quadratic functions of $\mathbf{b}$, see Wildi (2025) for detailed derivations. \\
+Under the above assumptions, the classical MSE predictor can be expressed via orthogonal projection as:
+\[
+y_{MSE,t}=\sum_{k=0}^{L-1}\gamma_kx_{t-k}
+\]
+which corresponds to setting $b_{MSE,k}=\gamma_k$, $k=0,...,L-1$. In general, to enhance the smoothness of the SSA predictor $y_t$, we select $\rho_1>\rho_{MSE}$ in criterion \ref{crit1},  where $\rho_{MSE}$ denotes the first-order ACF of the (benchmark) MSE predictor\footnote{Selecting $\rho_1<\rho_{MSE}$ would produce an SSA predictor with more frequent zero-crossings than the MSE benchmark, which is typically undesirable in practical applications.}. 
+ 
 
-We can extend the SSA criterion \ref{crit1} to a multivariate framework. Assume first that $\mathbf{X}_t=\boldsymbol{\epsilon}_t$ is a multivariate white noise sequence with (full rank) variance-covariance matrix $\boldsymbol{\Sigma}$ and let $\mathbf{z}_t$:
+
+
+
+\subsection{M-SSA Optimization}
+
+
+We can now extend the SSA criterion \ref{crit1} to a multivariate setting. Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{i1},...,x_{it})'$. Let $\mathbf{z}_t=(z_{1},...,z_t)$  denote a target series, which typically lies outside the linear space spanned by $\mathbf{X}_t$  (and is unknown at time $t$). In this framework, $\mathbf{X}_t$ corresponds to a matrix of selected economic indicators with $n=5$, and $z_{it}$, i=1,...,5,   is the output of a two-sided HP(160) filter applied to the four indicators as well as to GDP. %Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y_{it}=\sum_{j=1}^ny_{ijt}$, where $y_{ijt}=\mathbf{b}_{ij}~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b_{ijk}x_{j,t-k}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}_i^f$, with columns $\mathbf{b}_{ij}$ of fixed length $L$, $j=1,...,5$, assigning weights to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
+For the sake of clarity, we now omit the index $i$ for all variables, assuming $z_t=z_{i_0t}$ for some fixed $i_0$.
+
+
+
+
+To introduce the M-SSA, assume that $\mathbf{X}_t=\boldsymbol{\epsilon}_t$ is an $n$-dim white noise sequence with (full rank) variance-covariance matrix $\boldsymbol{\Sigma}$. Consider the generalized target $\mathbf{z}_t$:
 \[
 \mathbf{z}_t=\sum_{|k|<\infty}\boldsymbol{\Gamma}_k\mathbf{x}_{t-k},
 \] 
-where $\boldsymbol{\Gamma}_k$ is a sequence of square-summable $n\times n$ dimensional filter matrices, with entries $(\gamma_{ijk})$ for $i, j = 1, \ldots, n$. The condition for square summability is expressed mathematically as:
-\[
-\sum_{|k| < \infty} \text{tr}(\boldsymbol{\Gamma}_k' \boldsymbol{\Gamma}_k) < \infty,
-\]
-where $\text{tr}(\cdot)$ denotes the trace operator. We focus on the estimation of $\mathbf{z}_{t+\delta}$, utilizing the $n-$dimensional predictor defined by
+where $\boldsymbol{\Gamma}_k$  is a sequence of filter matrices of dimension  $n\times n$, satisfying the square-summability condition. Each $\boldsymbol{\Gamma}_k$ has entries $(\gamma_{ijk})$ for $i, j = 1, \ldots, n$. We focus on the estimation of $\mathbf{z}_{t+\delta}$, utilizing the $n-$dimensional predictor defined by
 \[
 \mathbf{y}_t = \sum_{k=0}^{L-1} \mathbf{B}_k \mathbf{x}_{t-k},
 \]
@@ -514,16 +535,16 @@ The variance of $z_{it}$ is given by
 \[
 E[z_{it}^2]=\sum_{|k|<\infty}\boldsymbol{\gamma}_{i k}'\boldsymbol{\Sigma}\boldsymbol{\gamma}_{i k},
 \]
-where $\boldsymbol{\gamma}_{i k}:=(\gamma_{i1k},...,\gamma_{ink})'$. Consequntly, we propose the following multivariate M-SSA criterion for $i=1,...,n$: 
+where $\boldsymbol{\gamma}_{i k}:=(\gamma_{i1k},...,\gamma_{ink})'$. Consequently, we propose the following multivariate M-SSA criterion for $i=1,...,n$: 
 \begin{eqnarray}\label{mcrit1}
 \textrm{max}_{\mathbf{b}_i}\boldsymbol{\gamma}_{i\cdot\delta}'\tilde{\mathbf{I}}\mathbf{b}_{i}\\
-\mathbf{b}_{i}'\tilde{\mathbf{M}}\mathbf{b}_{i}=\rho_i\nonumber\\
+\textrm{subject~to~}\mathbf{b}_{i}'\tilde{\mathbf{M}}\mathbf{b}_{i}=\rho_i\nonumber\\
 \mathbf{b}_{i}'\tilde{\mathbf{I}}\mathbf{b}_{i}=1,\nonumber
 \end{eqnarray}
 for $i=1,...,n$. 
-Under the imposed length constraint, the objective function is proportional to the correlation between the predictor and the $i$-th target, or equivalently, the $i$-th MSE predictor. Additionally, the HT constraint regulates the first-order ACF or, equivalently, the HT of the predictor. The relationships established between sign accuracy and target correlation, as well as between first-order ACF and HT, as discussed in the previous section, remain valid. Thus, the M-SSA framework can be reformulated in accordance with any alternative and equivalent expressions of the optimization criterion, as reviewed in the previous section. \\
+Under the imposed length constraint, the objective function is proportional to the correlation between the predictor and the $i$-th target. Furthermore, the criterion relies on affine and quadratic functions of $\mathbf{b}_i$, facilitating the numerical optimization. Finally, the HT constraint regulates the first-order ACF or, equivalently, the HT of the predictor.\\
 
-To conclude, we now relax the WN hypothesis and assume a stationary process 
+Finally, we can relax the WN hypothesis and assume a stationary process 
 \begin{equation}\label{x_m_st}
 \mathbf{X}_t = \sum_{k=0}^\infty \boldsymbol{\Xi}_k \boldsymbol{\epsilon}_{t-k},
 \end{equation}
@@ -554,29 +575,23 @@ It is important to note that if $\boldsymbol{\Xi}_k=\mathbf{0},~k>0$, resulting 
 \begin{eqnarray}\label{gen_stat_x}
 %\max_{(\mathbf{b}\cdot\boldsymbol{\xi})_i}\frac{ (\boldsymbol{\gamma}\cdot\boldsymbol{\xi})_{i\delta}'\mathbf{\tilde{I}} (\mathbf{b}\cdot\boldsymbol{\xi})_i}{\sqrt{(\boldsymbol{\gamma}\cdot\boldsymbol{\xi})_{i\delta}'\mathbf{\tilde{I}}(\boldsymbol{\gamma}\cdot\boldsymbol{\xi})_{i\delta}}\sqrt{(\mathbf{b}\cdot\boldsymbol{\xi})_i'\mathbf{\tilde{I}}(\mathbf{b}\cdot\boldsymbol{\xi})_i}}
 \max_{(\mathbf{b}\cdot\boldsymbol{\xi})_i} (\boldsymbol{\gamma}\cdot\boldsymbol{\xi})_{i\delta}'\mathbf{\tilde{I}} (\mathbf{b}\cdot\boldsymbol{\xi})_i\\
-(\mathbf{b}\cdot\boldsymbol{\xi})_i'\mathbf{\tilde{M}}(\mathbf{b}\cdot\boldsymbol{\xi})_i=\rho_i\nonumber\\
+\textrm{subject~to~}(\mathbf{b}\cdot\boldsymbol{\xi})_i'\mathbf{\tilde{M}}(\mathbf{b}\cdot\boldsymbol{\xi})_i=\rho_i\nonumber\\
 (\mathbf{b}\cdot\boldsymbol{\xi})_i'\mathbf{\tilde{I}}(\mathbf{b}\cdot\boldsymbol{\xi})_i=1\nonumber
 \end{eqnarray}
-for $i=1,...,n$. This formulation can be solved for $(\mathbf{b}\cdot\boldsymbol{\xi})_i$, as detailed in Theorem \eqref{lambda_mult} in the next section. The M-SSA coefficients $\mathbf{b}_i$ can subsequently be determined through deconvolution, as indicated in Equation \eqref{con_inv}. 
-Wildi (2025) posits an extension of SSA to non-stationary integrated processes, wherein the HT constraint pertains to stationary differences of the predictor. While a corresponding extension to M-SSA is feasible based on findings by McElroy and Wildi (2020), the present discussion is confined to stationary processes, omitting a lengthier treatment of rank-defficient designs (cointegration) in the non-stationary case.\\
+for $i=1,...,n$. In analogy to the above white noise case, this formulation can be solved for $(\mathbf{b}\cdot\boldsymbol{\xi})_i$. The M-SSA coefficients $\mathbf{b}_i$ can subsequently be determined through deconvolution, as indicated in Equation \eqref{con_inv}. 
+The present discussion is confined to stationary processes, omitting a lengthier treatment of rank-defficient designs (cointegration) in the non-stationary case.\\
 
-
-
-
- 
-
-
-%\textcolor{blue}{This is where Marc outlines the generalization of the correlation function and other elements of M-SSA.}
 
  Consequently, the subsequent analysis employs the M-SSA framework to construct a `smooth' predictor $y_t$ for forecasting $z_{t+h}$. In particular, it is shown that controlling the zero-crossing rate within the M-SSA framework has a quantifiable effect on the hit rate and false positive rate.
- 
-%Lastly, sign changes in trend growth, represented by zero-crossings of the target $z_t$, are indicative of relevant changes in the trajectory of the economy, for example, at transitions between expansions and recessions. 
- 
- 
- %In a second stage, serving as a generalization and refinement of the univariate HP-C utilized in the direct HP forecast.
 
+ 
 
-\subsection{Example: Out of sample M-MSE vs. M-SSA Nowcasts}
+ 
+ 
+ 
+ 
+ 
+ \subsection{Example: Out of sample M-MSE vs. M-SSA Nowcasts}
 
 For illustration, consider the problem of nowcasting HP-filtered GDP, denoted by HP-GDP, where the target $z_t$ is generated using the two-sided HP(160) filter examined previously. We compare the classic multivariate mean squared error (MSE) predictor (denoted M-MSE) with the M-SSA predictor where we set $HT_1=1.5\times HT_{MSE}$. This constraint ensures that the M-SSA predictor produces roughly 33$\%$ fewer sign changes than M-MSE in large samples. Comparisons with M-MSE allow us to see the cost of this constraint in terms of prediction performance (target correlation). 
 Both predictors use the same underlying VAR(1) model introduced in Section \ref{sec:direct_forecast} and estimated on data up to Q4-2007. This ensures a lengthy out-of-sample period that includes significant events such as the financial crisis, the sovereign debt crisis, and the COVID-19 pandemic.\footnote{The economic sentiment indicator (ESI) does not receive any weight in the parsimonious VAR(1) model estimated over the shorter sub-sample ending in Q4-2007. Technical details and background information on the M-SSA are provided in \cite{Wildi2025}. All computations are conducted using the M-SSA package, as documented in \cite{Wildi2025}. The package can be accessed at \url{https://github.com/wiaidp/R-package-SSA-Predictor}.}
@@ -605,7 +620,7 @@ Both predictors use the same underlying VAR(1) model introduced in Section \ref{
 
 \begin{figure}[H]
     \begin{center}
-    \textcolor{blue}{@Marc: Please change the plot Title to "M-MSE \& M-SSA Nowcasts: Financial Crisis".)}
+%    \textcolor{blue}{@Marc: Please change the plot Title to "M-MSE \& M-SSA Nowcasts: Financial Crisis".)}
         \includegraphics[height=3in, width=4.5in]{./Figures/mssa_msse_zc.pdf}
         % \caption{Sign changes of the M-MSE (green) and M-SSA (blue) nowcasts towards the financial crisis, with sign changes of the M-MSE marked by green vertical lines. The sample holding time (HT) of each filter corresponds to the average duration between its consecutive zero-crossings. For each filter, its sample HT converges to the respective expected HT asymptotically. Here, we impose  $HT_{MSSA}=1.5\times HT_{MSE}$: in the long run, we expect the M-MSE to exhibit approximately $50\%$ more sign changes than the M-SSA.
         \caption{M-MSE (green) and M-SSA (blue) nowcasts around the financial crisis.\\
