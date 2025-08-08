@@ -461,7 +461,7 @@ The concept can be extended to a multivariate framework, denoted M-SSA, by gener
 
 \subsection{Implementation}
 
-For a better understanding, we here briefly substantiate the optimization criterion \ref{critssa}. To start, assume a simple univariate framework with $x_t=\epsilon_t$ white noise and $z_t=\sum_{k=-infty}^\infty \gamma_k x_{t-k}=\sum_{k=-infty}^\infty \gamma_k \epsilon_{t-k}$, where it is assumed that $\gamma_k\neq 0$ for some $k<0$ (acausal filter) and $\sum_{|k|<\infty}\gamma_k^2<\infty$, which ensures stationarity of $z_t$ (extensions to non-stationary integrated processes are discussed in Wildi (2025)). Assume we want to predict $z_{t+\delta}$, $\delta\geq 0$ and let $y_{\delta t}=\sum_{k=0}^{L-1} b_{\delta k}x_{t-k}$ designate a causal predictor of length $L$. For simplicity of exposition we may assume $\delta=0$ (nowcast) and we may drop $\delta$ from our notation. Then, $\rho(z,y)=\frac{\sum_{k=0}^{L-1}b_k\gamma_k}{\sqrt{\sum_{k=0}^{L-1}b_k^2}\sqrt{\sum_{k=0}^{L-1}\gamma_k^2}}$  and $\rho(y,1)=\frac{\mathbf{b}'\mathbf{Mb}}{\mathbf{b}'\mathbf{b}}$, where 
+For a better understanding, we here briefly substantiate the optimization criterion \ref{critssa}. To start, assume a simple univariate framework with $x_t=\epsilon_t$ white noise, with variance $\sigma^2$, and $z_t=\sum_{k=-\infty}^\infty \gamma_k x_{t-k}=\sum_{k=-\infty}^\infty \gamma_k \epsilon_{t-k}$, where it is assumed that $\gamma_k\neq 0$ for some $k<0$ (acausal filter) and $\sum_{|k|<\infty}\gamma_k^2<\infty$, ensuring stationarity of $z_t$ (extensions to non-stationary integrated processes are discussed in Wildi (2025)). Assume we want to predict $z_{t+\delta}$, $\delta\geq 0$ and let $y_{\delta t}=\sum_{k=0}^{L-1} b_{\delta k}x_{t-k}$ designate a causal predictor of length $L$. For simplicity of exposition we may assume $\delta=0$ (nowcast) and we may drop $\delta$ from our notation. Then, $\rho(z,y)=\frac{\sum_{k=0}^{L-1}b_k\gamma_k}{\sqrt{\sum_{k=0}^{L-1}b_k^2}\sqrt{\sum_{|k|<\infty}\gamma_k^2}}$  and $\rho(y,1)=\frac{\mathbf{b}'\mathbf{Mb}}{\mathbf{b}'\mathbf{b}}$, where 
 \[
 \mathbf{M}=\left(\begin{array}{ccccccccc}0&0.5&0&0&0&...&0&0&0\\
 0.5&0&0.5&0&0&...&0&0&0\\
@@ -470,7 +470,7 @@ For a better understanding, we here briefly substantiate the optimization criter
 0&0&0&0&0&...&0&0.5&0
 \end{array}\right),
 \]
-ofs dimension $L\times L$ is such that $\mathbf{b}'\mathbf{Mb}=\sum_{k=1}^{L-1}b_{k-1}b_k$ corresponds to the order-one autocovariance of $y_t$, up to scaling by the variance $\sigma^2$ of $\epsilon_t$. We can now rewrite criterion \ref{critssa} as:
+of dimension $L\times L$, is such that $\mathbf{b}'\mathbf{Mb}=\sum_{k=1}^{L-1}b_{k-1}b_k$, the first-order autocovariance of $y_t$ (up to scaling by $\sigma^2$). We can now rewrite criterion \ref{critssa} as:
 \begin{eqnarray}\label{crit1}
 \left.\begin{array}{cc}
 &\max_{\mathbf{b}}\mathbf{b}'\boldsymbol{\gamma}_{\delta}\\
@@ -478,7 +478,7 @@ ofs dimension $L\times L$ is such that $\mathbf{b}'\mathbf{Mb}=\sum_{k=1}^{L-1}b
 &\mathbf{b}'\mathbf{b}=l
 \end{array}\right\},
 \end{eqnarray}
-where the additional length constraint $\mathbf{b}'\mathbf{b}=l$ serves two purposes, namely to warrant uniqueness of the SSA solution and to ensure that the objective function $\mathbf{b}'\boldsymbol{\gamma}_{\delta}$ is identical to the target correlation, up to an arbitrary scaling term $\sqrt{\mathbf{b}'\mathbf{b}}\sqrt{\sum \gamma_k^2}=\sqrt{l}\sqrt{\sum \gamma_k^2}$. 
+where the additional length constraint $\mathbf{b}'\mathbf{b}=l$ serves two purposes, namely to warrant uniqueness of the SSA solution and to ensure that the objective function $\mathbf{b}'\boldsymbol{\gamma}_{\delta}$ is identical to the target correlation, up to an arbitrary scaling term $\sqrt{\mathbf{b}'\mathbf{b}}\sqrt{\sum \gamma_k^2}=\sqrt{l}\sqrt{\sum \gamma_k^2}$. Criterion \ref{crit1} is easily amenable to optimization, since it involves affine and quadratic functions of $\mathbf{b}$, see Wildi (2025) for details. 
 By orthogonal projection, the MSE predictor is $y_{MSE,t}=\sum_{k=0}^{L-1}\gamma_kx_{t-k}$, i.e., $b_{MSE,k}=\gamma_k$, $k=0,...,L-1$ and in general we select $\rho_1>\rho_{MSE}$ in criterion l{crit1} to improve smoothness of the resulting SSA predictor $y_t$, where $\rho_{MSE}$ designates the first order ACF of the (benchmark) MSE predictor\footnote{Selecting $\rho_1<\rho_{MSE}$ would result in a SSA predictor with more frequent zero-crossings than the MSE benchmark, which is undesirable in typical applications.}. \\
 
 We can extend the SSA criterion \ref{crit1} to a multivariate framework. Assume first that $\mathbf{X}_t=\boldsymbol{\epsilon}_t$ is a multivariate white noise sequence with (full rank) variance-covariance matrix $\boldsymbol{\Sigma}$ and let $\mathbf{z}_t$:
