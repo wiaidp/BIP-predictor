@@ -50,11 +50,11 @@
 
 
 
-\title{Smooth and Persistent Forecasts of German GDP\\ Balancing Accuracy and Stability\thanks{We would like Barbara Rossi and the participants at the Vienna Forecasting Workshop 2025 for their comments and suggestions.}}
+\title{Smooth and Persistent Forecasts of German GDP:\\ Balancing Accuracy and Stability\thanks{We would like Barbara Rossi and the participants at the Vienna Forecasting Workshop 2025 for their comments and suggestions.}}
 \author{Katja Heinisch\thanks{Halle Institute for Economic Research (IWH).} \hspace{0.2cm}
 Simon van Norden\thanks{HEC Montréal and CIREQ.} \hspace{0.2cm}
 Marc Wildi\thanks{Zurich University of Applied Sciences (ZHAW).}}
-\date{July 2025 \\
+\date{August 2025 \\
 \vspace{2cm} \textit{Work in progress, not for circulation}}
 
 
@@ -64,12 +64,12 @@ Marc Wildi\thanks{Zurich University of Applied Sciences (ZHAW).}}
 \maketitle
 
 \begin{abstract} %max.
-This paper explores the trade-off between informational efficiency and forecast smoothness in economic forecasting. Forecasts that minimize mean squared forecast errors often exhibit excessive volatility, limiting their practical applicability. We propose the Multivariate Smooth Sign Accuracy (M-SSA) framework as a solution, extracting smoothed components from leading indicators. This enhances the signal-to-noise ratio and controls forecast volatility and timing. Applied to German GDP, our method yields smoothed forecasts that improve the forecasting accuracy of traditional models, particularly over medium-term horizons. While smoother forecasts tend to lag slightly, this drawback can be mitigated by adjusting the forecast horizon. These findings highlight the practicality of the M-SSA framework for both forecasters and policymakers, especially in settings where updating forecasts or policy adjustments are costly.
+This paper explores the trade-off between informational efficiency and forecast smoothness in economic forecasting. Forecasts that minimize mean squared forecast errors often exhibit excessive volatility, limiting their practical applicability. We propose the Multivariate Smooth Sign Accuracy (M-SSA) framework as a solution, extracting smoothed components from leading indicators. This enhances the signal-to-noise ratio and controls forecast volatility and timing. Applied to German GDP growth, our method yields smoothed forecasts that improve the forecasting accuracy of traditional models, particularly over medium-term horizons. While smoother forecasts tend to lag slightly, this drawback can be mitigated by adjusting the forecast horizon. These findings highlight the practicality of the M-SSA framework for both forecasters and policymakers, especially in settings where updating forecasts or policy adjustments are costly.
 
 \end{abstract}
 
 \bigskip \vspace{10pt}
-\textbf{Keywords:} Forecast Smoothing, Smooth Sign Accuracy 
+\textbf{Keywords:} Forecast Smoothing, Smooth Sign Accuracy, Time Series Filtering 
 \newline
 \textbf{JEL Classification:} C53, E37, E66
 %C53 – Forecasting and Prediction Methods; Simulation Methods
@@ -92,8 +92,7 @@ This paper explores the trade-off between informational efficiency and forecast 
 
 %Economic forecasters face a dilemma: While efficiency suggests that their forecasts should incorporate all available information, the resulting forecasts are often volatile, which may reflect greater information content or contamination by excessive ``noise''. Further, forecast users (including public and private decision makers) may be constrained by how rapidly they can adjust to changing forecasts.\footnote{For example, private or public spending decisions may be constrained by annual budgets. Similarly, central banks increasingly attempt to smooth interest rate changes to allow them to signal the future direction of policy to markets, while private firms attempt to smooth changes in dividends.}
 
-Economic forecasters face a dilemma
-: while informational efficiency requires that forecasts incorporate all available data, doing so often results in forecasts that are excessively volatile.
+Economic forecasters face a dilemma: while informational efficiency requires that forecasts incorporate all available data, doing so often results in forecasts that are excessively volatile.
  %Volatile forecasts may be a sign that they efficiently incorporate all available information. 
  In addition, forecasts may reflect excessive ``noise'' due to overfitting. Further, forecast users (including public and private decision makers) may face constraints in their speed of adjustment to changing forecasts. For example, fixed annual budgets may constrain spending, or transaction costs may limit changes in investments. Others may attempt to smooth their reactions for reasons of signalling. Important examples include dividend smoothing by corporate managers and interest rate smoothing by central banks.
 
@@ -117,7 +116,7 @@ Economic forecasters face a dilemma
 %, unprocessed 
 %leading indicators with smoothed and filtered components derived from the M-SSA procedure, thereby improving the signal-to-noise ratio in the predictor variables used to forecast GDP. We apply this framework to well-established German economic indicators to show its ability to improve forecasts of GDP and GDP trends using a variety of sample periods and performance metrics. 
 
-This study extends this framework by replacing raw leading indicators with smoothed and filtered components, thereby improving the signal-to-noise ratio in the predictor variables. We apply this framework to well-established German economic indicators to show its ability to improve forecasts of GDP \citep{lehmann2021predicting,Heinisch2018bottom}  and GDP trends using a variety of sample periods and performance metrics. 
+This study extends this framework by replacing raw leading indicators with smoothed and filtered components, thereby improving the signal-to-noise ratio in the predictor variables. We apply this framework to well-established German economic indicators to show its ability to improve forecasts of GDP growth \citep{lehmann2021predicting,Heinisch2018bottom}  and GDP trends using a variety of sample periods and performance metrics. 
 
 We find that smoothing indicator-based forecasts often provides useful leading information for GDP, especially over medium-term horizons ranging from two to four quarters ahead. We also show that while smoother GDP forecasts lag efficient MSE forecasts slightly, this can be mitigated by adjustments in the forecast horizon.\footnote{The lag reflects the trilemma highlighted by \cite{McElroy2019} in which forecasters choose between forecast accuracy, timeliness, and volatility.}
 
@@ -125,20 +124,21 @@ We find that smoothing indicator-based forecasts often provides useful leading i
 
 %Previous research often highlights the utility of direct forecasts, particularly for short-term predictions such as nowcasting and forecasts one quarter ahead. However, this paper advances the literature by showing that more sophisticated predictors—specifically, filtered components obtained via M-SSA yield superior performance, especially over medium-term horizons ranging from two to four quarters ahead.
 
-We proceed as follows. Section \eqref{sec:data} describes our data series, the sample period used, and documents their dynamic behaviour. Section \eqref{sec:direct_forecast} provides benchmark forecasts using simple direct projections of GDP based on selected indicators. We demonstrate how in-sample forecast performance may improve when we ``de-noise'' the indicators prior to projection with simple smoothing filters. Section \eqref{sec:mSSA} defines the M-SSA method and shows how its forecast performance compares to that of direct projections as well as how it varies with forecast horizon. 
-Section \eqref{sec:mSSA_component} considers the ability of our indicators to forecast German GDP growth out-of-sample using the M-SSA framework, and Section \eqref{sec:revisions} investigates the temporal stability of the estimated forecasting equations. 
-Section \eqref{sec:conclusions} summarizes our results and concludes.
+We proceed as follows. Section \ref{sec:data} describes our data series, the sample period used, and documents their dynamic behaviour. Section \ref{sec:direct_forecast} provides benchmark forecasts using simple direct projections of GDP based on selected indicators. We demonstrate how in-sample forecast performance may improve when we ``de-noise'' the indicators prior to projection with simple smoothing filters. Section \ref{sec:mSSA} defines the M-SSA method and shows how its forecast performance compares to that of direct projections as well as how it varies with forecast horizon. 
+Section \ref{sec:mSSA_component} considers the ability of our indicators to forecast German GDP growth out-of-sample using the M-SSA framework, and Section \ref{sec:revisions} investigates the temporal stability of the estimated forecasting equations. Section \ref{sec:conclusions} summarizes our results and concludes.
 
 
 
 \section{Data and Dependence}\label{sec:data}
 \subsection{Data and Publication Lags}
 The analysis employs a set of well-established leading indicators to forecast quarterly German GDP \citep{Drechsel2012financial,Heinisch2018bottom}, including industrial production (IP), the ifo Business Climate Index (ifo\_c), the Economic Sentiment Indicator (ESI), and the term spread between 10-year bond yields and the 3-month EURIBOR rate (spre\_10y\_3m) covering the period 1995 to 2024.  
-We take into account the publication lag of the indicators and the GDP series (Table \eqref{tab:data_stucture}).\footnote{Data revisions are not considered, given that previous studies \citep{Heinisch2019} have shown that their overall effect on forecast performance is minor.} 
+We take into account the publication lag of the indicators and the GDP series (Table \ref{tab:data_stucture}).\footnote{Data revisions are not considered, given that previous studies \citep{Heinisch2019} have shown that their overall effect on forecast performance is minor.} 
 While GDP is available with a one-quarter delay, and IP is released with a two-month lag, business surveys and financial data are published without any lag. %All series are consequently re-aligned to correspond with the information available to forecasters, with GDP and IP variables shifted forward according to their respective lags. Table \eqref{tab:data_stucture_aligned} displays the dataset as of the end of 2024, with GDP and IP variables temporally aligned at the sample endpoint. This configuration reflects the matrix of explanatory variables accessible in Q4-2024 for the purposes of nowcasting or forecasting GDP. For illustrative purposes, an additional target column is included on the right side of the table, representing the dependent variable for nowcasting applications. In the case of an $h$-step ahead forecast, this column is shifted upwards by $h$ quarters. 
 
 
 \begin{table}[ht]
+\caption{Ragged edge structure. As of January 2025, before publication of the GDP flash estimate.} 
+\label{tab:data_stucture}
 \centering
 \begin{tabular}{rrrrrr}
   \hline
@@ -153,15 +153,16 @@ While GDP is available with a one-quarter delay, and IP is released with a two-m
   2025-01-01 &  &  & 82.500 & 88.100 & -0.200 \\ 
    \hline
 \end{tabular}
-\caption{Ragged edge structure. As of January 2025, before publication of the GDP flash estimate.} 
-\label{tab:data_stucture}
+
 \end{table}
 
 
-To allow for missing observations due to publication lags, we re-align series to reflect the information available to forecasters. Table \eqref{tab:data_stucture_aligned} displays the result as of the end of 2024, with GDP and IP columns shifted to reflect their release dates rather than the periods that they measure. This will be the data configuration used for nowcasting or forecasting GDP. For illustrative purposes, an additional target column is included on the right side of the table, representing the dependent variable for nowcasting applications.\footnote{In the case of an $h$-step ahead forecast, this column is shifted upwards by $h$ quarters.} 
+To allow for missing observations due to publication lags, we re-align series to reflect the information available to forecasters. Table \ref{tab:data_stucture_aligned} displays the artificial result as of the end of 2024, with GDP and IP columns shifted to reflect their release dates rather than the periods that they measure. This data configuration will be the used for nowcasting or forecasting GDP. For illustrative purposes, an additional target column is included on the right side of the table, representing the dependent variable for nowcasting applications.\footnote{In the case of an $h$-step ahead forecast, this column is shifted upwards by $h$ quarters.} 
 
 
 \begin{table}[ht]
+\caption{Aligned dataset. At each date, various columns show the most recent values of each predictor available to forecasters. Column 6 represents the target variable for a GDP nowcast (i.e. the values of column 1 shifted upwards by the publication lag of GDP.} 
+\label{tab:data_stucture_aligned}
 \centering
 \begin{tabular}{rrrrrrrc}
   \hline
@@ -175,14 +176,13 @@ To allow for missing observations due to publication lags, we re-align series to
   2024-12-01 &902.571   & 92.200  & 82.800 & 86.900 & -0.800&| &?\\ 
     \hline
 \end{tabular}
-\caption{Aligned dataset. At each date, columns 1 through 5 show the most recent values of each predictor available to forecasters. Column 6 represents the target variable for a GDP nowcast (i.e. the values of column 1 shifted upwards by the publication lag of GDP.} 
-\label{tab:data_stucture_aligned}
+
 \end{table}
 
 
 
 To ensure comparability and mitigate scale effects, all indicators (except the term spread, which is differenced only) are log-differenced and standardized. Additionally, extreme outliers associated with the COVID-19 pandemic are trimmed to prevent distortions in subsequent figures. 
- Monthly series are shifted (Table \eqref{tab:data_stucture_aligned}) and averaged to quarterly series (Figure \eqref{fig:data}), while Figure \eqref{fig:data_lags} offers a close-up view of the financial crisis and the pandemic. The latter figure shows that the real-time GDP and industrial production series are synchronized at turning points, whereas the other indicators tend to lead somewhat. The challenge for forecasters is to use the latter in a multivariate approach to improve forecasting performance over that of univariate benchmarks. 
+ Monthly series are shifted (Table \ref{tab:data_stucture_aligned}) and averaged to quarterly series (Figure \ref{fig:data}), while Figure \ref{fig:data_lags} offers a close-up view of the financial crisis and the pandemic. The latter figure shows that the real-time GDP and industrial production series are synchronized at turning points, whereas the other indicators tend to lead somewhat. The challenge for forecasters is to use the latter in a multivariate approach to improve forecasting performance over that of univariate benchmarks. 
 
 
 \begin{figure}
@@ -210,9 +210,9 @@ To ensure comparability and mitigate scale effects, all indicators (except the t
 %%%%%%%%%%%%%%%%%%% here comes the GIT-file
 
 \subsection{Dependence}
-To examine the joint dynamics of our variables, we estimate their cross-correlations as well as their vector moving-average (VMA) representations. The latter is a key input to the multivariate filters we develop in Sections \eqref{sec:mSSA} and \eqref{sec:mSSA_component}. 
+To examine the joint dynamics of our variables, we estimate their cross-correlations as well as their vector moving-average (VMA) representations. The latter is a key input to the multivariate filters we develop in Sections \ref{sec:mSSA} and \ref{sec:mSSA_component}. 
 
-Figures \eqref{CCF} (full sample) and \eqref{CCF_wc} (omitting the Pandemic period) show the sample cross-correlation functions (CCF's) between current and lagged GDP and the two survey indicators. Both figures show strong correlations that peak when GDP is slightly lagged. Results for IP showed no such lag, while correlations for the term spread were weaker. The figures also show that the precise strengths of the correlations are influenced by the outliers associated with the COVID-19 pandemic. In the interest of model stability, we exclude data from Q4-2019 to Q4-2020 (pandemic) when modelling the dynamics for the multivariate filters developed below. 
+Figures \ref{CCF} (full sample) and \ref{CCF_wc} (omitting the Pandemic period) show the sample cross-correlation functions (CCF's) between current and lagged GDP and the two survey indicators. Both figures show strong correlations that peak when GDP is slightly lagged. Results for IP showed no such lag, while correlations for the term spread were weaker. The figures also show that the precise strengths of the correlations are influenced by the outliers associated with the COVID-19 pandemic. In the interest of model stability, we exclude data from Q4-2019 to Q4-2020 (pandemic) when modelling the dynamics for the multivariate filters developed below. 
 
 \begin{figure}[ht]
     \begin{subfigure}[htpb]{\textwidth}
@@ -231,7 +231,7 @@ Figures \eqref{CCF} (full sample) and \eqref{CCF_wc} (omitting the Pandemic peri
     \caption{Sample cross-correlation functions (CCF) showing correlations with lags of GDP growth.}
 \end{figure}
 
-We then estimated a variety of parsimonious VARMA models to capture these dynamics, selecting parsimonious VAR(1) and VAR(3) specifications.\footnote{We used the \texttt{refVARMA()} procedure in the \cite{MTSpackage} \texttt{MTS} package, which sets VARMA coefficients with t-statistics below a critical threshold to zero \citep[see][]{tsay2013multivariate}.  This led to a VAR(1) specification with a threshold of 1.5. The VAR(1) left some residual evidence of higher-order dynamics, but capturing these in our limited sample size was difficult without overfitting. We therefore explored VAR($p$) models with coefficients estimated by Elastic Net using the \cite{ElasticNet} \texttt{elasticnet} package.  This led to a VAR(3) specification with 7 steps. For additional details, see \cite{ElasticNet} and the references therein.} The figures \eqref{ma_inv_BIP} and \eqref{ma_inv_BIP_var3_en} show the implied responses of GDP to shocks to each indicator variable.\footnote{Shown are the MA coefficients for GDP from the vector moving-average (VMA) models obtained by inversion of the VAR(1) and VAR(3) representations respectively (i.e. the impulse-response functions (IRFs) of GDP to the correlated reduced-form shocks.)} 
+We then estimated a variety of parsimonious VARMA models to capture these dynamics, selecting parsimonious VAR(1) and VAR(3) specifications.\footnote{We used the \texttt{refVARMA()} procedure in the \cite{MTSpackage} \texttt{MTS} package, which sets VARMA coefficients with t-statistics below a critical threshold to zero \citep[see][]{tsay2013multivariate}.  This led to a VAR(1) specification with a threshold of 1.5. The VAR(1) left some residual evidence of higher-order dynamics, but capturing these in our limited sample size was difficult without overfitting. We therefore explored VAR($p$) models with coefficients estimated by Elastic Net using the \cite{ElasticNet} \texttt{elasticnet} package.  This led to a VAR(3) specification with 7 steps. For additional details, see \cite{ElasticNet} and the references therein.} The figures \ref{ma_inv_BIP} and \ref{ma_inv_BIP_var3_en} show the implied responses of GDP to shocks to each indicator variable.\footnote{Shown are the MA coefficients for GDP from the vector moving-average (VMA) models obtained by inversion of the VAR(1) and VAR(3) representations respectively (i.e. the impulse-response functions (IRFs) of GDP to the correlated reduced-form shocks.)} 
 
 %
 %   SvN: I've added the following very brief description of Elastic-Net
@@ -306,7 +306,7 @@ where
     \end{center}
 \end{figure}
 
-Figures \eqref{direct_wc} and \eqref{direct_wc_financial_crisis} compare actual and fitted values for GDP at forecast horizons $h = 0, \ldots, 3$, using the four indicators and the target, i.e., GDP shifted $h$ quarters ahead. Figure \eqref{direct_wc} shows results over the sample without the pandemic, while Figure \eqref{direct_wc_financial_crisis} provides a closer look at the fit during the financial crisis. Table \eqref{tab:pvaluedhp} shows p-values for tests of the joint null hypothesis that all coefficients on the indicators are zero (HAC-adjusted Wald test).
+Figures \ref{direct_wc} and \ref{direct_wc_financial_crisis} compare actual and fitted values for GDP at forecast horizons $h = 0, \ldots, 3$, using the four indicators and the target, i.e., GDP shifted $h$ quarters ahead. Figure \ref{direct_wc} shows results over the sample without the pandemic, while Figure \ref{direct_wc_financial_crisis} provides a closer look at the fit during the financial crisis. Table \ref{tab:pvaluedhp} shows p-values for tests of the joint null hypothesis that all coefficients on the indicators are zero (HAC-adjusted Wald test).
 
 \begin{figure}[H]
     \begin{center}
@@ -317,7 +317,7 @@ Figures \eqref{direct_wc} and \eqref{direct_wc_financial_crisis} compare actual 
 \end{figure}
 
 The results indicate that as the forecast horizon $h$ increases, forecast become less volatile and their turning points (i.e., peaks and troughs) become increasingly right-shifted (lagged) relative to the target GDP. Additionally, the p-values of the HAC-adjusted Wald test precipitously increase from $h=2$ to $h=3$ (see Table \eqref{tab:pvaluedhp}), implying that the indicators become statistically insignificant for forecast horizons of more than two quarters.\footnote{ 
-These findings are confirmed by the relative root mean-square errors comparing direct forecasts against the mean benchmark, see Table \eqref{rRMSE_mSSA_direct_mean_without_covid8} in the Appendix.} 
+These findings are confirmed by the relative root mean-square errors comparing direct forecasts against the mean benchmark, see Table \ref{rRMSE_mSSA_direct_mean_without_covid8} in the Appendix.} 
 
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:46 2025
@@ -336,6 +336,8 @@ These findings are confirmed by the relative root mean-square errors comparing d
 %\end{table}
 \bigskip
 \begin{table}[h]
+\caption{p-values for $H_0: \boldsymbol{\beta} = 0$ in \eqref{eq:direct_forecast} based on HAC-adjusted Wald test.\\Estimation over full sample (without pandemic.)} 
+\label{tab:pvaluedhp}
 \centering
 \begin{tabular}{lrrrrrr}
   \hline
@@ -345,11 +347,8 @@ These findings are confirmed by the relative root mean-square errors comparing d
 HP-C filtered & 0.001 & 0.036 & 0.046 & 0.049 & 0.012 & 0.022 \\ 
    \hline
 \end{tabular}
-\caption{p-values for $H_0: \boldsymbol{\beta} = 0$ in \eqref{eq:direct_forecast} based on HAC-adjusted Wald test.\\Estimation over full sample (without pandemic.)} 
-\label{tab:pvaluedhp}
+
 \end{table}
-
-
 
 
 %\begin{table}[ht]
@@ -375,7 +374,7 @@ The Hodrick-Prescott (HP) filter is a classic tool used in business cycle analys
 %In our context, this oversmoothing issue would be further exacerbated when considering forecast horizons shorter than a year---an interval inconsistent with the mean duration of up to several years of business cycles, as highlighted by the HP(1600). 
 To address this concern, we instead use $\lambda = 160$ to allow for a more adaptive filter. 
 
-Figure \eqref{hp_160} presents both classic two-sided and one-sided HP(160) (denoted HP-C for \textit{concurrent}) filters (top panels) along with their associated amplitude functions in the frequency domain (bottom panels). It confirms that the HP-C filter assigns greater weight to yearly components—relevant in a medium-term forecast context— than the classic quarterly HP filter, while also reducing undesirable high-frequency noise. Therefore, while the choice of the HP(160) filter in this example
+Figure \ref{hp_160} presents both classic two-sided and one-sided HP(160) (denoted HP-C for \textit{concurrent}) filters (top panels) along with their associated amplitude functions in the frequency domain (bottom panels). It confirms that the HP-C filter assigns greater weight to yearly components—relevant in a medium-term forecast context— than the classic quarterly HP filter, while also reducing undesirable high-frequency noise. Therefore, while the choice of the HP(160) filter in this example
 is somewhat arbitrary, it should serve the purpose of reducing high-frequency noise while preserving longer-duration movements.\footnote{A comprehensive technical analysis of the effect of $\lambda$ on the resulting GDP predictor can be conducted using the M-SSA package (\url{https://github.com/wiaidp/R-package-SSA-Predictor}).}
 
 \begin{figure}[h]
@@ -394,10 +393,10 @@ is somewhat arbitrary, it should serve the purpose of reducing high-frequency no
 
 %Extending the `classic' direct forecast design, we consider filtered indicators, based on the one-sided HP(160), denoted as the HP-C filter: the filtered indicators are explanatory variables for the regressions on forward-shifted GDP. As in the previous section, we rely on all indicators as well as the full sample estimate for illustration, 
 
-Figures \eqref{direct_hp_forecasts} and \eqref{direct_hp_forecasts_financial_crisis} provide results comparable to those of Figures \eqref{direct_wc} and \eqref{direct_wc_financial_crisis} but now using indicators smoothed with the one-sided HP(160), (denoted as the HP-C, for \textit{concurrent}) filter.  The fitted values lag GDP slightly less and track turning points somewhat more quickly. Table \eqref{tab:pvaluedhp} shows p-values for tests of the joint null hypothesis that all coefficients ${\boldsymbol{\beta}} = 0$. The use of filtered indicators improves their statistical significance at forecast horizons $h > 2$ quarters. 
-%Figures \eqref{direct_hp_forecasts} (all observations with exclusion of the pandemic) and \eqref{direct_hp_forecasts_financial_crisis} (financial crisis). A comparison with the classic (unfiltered) direct forecasts in the latter figure %in Fig.\eqref{direct_wc_financial_crisis} 
+Figures \ref{direct_hp_forecasts} and \ref{direct_hp_forecasts_financial_crisis} provide results comparable to those of Figures \ref{direct_wc} and \ref{direct_wc_financial_crisis} but now using indicators smoothed with the one-sided HP(160), (denoted as the HP-C, for \textit{concurrent}) filter.  The fitted values lag GDP slightly less and track turning points somewhat more quickly. Table \ref{tab:pvaluedhp} shows p-values for tests of the joint null hypothesis that all coefficients ${\boldsymbol{\beta}} = 0$. The use of filtered indicators improves their statistical significance at forecast horizons $h > 2$ quarters. 
+%Figures \ref{direct_hp_forecasts} (all observations with exclusion of the pandemic) and \ref{direct_hp_forecasts_financial_crisis} (financial crisis). A comparison with the classic (unfiltered) direct forecasts in the latter figure %in Fig.\eqref{direct_wc_financial_crisis} 
 % indicates that the new predictors are slightly less retarded and track the turning points more promptly (`faster'). 
-% The filtered approach also exhibits superior statistical properties. As shown in Table \eqref{tab:f_stats}, 
+% The filtered approach also exhibits superior statistical properties. As shown in Table \ref{tab:f_stats}, 
 %The p-values of the F-statistics for the HP-based forecasts are smaller than for the direct forecasts specifically at $h=3$, but the predictor remains statistically insignificant at forecast horizons exceeding two quarters (even though the evaluation is conducted in-sample and based on all available indicators). 
 
 \begin{figure}[H]
@@ -433,7 +432,7 @@ To understand the smoothing properties of the M-SSA framework, we begin with the
 
 \subsection{SSA Optimization Criterion}
 
-Let $\mathbf{x}_t$ be a time series representing the data, with observations $(x_{t},...,x_{1})'$. Let $\mathbf{z}_t=(z_{t},...,z_1)'$  denote a target series, which depends on $\mathbf{x}_t$ as well as on unknown future $x_{t+k}$, $k>0$ (and possibly unknown past $x_k$, $k\leq 0$). For simplicity, we assume stationarity of all time series involved. In our current framwork, $z_t$ corresponds to the output of a two-sided Hodrick–Prescott filter with smoothing parameter $\lambda = 160$ applied to the doubly infinite sequence $x_k$, $k\in\mathbb{Z}$. The finite sample $\mathbf{x}_t$ is the portion effectively observed and represents the log-differenced GDP (the dependence on $x_0, x_{-1},...$ is neglected because the HP filter weights decay rapidly to zero; see Fig. \eqref{hp_160}). The prediction task comprises tracking $z_{t}$  using the (causal) predictor $y_{t}=\sum_{k=0}^{L-1} b_{k}x_{t-k}=\mathbf{b}'\mathbf{x}_t$, where the filter $\mathbf{b}$ with weights $b_0,...,b_{L-1}'$ (actually of length $L=t$) is available for optimization purposes.
+Let $\mathbf{x}_t$ be a time series representing the data, with observations $(x_{t},...,x_{1})'$. Let $\mathbf{z}_t=(z_{t},...,z_1)'$  denote a target series, which depends on $\mathbf{x}_t$ as well as on unknown future $x_{t+k}$, $k>0$ (and possibly unknown past $x_k$, $k\leq 0$). For simplicity, we assume stationarity of all time series involved. In our current framwork, $z_t$ corresponds to the output of a two-sided Hodrick–Prescott filter with smoothing parameter $\lambda = 160$ applied to the doubly infinite sequence $x_k$, $k\in\mathbb{Z}$. The finite sample $\mathbf{x}_t$ is the portion effectively observed and represents the log-differenced GDP (the dependence on $x_0, x_{-1},...$ is neglected because the HP filter weights decay rapidly to zero; see Fig. \ref{hp_160}). The prediction task comprises tracking $z_{t}$  using the (causal) predictor $y_{t}=\sum_{k=0}^{L-1} b_{k}x_{t-k}=\mathbf{b}'\mathbf{x}_t$, where the filter $\mathbf{b}$ with weights $b_0,...,b_{L-1}'$ (actually of length $L=t$) is available for optimization purposes.
 
 The task of tracking a target `optimally' can be formalized in different ways; here, we focus on the correlation $\rho(z,y,h)$ between $y_t$ and target $z_{t+h}$, where $h\geq 0$ denotes the forecast horizon (backcasting with $h<0$ is ignored in this context). For simplicity, assume a fixed horizon, say $h=h_0$, so that we may drop the reference to $h$ in our notation. In the univariate case, \cite{Wildi2025} proposes the Smooth Sign Accuracy (SSA) as an optimization criterion for determining $\mathbf{b}$:
 \begin{eqnarray}\label{critssa}
@@ -455,10 +454,10 @@ where the smoothness parameter $1/HT_1$ expresses the expected rate of sign chan
 
 One implication of criterion \eqref{critssaht} is that the objective function as well as the constraint are indifferent to an affine transformation of the predictor. This ambiguity can be resolved by assuming an arbitrary scale and level for $y_t$ (standardization). Alternatively, a mean square error norm (MSE) can be substituted for the target correlation, as noted in \cite{Wildi2025}. In this case, the classic MSE predictor $y_{t,MSE}$ is obtained as a solution to the SSA criterion by insertion of $1/HT_1:=1/HT_{MSE}$ in the constraint, where $HT_{MSE}$ represents the holding time of $y_{t,MSE}$. %If the MSE predictor is noisy, which is often the case in applications, one can select $HT_1>HT_{MSE}$  in the constraint to address the rate of noisy crossings or false alarms. 
 
-Traditional predictors often yield an excessive number of false sign changes due to leakage of high-frequency components (high-frequency leakage) in the predicted series, as discussed above (see Figure \eqref{hp_160}). This noisiness is particularly problematic near the onset or termination of economic crises (recessions), where the target fluctuates around zero; reliable tracking of sign changes would facilitate real-time assessment of the occurrence and timing of such events. 
-%as illustrated by the amplitude function in Figure \eqref{hp_160} (bottom right panel) and further elaborated upon by \cite{Wildi2025}. 
- \cite{Wildi2025} shows that the SSA criterion helps control this phenomenon (see Fig.\eqref{mssa_msse_zc} for illustration). Using the dual formulation of the criterion \eqref{critssaht}, the author demonstrates that the SSA solution yields the \emph{lowest} zero-crossing rate among all (linear) predictors with equivalent target correlation.
-The concept can be extended to a multivariate framework, denoted M-SSA, by generalizing the correlation functions as detailed in the next section.\\
+Traditional predictors often yield an excessive number of false sign changes due to leakage of high-frequency components (high-frequency leakage) in the predicted series, as discussed above (see Figure \ref{hp_160}). This noisiness is particularly problematic near the onset or termination of economic crises (recessions), where the target fluctuates around zero; reliable tracking of sign changes would facilitate real-time assessment of the occurrence and timing of such events. 
+%as illustrated by the amplitude function in Figure \ref{hp_160} (bottom right panel) and further elaborated upon by \cite{Wildi2025}. 
+ \cite{Wildi2025} shows that the SSA criterion helps control this phenomenon (see Fig.\ref{mssa_msse_zc} for illustration).\\ Using the dual formulation of the criterion \eqref{critssaht}, the author demonstrates that the SSA solution yields the \emph{lowest} zero-crossing rate among all (linear) predictors with equivalent target correlation. 
+The concept can be extended to a multivariate framework, denoted M-SSA, by generalizing the correlation functions as detailed in the next section. As we shall see, controlling the zero-crossing rate within the M-SSA framework will have a quantifiable effect on the hit rate and false positive rate, thereby explicitly addressing the detection of present (nowcasting) and future (forecasting) economic contractions and expansions.\\
 
 
 We now briefly elucidate the SSA optimization criterion outlined in Eq. \eqref{critssa}. Consider a simplified univariate framework where $x_t=\epsilon_t$ represents white noise with variance $\sigma^2$ and assume, for notational simplicity, that $\sigma^2=1$. A generic target specification for $z_t$ is then defined as a linear filter of $x_t$:
@@ -500,7 +499,7 @@ which corresponds to setting $b_{MSE,k}=\gamma_{k+h}$, $k=0,...,L-1$. In general
 \subsection{M-SSA Optimization}
 
 
-We can now extend the SSA criterion \eqref{crit1} to a multivariate setting. Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{it},...,x_{i1})'$. Let $\mathbf{Z}_t$, of dimension $t\times m$  a set of $m$ target series $\mathbf{z}_{it}=(z_{it},...,z_{i1})'$, $i=1,...m$, which typically lie outside the linear space spanned by   $\mathbf{X}_t$ (and are unknown at time $t$ but not independent of $\mathbf{X}_t$). In this framework, $\mathbf{X}_t$ represents a matrix of selected economic indicators for the German economy, with $n=5$. The targets $z_{it}$, i=1,...,5,   are obtained by applying a two-sided HP(160) filter to the doubly-infinite extensions $x_{ik}$, $k\in \mathbf{Z}$, of these indicators. In a subsequent step, as delineated in Section \eqref{sec:mSSA_component}, the (filtered) predictors $y_{hit}$ of $z_{it+h}$, with $h\geq 0$,  will be utilized to construct predictors for the GDP. However, unlike the approach in Section \eqref{sec:direct_forecast}, these predictors will be based on multivariate M-SSA filters rather than univariate HP-C designs. %Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y_{it}=\sum_{j=1}^ny_{ijt}$, where $y_{ijt}=\mathbf{b}_{ij}~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b_{ijk}x_{j,t-k}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}_i^f$, with columns $\mathbf{b}_{ij}$ of fixed length $L$, $j=1,...,5$, assigning weights to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
+We can now extend the SSA criterion \eqref{crit1} to a multivariate setting. Let $\mathbf{X}_t$ (of dimension $t\times n$) denote a set of $n$ explanatory series $\mathbf{x}_{1t},...,\mathbf{x}_{nt}$, with observations $\mathbf{x}_{it}=(x_{it},...,x_{i1})'$. Let $\mathbf{Z}_t$, of dimension $t\times m$, represent  a set of $m$ target series $\mathbf{z}_{it}=(z_{it},...,z_{i1})'$, $i=1,...m$, which typically lie outside the linear space spanned by   $\mathbf{X}_t$ (and are unknown at time $t$ but not independent of $\mathbf{X}_t$). In this framework, $\mathbf{X}_t$ represents a matrix of selected economic indicators for the German economy, with $n=5$. The targets $z_{it}$, i=1,...,5,   are obtained by applying a two-sided HP(160) filter to the doubly-infinite extensions $x_{ik}$, $k\in \mathbf{Z}$, of these indicators. In a subsequent step, as delineated in Section \eqref{sec:mSSA_component}, the (filtered) predictors $y_{hit}$ of $z_{it+h}$, with $h\geq 0$,  will be utilized to construct predictors for the GDP. However, unlike the approach in Section \eqref{sec:direct_forecast}, these predictors will be based on multivariate M-SSA filters rather than univariate HP-C designs. %Since $z_{it}$  depends on future observations $x_{it+1},x_{it+2},...$, the prediction task involves `tracking' $z_{it}$  using the estimate $y_{it}=\sum_{j=1}^ny_{ijt}$, where $y_{ijt}=\mathbf{b}_{ij}~'\mathbf{x}_{jt}=\sum_{k=0}^{L} b_{ijk}x_{j,t-k}$ are the outputs of a multivariate (causal or one-sided) filter $\mathbf{B}_i^f$, with columns $\mathbf{b}_{ij}$ of fixed length $L$, $j=1,...,5$, assigning weights to the last $L$ observations of the $j$-th indicator $\mathbf{x}_{jt}$ (the fixed-length assumption is merely used for ease of exposition).
 %For the sake of clarity, we now omit the index $i$ for all variables, assuming $z_t=z_{i_0t}$ for some fixed $i_0$.
 
 
@@ -655,6 +654,8 @@ Both predictors use the same underlying VAR(1) model introduced in Section \eqre
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:47 2025
 \begin{table}[ht]
+\caption{Sample target correlations and holding times (HT) of M-SSA and M-MSE nowcasts.} 
+\label{corhtnow}
 \centering
 \begin{tabular}{lrr}
   \hline
@@ -664,8 +665,7 @@ Target correlation & 0.68 & 0.69 \\
   HT & 6.50 & 3.71 \\ 
    \hline
 \end{tabular}
-\caption{Sample target correlations and holding times (HT) of M-SSA and M-MSE nowcasts.} 
-\label{corhtnow}
+
 \end{table}
 
 Figure \eqref{bk_gammak} displays the coefficients of the multivariate nowcasts, where M-SSA's increased smoothing reduces the maximum amplitudes of the filter weights and slows their rate of decay at longer lags. The resulting filtered series, presented in Figure \eqref{mssa_msse_now}, are standardized to enable direct comparisons. The M-SSA nowcast is slightly smoother than that of the M-MSE, exhibiting approximately one-third fewer sign-changes. Fig.\eqref{mssa_msse_zc} compares both nowcasts in relation to the financial crisis, highlighting that the classic (MSE-based) design tends to produce unwanted `noisy' zero-crossings at (or in the vicinity of) the transitions between recessions and expansions. Further, Table \eqref{corhtnow} compares sample target correlations and HTs of the two nowcasts. Increased smoothness, i.e. sample holding time increases from 3.7 to 6.5 quarters, achieved by the M-SSA comes at the cost of a slight reduction (0.68 vs 0.69) in target correlation. This highlights the inherent trade-off—often referred to as the prediction dilemma—between smoothness (zero-crossing rate) and predictive accuracy (target correlation) within the M-SSA criterion. 
@@ -822,6 +822,13 @@ In contrast, the GDP component predictors $\hat{\textrm{GDP}}_{t+shift}(h)$, opt
 
 
 \begin{table}[ht]
+
+\caption{rRMSEs: out-of-sample forecast errors Equation \eqref{oosfe} vs expanding mean of GDP\\Out-of-sample evaluation starting in Q1-2008, without pandemic\\Values $< 1$ indicate superior predictions from Equation \eqref{oos_pred}\\
+Row-index: Shift refers to the left-shift of the target $\textrm{GDP}_{t+shift}$\\
+Column-index: $h$ refers to the forecast horizon for which $\textrm{M-SSA}_t^{\textrm{GDP}}(h)$ is optimized\\
+Significance refers to the hypothesis $\alpha_1=0$ in Equation \eqref{eq_gdp_pred}.
+} 
+\label{rRMSE_mSSA_comp_mean_wc}
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
@@ -835,12 +842,6 @@ Shift=0 & 0.975 & $0.941^{*}$ & $0.886^{*}$ &$ 0.839^{**} $& $0.843^{**}$ &$ 0.8
   Shift=5 & 1.016 & 1.062 & 1.106 & 1.115 & 1.078 & 1.015 & $0.955^*$ \\  
    \hline
 \end{tabular}
-\caption{rRMSEs: out-of-sample forecast errors Equation \eqref{oosfe} vs expanding mean of GDP\\Out-of-sample evaluation starting in Q1-2008, without pandemic\\Values $< 1$ indicate superior predictions from Equation \eqref{oos_pred}\\
-Row-index: Shift refers to the left-shift of the target $\textrm{GDP}_{t+shift}$\\
-Column-index: $h$ refers to the forecast horizon for which $\textrm{M-SSA}_t^{\textrm{GDP}}(h)$ is optimized\\
-Significance refers to the hypothesis $\alpha_1=0$ in Equation \eqref{eq_gdp_pred}.
-} 
-\label{rRMSE_mSSA_comp_mean_wc}
 \end{table}
 
 
@@ -885,7 +886,10 @@ For clarity, these results are based on the entire sample, excluding the pandemi
 \begin{figure}[h]\begin{center}\includegraphics[height=3in, width=5in]{./Figures/ROC_GDP_shift_1_4.pdf}\caption{Hit rate vs. false alarm rate of the predictors at small (one quarter ahead:left panel) and yearly forecast horizons (right panel).\label{ROC_GDP_shift_1_4}}\end{center}\end{figure}
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May 21 10:06:12 2025
+
 \begin{table}[ht]
+\caption{AUCs of predictors against GDP at various forecast horizons.} 
+\label{auc}
 \centering
 \begin{tabular}{rrrrr}
   \hline
@@ -898,9 +902,10 @@ Forecast horizon 1 & 0.752 & 0.715 & 0.750 & 0.756 \\
   Forecast horizon 5 & 0.593 & 0.636 & 0.660 & 0.713 \\ 
    \hline
 \end{tabular}
-\caption{AUCs of predictors against GDP at various forecast horizons.} 
-\label{auc}
-\end{table}At forecast horizons less than or equal to two quarters, the direct forecast challenges the filters. However, for horizons $h>2$, the filters outperform the direct approach: the univariate HP-C design is surpassed by the classic multivariate MSE filter, which is in turn dominated by the M-SSA. These results confirm that controlling the rate of sign changes of the predictor, while maximizing its target correlation through M-SSA can enhance predictor performance in terms of sign accuracy and false alarm rate.
+
+\end{table}
+
+At forecast horizons less than or equal to two quarters, the direct forecast challenges the filters. However, for horizons $h>2$, the filters outperform the direct approach: the univariate HP-C design is surpassed by the classic multivariate MSE filter, which is in turn dominated by the M-SSA. These results confirm that controlling the rate of sign changes of the predictor, while maximizing its target correlation through M-SSA can enhance predictor performance in terms of sign accuracy and false alarm rate.
 
 
 
@@ -996,6 +1001,8 @@ In conclusion, the new predictor design integrates the traditional direct foreca
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{Regression of shifted GDP on M-SSA($h$) GDP component.\\rRMSEs benchmarked against the direct forecast.\\Out-of-sample evaluation starting in Q1-2008, without pandemic.} 
+\label{rRMSE_mSSA_comp_direct_without_covid7}
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
@@ -1009,11 +1016,13 @@ Shift=0 & 1.131 & 1.092 & 1.028 & 0.973 & 0.977 & 1.040 & 1.119 \\
   Shift=5 & 0.988 & 1.033 & 1.076 & 1.084 & 1.048 & 0.987 & 0.929 \\  
    \hline
 \end{tabular}
-\caption{Regression of shifted GDP on M-SSA($h$) GDP component.\\rRMSEs benchmarked against the direct forecast.\\Out-of-sample evaluation starting in Q1-2008, without pandemic.} 
-\label{rRMSE_mSSA_comp_direct_without_covid7}
+
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{Direct forecasts.\\
+rRMSEs benchmarked against the expanding mean.\\Out-of-sample evaluation starting in Q1-2008, without pandemic.} 
+\label{rRMSE_mSSA_direct_mean_without_covid8}
 \centering
 \begin{tabular}{rrrrrrr}
   \hline
@@ -1022,9 +1031,7 @@ Shift=0 & 1.131 & 1.092 & 1.028 & 0.973 & 0.977 & 1.040 & 1.119 \\
 rRMSE & 0.862 & 0.838 & 0.912 & 1.008 & 1.001 & 1.028 \\  
    \hline
 \end{tabular}
-\caption{Direct forecasts.\\
-rRMSEs benchmarked against the expanding mean.\\Out-of-sample evaluation starting in Q1-2008, without pandemic.} 
-\label{rRMSE_mSSA_direct_mean_without_covid8}
+
 \end{table}
 
 \newpage
@@ -1035,6 +1042,8 @@ rRMSEs benchmarked against the expanding mean.\\Out-of-sample evaluation startin
 % latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{p-values for $H_0: {\alpha_1} = 0$, HAC-adjusted Wald test, Equation \eqref{eq_gdp_pred}.\\ including the pandemic.} 
+\label{p_val1}
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
@@ -1048,11 +1057,12 @@ Shift=0 & 0.080 & 0.042 & 0.011 & 0.001 & 0.000 & 0.002 & 0.011 \\
   Shift=5 & 0.531 & 0.875 & 0.971 & 0.929 & 0.605 & 0.239 & 0.041 \\ 
    \hline
 \end{tabular}
-\caption{p-values for $H_0: {\alpha_1} = 0$, HAC-adjusted Wald test, Equation \eqref{eq_gdp_pred}.\\ including the pandemic.} 
-\label{p_val1}
+
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{rRMSEs: out-of-sample forecast errors Equation \eqref{oosfe} vs expanding mean of GDP\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.\\Values $< 1$ indicate superior predictions from Equation \eqref{oos_pred}.} 
+\label{rRMSE_mSSA_comp_mean2}
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
@@ -1066,11 +1076,12 @@ Shift=0 & 0.999 & 0.980 & 0.951 & 0.925 & 0.915 & 0.926 & 0.955 \\
   Shift=5 & 1.010 & 1.032 & 1.054 & 1.060 & 1.043 & 1.013 & 0.983 \\  
    \hline
 \end{tabular}
-\caption{rRMSEs: out-of-sample forecast errors Equation \eqref{oosfe} vs expanding mean of GDP\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.\\Values $< 1$ indicate superior predictions from Equation \eqref{oos_pred}.} 
-\label{rRMSE_mSSA_comp_mean2}
+
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{Regression of shifted GDP on M-SSA($h$) GDP component.\\rRMSEs benchmarked against the direct forecast.\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.} 
+\label{rRMSE_mSSA_comp_direct3}
 \centering
 \begin{tabular}{rrrrrrrr}
   \hline
@@ -1084,11 +1095,13 @@ Shift=0 & 1.230 & 1.207 & 1.172 & 1.139 & 1.127 & 1.140 & 1.177 \\
   Shift=5 & 0.979 & 1.001 & 1.022 & 1.028 & 1.012 & 0.983 & 0.953 \\   
    \hline
 \end{tabular}
-\caption{Regression of shifted GDP on M-SSA($h$) GDP component.\\rRMSEs benchmarked against the direct forecast.\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.} 
-\label{rRMSE_mSSA_comp_direct3}
+
 \end{table}% latex table generated in R 4.2.2 by xtable 1.8-4 package
 % Wed May  7 12:49:51 2025
 \begin{table}[ht]
+\caption{Direct forecasts.\\
+rRMSEs benchmarked against the expanding mean.\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.} 
+\label{rRMSE_mSSA_direct_mean4}
 \centering
 \begin{tabular}{rrrrrrr}
   \hline
@@ -1097,11 +1110,13 @@ Shift=0 & 1.230 & 1.207 & 1.172 & 1.139 & 1.127 & 1.140 & 1.177 \\
 rRMSE & 0.812 & 1.075 & 0.992 & 0.977 & 1.021 & 1.031 \\ 
    \hline
 \end{tabular}
-\caption{Direct forecasts.\\
-rRMSEs benchmarked against the expanding mean.\\Out-of-sample evaluation starting in Q1-2008, including the pandemic.} 
-\label{rRMSE_mSSA_direct_mean4}
+
 \end{table}
 
+
+
+\begin{figure}[htpb]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/CCF.pdf}\caption{Sample cross-correlation function (CCF): full data set.\label{CCF}}\end{center}\end{figure}
+\begin{figure}[htpb]\begin{center}\includegraphics[height=3in, width=4.5in]{./Figures/CCF_wc.pdf}\caption{Sample cross-correlation function (CCF): without Pandemic.\label{CCF_wc}}\end{center}\end{figure}
 
 
 
