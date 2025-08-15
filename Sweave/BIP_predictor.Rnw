@@ -183,8 +183,9 @@ date_to_fit<-"2008"
 L<-31
 
 # We can select type of VAR model
-#VAR_type="BVAR"
+# This is the setting used in the paper
 VAR_type="VAR"
+#VAR_type="BVAR"
 #VAR_type="elastic_net"
 if (VAR_type=="BVAR")
 {
