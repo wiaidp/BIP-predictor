@@ -154,6 +154,7 @@ load(file=paste(getwd(),"\\Data\\macro",sep=""))
 
 select_vec_multi<-c("BIP","ip","ifo_c","ESI","spr_10y_3m")
 x_mat<-data[,select_vec_multi]
+head(x_mat)
 tail(x_mat)
 rownames(x_mat)<-rownames(data)
 n<-dim(x_mat)[2]
@@ -172,6 +173,7 @@ diff_lag<-3
 read_obj<-read_data_func_monthly(path.data,select_vec,h0,trim_threshold,na_rw_lin,data_file_name,diff_lag)
 data_table<-read_obj$data_select_unshifted_xts
 colnames(data_table)[1]<-"GDP"
+head(data_table,20)
 tail(data_table,20)
 
 # Settings for M-SSA
