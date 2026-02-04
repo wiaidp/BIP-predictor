@@ -146,9 +146,14 @@ recompute_results<-T
 
 # Load data
 data_file_name<-c("Data_HWI_2025_02.csv","gdp_2025_02.csv")
+data_file_name<-c("Data_HWI_2026_02.csv","gdp_2026_02.csv")
 # Original (un-transformed) indicators
 data_quarterly<-read.csv(paste(getwd(),"/Data/",data_file_name[2],sep=""))
+tail(data_quarterly)
 BIP_original<-data_quarterly[,"BIP"]
+
+
+
 # Transformed indicators: differences, trimmed, standardized
 load(file=paste(getwd(),"\\Data\\macro",sep=""))
 
