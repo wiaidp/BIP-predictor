@@ -63,9 +63,9 @@ tail(data)
 data[(nrow(data)-1):nrow(data),1]<-NA
 tail(data)
 
-save(data,file=paste(getwd(),"\\Data\\macro_2026",sep=""))
+save(data,file=paste(getwd(),"/Data/macro_2026",sep=""))
 
-load(file=paste(getwd(),"\\Data\\macro_2026",sep=""))
+load(file=paste(getwd(),"/Data/macro_2026",sep=""))
 
 tail(data,20)
 
