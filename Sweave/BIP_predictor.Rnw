@@ -2947,8 +2947,7 @@ pdf(file = paste(path.out,file,sep=""), paper = "special", width = 7, height = 7
 par(mfrow=c(1,2))
 
 shift<-1
-h<-1
-    
+
 # Select target: shifted GDP or HP-GDP
 if (select_target=="GDP")
 {
@@ -2958,7 +2957,7 @@ if (select_target=="GDP")
   target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
 }
 # Set up data matrix for ROC calculation    
-ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
+ROC_data<-cbind(target,direct_forecast_mat[,shift+1],direct_hp_forecast_mat[,shift+1],mmse_mat[,shift+1],mssa_mat[,shift+1])
 rownames(ROC_data)<-rownames(data_roc)
 colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
 ROC_data<-as.data.frame(na.exclude(ROC_data))
@@ -2968,8 +2967,7 @@ AUC<-ROCplots(ROC_data, showROC , main = "One quarter ahead", lbls = lbls,
                   smoothROC , colours =NULL, lwd = 2,
                   showLegend , lg_cex = 1, lg_ncol = 1)
 shift<-4
-h<-shift
-    
+
 # Select target: shifted GDP or HP-GDP
 if (select_target=="GDP")
 {
@@ -2979,7 +2977,7 @@ if (select_target=="GDP")
   target<-as.integer(forward_shifted_HP_GDP_mat[,shift+1]>0)
 }
 # Set up data matrix for ROC calculation    
-ROC_data<-cbind(target,direct_forecast_mat[,h+1],direct_hp_forecast_mat[,h+1],mmse_mat[,h+1],mssa_mat[,h+1])
+ROC_data<-cbind(target,direct_forecast_mat[,shift+1],direct_hp_forecast_mat[,shift+1],mmse_mat[,shift+1],mssa_mat[,shift+1])
 rownames(ROC_data)<-rownames(data_roc)
 colnames(ROC_data)<-c("Target","Direct forecast","Direct HP forecast","M-MSE","M-SSA")
 ROC_data<-as.data.frame(na.exclude(ROC_data))
