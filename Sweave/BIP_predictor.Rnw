@@ -155,7 +155,8 @@ BIP_original<-data_quarterly[,"BIP"]
 
 
 # Transformed indicators: differences, trimmed, standardized
-load(file=paste(getwd(),"\\Data\\macro",sep=""))
+load(file=paste(getwd(),"\\Data\\macro_2026",sep=""))
+load(file=paste(getwd(),"\\Data\\macro_2025",sep=""))
 
 select_vec_multi<-c("BIP","ip","ifo_c","ESI","spr_10y_3m")
 x_mat<-data[,select_vec_multi]
